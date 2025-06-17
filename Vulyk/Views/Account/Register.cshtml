@@ -1,0 +1,23 @@
+﻿@model Vulyk.Models.RegistrationViewModel
+@{
+	ViewData["Title"] = "Registration";
+}
+<form asp-action="Register">
+	<div class="error-text" asp-validation-summary="ModelOnly"></div>
+	<label asp-for="Login"></label>
+	<input asp-for="Login" />
+	<span class="error-text" asp-validation-for="Login"></span>
+	<label asp-for="Password"></label>
+	<input asp-for="Password" />
+	<span class="error-text" asp-validation-for="Password"></span>
+	<label asp-for="Name"></label>
+	<input asp-for="Name" />
+	<span class="error-text" asp-validation-for="Name"></span>
+	<label asp-for="Email"></label>
+	<input asp-for="Email" />
+	<span class="error-text" asp-validation-for="Email"></span>
+	<label asp-for="Phone"></label>
+	<input asp-for="Phone" />
+	<span class="error-text" asp-validation-for="Phone"></span>
+	<input class="button custom-text" type="submit" value="Register" />
+</form>

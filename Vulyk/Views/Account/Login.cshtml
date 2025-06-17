@@ -1,0 +1,14 @@
+﻿@model Vulyk.Models.LoginViewModel
+@{
+	ViewData["Title"] = "Login";
+}
+<form asp-controller="Account" asp-action="Login">
+	<label asp-for="Login"></label>
+	<input asp-for="Login" />
+	<span class="error-text" asp-validation-for="Login"></span>
+	<label asp-for="Password"></label>
+	<input asp-for="Password" />
+	<span class="error-text" asp-validation-for="Password"></span>
+	<div class="error-text" asp-validation-summary="ModelOnly"></div>
+	<input class="button custom-text" type="submit" value="Login" />
+</form>

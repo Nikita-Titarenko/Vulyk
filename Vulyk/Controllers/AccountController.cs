@@ -1,0 +1,108 @@
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Vulyk.Data;
+using Vulyk.Models;
+using Vulyk.Services;
+
+namespace Vulyk.Controllers
+{
+    public class AccountController : BaseController
+    {
+        private readonly ApplicationDbContext _context;
+
+        public AccountController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+        public IActionResult Register()
+        {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegistrationViewModel registrationViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(registrationViewModel);
+            }
+            UserService userService = new UserService(_context);
+            Dictionary<string, string> errors = await userService.CheckUniqueColumnsAsync(null, registrationViewModel.Login, registrationViewModel.Email, registrationViewModel.Phone);
+            if (errors.Any())
+            {
+                foreach (var error in errors)
+                {
+                    ModelState.AddModelError(error.Key, error.Value);
+                }
+                return View(registrationViewModel);
+            }
+            User user = new()
+            {
+                Id = registrationViewModel.Id,
+                Name = registrationViewModel.Name,
+                Email = registrationViewModel.Email,
+                Phone = registrationViewModel.Phone,
+                Login = registrationViewModel.Login,
+                Password = registrationViewModel.Password
+            };
+            await userService.AddUserAsync(user);
+
+            createCookie(user.Id.ToString());
+
+            return RedirectToAction("Index", "Chat");
+        }
+
+        public IActionResult Login()
+        {
+            return View(new LoginViewModel());
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(user);
+            }
+            UserService userService = new UserService(_context);
+            int? userId = await userService.FindUserAsync(user.Login, user.Password);
+            if (userId == null)
+            {
+                ModelState.AddModelError(string.Empty, "Incorrect login or password!");
+                return View(user);
+            }
+            createCookie(userId.Value.ToString());
+            return RedirectToAction("Index", "Chat");
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        private async void createCookie(string userId)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.Now.AddDays(30),
+            };
+
+            await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(claimsIdentity), authProperties);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogOut()
+        {
+            await HttpContext.SignOutAsync("Identity.Application");
+            return RedirectToAction("Index", "Home");
+        }
+    }
+}

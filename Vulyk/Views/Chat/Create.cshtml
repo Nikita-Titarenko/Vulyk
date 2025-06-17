@@ -1,0 +1,29 @@
+﻿@model Vulyk.Models.CreateChatViewModel
+@{
+	ViewData["Title"] = "Create new chat";
+}
+
+<form asp-controller="Chat" asp-action="Create">
+	<label asp-for="Login"></label>
+	<input asp-for="Login" disabled/>
+	<div class="center">
+		<label>
+			<input type="radio" name="addType" value="login" checked/>
+			Add using login
+		</label>
+		<label>
+			<input type="radio" name="addType" value="phone"/>
+			Add using phone
+		</label>
+	</div>
+	<div id="loginInput">
+		<label asp-for="LoginToAdd"></label>
+		<input asp-for="LoginToAdd" />
+	</div>
+	<div id="phoneInput" class="hidden">
+		<label asp-for="phoneToAdd"></label>
+		<input asp-for="phoneToAdd" />
+	</div>
+
+	<input type="submit" value="Add" />
+</form>

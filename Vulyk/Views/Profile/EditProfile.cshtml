@@ -1,0 +1,28 @@
+﻿@model Vulyk.Models.EditProfileViewModel
+
+@{
+	<div id="changeCredentialsPanel">
+		<form asp-controller="Profile" asp-action="EditProfile">
+			<label class="center">Change personal data</label>
+			<div class="error-text" asp-validation-summary="ModelOnly"></div>
+			<input class="hidden" asp-for="Id" />
+			<label asp-for="Name"></label>
+			<input asp-for="Name" />
+			<span class="error-text" asp-validation-for="Name"></span>
+			<label asp-for="Email"></label>
+			<input asp-for="Email" />
+			<span class="error-text" asp-validation-for="Email"></span>
+			<label asp-for="Phone"></label>
+			<input asp-for="Phone" />
+			<span class="error-text" asp-validation-for="Phone"></span>
+			<input class="button" type="submit" value="Change" />
+			@{
+				if (ViewBag.SuccessMessage != null)
+				{
+					<label>@ViewBag.SuccessMessage</label>
+				}
+			}
+		</form>
+	</div>
+
+}

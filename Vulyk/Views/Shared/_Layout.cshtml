@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - Vulyk</title>
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/Vulyk.styles.css" asp-append-version="true" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+	<header>
+		<nav>
+
+			<ul class="left-menu">
+				<li>
+					<a asp-controller="Home" asp-action="Index" class="custom-h">Vulyk</a>
+				</li>
+				<li>
+					<a asp-controller="Home" asp-action="Index">Home</a>
+				</li>
+			</ul>
+			@{
+				if (User.Identity != null && User.Identity.IsAuthenticated)
+				{
+					<ul class="right-menu">
+						<li>
+							<a asp-controller="Chat" asp-action="Create"><i class="fa fa-plus icon fa-2x"></i></a>
+						</li>
+						<li>
+							<a asp-controller="Profile" asp-action="EditProfile"><i class="fa fa-user icon fa-2x"></i></a>
+						</li>
+						<li>
+						<form asp-controller="Account" asp-action="LogOut">
+								<button type="submit" class="icon-button"><i class="fa fa-sign-out icon fa-2x"></i></button>
+						</form>
+						</li>
+					</ul>
+				}
+			}
+		</nav>
+	</header>
+
+	<main role="main">
+		@RenderBody()
+	</main>
+
+	<footer class="custom-text">
+		&copy; 2025 - Vulyk - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+	</footer>
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/js/site.js" asp-append-version="true"></script>
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

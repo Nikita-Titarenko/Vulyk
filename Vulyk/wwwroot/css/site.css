@@ -1,0 +1,120 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+html, body {
+    display: flex;
+    height: 100vh;
+    margin: 0px;
+    padding: 0px;
+    flex-direction: column;
+    font-size: 30px;
+    color: black;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    align-items: center;
+}
+
+.custom-h{
+    font-size: 30px;
+    font-weight: bold;
+    color: black;
+}
+
+nav{
+    display: flex;
+}
+
+.left-menu {
+    display: flex;
+    justify-content: start;
+    flex: 1;
+}
+
+.right-menu {
+    display: flex;
+    justify-content: end;
+    flex: 1;
+}
+
+li{
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
+
+a{
+    padding: 20px;
+    color: inherit;
+}
+
+.icon {
+    padding: 0px 50px 0px 50px;
+    color: black;
+}
+
+.error-text{
+    color: red;
+}
+
+header {
+    background: #FFBF00;
+}
+
+footer{
+    padding-left: 100px;
+    display: flex;
+    align-items: center;
+}
+
+.button {
+    background: #FFBF00;
+    margin: 30px;
+    display: flex;
+    justify-content: center;
+    border: 4px solid black;
+    border-radius: 10px;
+}
+
+.icon-button{
+    all: unset;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.center{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+input{
+    font-size: inherit;
+}
