@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.Data.Migrations;
+using Vulyk.Models;
 
 namespace Vulyk.Services
 {
@@ -49,6 +50,23 @@ namespace Vulyk.Services
         public async Task<User?> FindUserAsync(int id)
         {
             return await _context.User.FirstOrDefaultAsync(u => id == u.Id);
+        }
+
+        public async Task<int?> FindUserAsync(string login, string phone, CreateType createType)
+        {
+            User? foundUser;
+            if (createType.Equals(CreateType.Login))
+            {
+                foundUser = await _context.User.FirstOrDefaultAsync(u => login == u.Login);
+            } else
+            {
+                foundUser = await _context.User.FirstOrDefaultAsync(u => phone == u.Phone);
+            }
+            if (foundUser == null)
+            {
+                return null;
+            }
+            return foundUser.Id;
         }
 
         public async Task<Dictionary<string, string>> CheckUniqueColumnsAsync(int? userId, string? login, string? email, string? phone)

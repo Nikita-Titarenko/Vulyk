@@ -27,7 +27,7 @@ html, body {
     color: black;
 }
 
-form {
+.vertical-center {
     display: flex;
     flex-direction: column;
 }
@@ -109,7 +109,7 @@ footer{
     display: none;
 }
 
-.center{
+.horizontal-center{
     display: flex;
     justify-content: center;
     width: 100%;

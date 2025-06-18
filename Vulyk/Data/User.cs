@@ -20,5 +20,7 @@ namespace Vulyk.Data
         public string Phone { get; set; } = string.Empty;
         [Column(TypeName = "nvarchar(20)")]
         public string Name { get; set; } = string.Empty;
+
+        public IEnumerable<UserChat> UserChats { get; set; } = new List<UserChat>();
     }
 }
