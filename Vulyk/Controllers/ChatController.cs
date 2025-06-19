@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
+using Vulyk.DTOs;
 using Vulyk.Models;
 using Vulyk.Services;
+using Vulyk.ViewModels;
 using static Vulyk.Services.ChatService;
 
 namespace Vulyk.Controllers
@@ -13,9 +15,27 @@ namespace Vulyk.Controllers
         {
             _context = context;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            int? userId = GetUserIdFromCookie();
+            if (userId == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            ChatService chatService = new ChatService(_context);
+            ChatPageViewModel chatPageViewModel = new ChatPageViewModel
+            {
+                chatItemViewModels = (await chatService.GetChatsAsync(userId.Value))
+                .Select(c => new ChatListItemViewModel
+                {
+                    LastMessageText = c.LastMessageText,
+                    LastMessageDateTime = c.LastMessageDateTime,
+                    ChatId = c.ChatId,
+                    Name = c.Name
+                }).ToList()
+            };
+
+            return View(chatPageViewModel);
         }
 
         public async Task<IActionResult> Create()
@@ -26,14 +46,14 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            User? user = await userService.FindUserAsync(userId.Value);
-            if (user == null)
+            string? login = await userService.GetUserLoginAsync(userId.Value);
+            if (login == null)
             {
                 return ShowUnexpectedError();
             }
             CreateChatViewModel createChatViewModel = new CreateChatViewModel
             {
-                Login = user.Login
+                Login = login
             };
             return View(createChatViewModel);
         }

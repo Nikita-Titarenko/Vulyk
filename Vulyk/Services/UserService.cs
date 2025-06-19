@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.Data.Migrations;
+using Vulyk.DTOs;
 using Vulyk.Models;
+using Vulyk.ViewModels;
 
 namespace Vulyk.Services
 {
@@ -15,26 +17,33 @@ namespace Vulyk.Services
             _context = context;
         }
 
-        public async Task AddUserAsync(User user)
+        public async Task AddUserAsync(UserRegisterDto dto)
         {
-            ConvertToLowerCase(user);
+            User user = new User
+            {
+                Email = dto.Email.Trim().ToLower().Trim(),
+                Name = dto.Name.Trim(),
+                Id = dto.Id,
+                Login = dto.Login.Trim().ToLower(),
+                Password = dto.Password.Trim(),
+                Phone = dto.Phone.Trim(),
+            };
+
             _context.Add(user);
             await _context.SaveChangesAsync();
         }
 
-        public async Task EditUserAsync(User user)
+        public async Task EditUserAsync(int userId, UserEditDto dto)
         {
-            ConvertToLowerCase(user);
-            _context.User.Update(user);
+            User? user = _context.User.Where(u => u.Id == userId).FirstOrDefault();
+            if (user == null)
+            {
+                return;
+            }
+            user.Email = dto.Email.Trim().ToLower();
+            user.Phone = dto.Phone.Trim();
+            user.Name = dto.Name.Trim();
             await _context.SaveChangesAsync();
-        }
-
-        private void ConvertToLowerCase(User user)
-        {
-            user.Login = user.Login.ToLower();
-            user.Phone = user.Phone.ToLower();
-            user.Name = user.Name.ToLower();
-            user.Email = user.Email.ToLower();
         }
 
         public async Task<int?> FindUserAsync(string login, string password)
@@ -47,9 +56,17 @@ namespace Vulyk.Services
             return foundUser.Id;
         }
 
-        public async Task<User?> FindUserAsync(int id)
+        public async Task<UserEditDto?> FindUserAsync(int id)
         {
-            return await _context.User.FirstOrDefaultAsync(u => id == u.Id);
+            return await _context.User
+                .Where(u => u.Id == id)
+                .Select(u => new UserEditDto { Email = u.Email, Name = u.Name, Phone = u.Phone})
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<string?> GetUserLoginAsync(int id)
+        {
+            return await _context.User.Where(u => u.Id == id).Select(u => u.Login).FirstOrDefaultAsync();
         }
 
         public async Task<int?> FindUserAsync(string login, string phone, CreateType createType)

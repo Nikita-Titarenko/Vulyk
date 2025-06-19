@@ -1,6 +1,6 @@
-﻿namespace Vulyk.Data
+﻿namespace Vulyk.ViewModels
 {
-    public class Message
+    public class MessageViewModel
     {
         public int Id { get; set; }
         public string Text { get; set; } = string.Empty;

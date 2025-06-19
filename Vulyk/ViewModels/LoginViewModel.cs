@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Vulyk.Models
+namespace Vulyk.ViewModels
 {
     public class LoginViewModel
     {

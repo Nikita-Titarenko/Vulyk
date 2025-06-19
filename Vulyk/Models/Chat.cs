@@ -1,4 +1,4 @@
-﻿namespace Vulyk.Data
+﻿namespace Vulyk.Models
 {
     public class Chat
     {

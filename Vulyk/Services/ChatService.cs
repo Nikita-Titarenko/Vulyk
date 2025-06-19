@@ -1,7 +1,9 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
+using Vulyk.DTOs;
 using Vulyk.Models;
+using Vulyk.ViewModels;
 
 namespace Vulyk.Services
 {
@@ -62,7 +64,32 @@ namespace Vulyk.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
 
+        public async Task<List<ChatListItemDto>> GetChatsAsync(int userId)
+        {
+            return await _context.UserChat
+                .Where(uc => uc.UserId == userId)
+                .Select(uc => new ChatListItemDto {
+                    ChatId = uc.ChatId,
+
+                    Name = _context.UserChat
+                    .Where(x => x.ChatId == uc.ChatId && x.UserId != uc.UserId)
+                    .Select(x => x.User.Name).FirstOrDefault(),
+
+                    LastMessageText = _context.Message
+                    .Where(m => m.UserId == uc.UserId && m.ChatId == uc.ChatId)
+                    .OrderByDescending(m => m.CreationDateTime)
+                    .Select(m => m.Text)
+                    .FirstOrDefault(),
+
+                    LastMessageDateTime = _context.Message
+                    .Where(m => m.UserId == uc.UserId && m.ChatId == uc.ChatId)
+                    .OrderByDescending(m => m.CreationDateTime)
+                    .Select(m => m.CreationDateTime)
+                    .FirstOrDefault(),
+                })
+                .ToListAsync();
         }
 
         public enum CreateChatResult

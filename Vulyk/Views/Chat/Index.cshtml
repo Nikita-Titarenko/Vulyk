@@ -1,10 +1,20 @@
-﻿@{
+﻿@using Vulyk.ViewModels
+@model Vulyk.ViewModels.ChatPageViewModel
+@{
 	ViewData["Title"] = "Chats";
 }
 
 <div class="horizontal-center">
 	<div class="vertical-center">
-
+		@{
+			foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
+			{
+				<div class="vertical-center">
+				<p>@chatItemViewModel.Name</p>
+				<p>@chatItemViewModel.LastMessageText</p>
+				</div>
+			}
+		}
 	</div>
 	<div class="vertical-center">
 

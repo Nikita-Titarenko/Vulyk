@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Vulyk.Models
+namespace Vulyk.DTOs
 {
-    public class EditProfileViewModel
+    public class UserEditDto
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }

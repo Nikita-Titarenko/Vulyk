@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
-using Vulyk.Models;
 using Vulyk.Controllers;
 using Vulyk.Services;
+using Vulyk.ViewModels;
+using Vulyk.Models;
+using Vulyk.DTOs;
 
 namespace Vulyk.Controllers
 {
@@ -24,7 +26,7 @@ namespace Vulyk.Controllers
                 return ShowUnexpectedError();
             }
             UserService userService = new UserService(_context);
-            User? user = await userService.FindUserAsync(userId.Value);
+            UserEditDto? user = await userService.FindUserAsync(userId.Value);
             if (user == null)
             {
                 return ShowUnexpectedError();
@@ -62,7 +64,7 @@ namespace Vulyk.Controllers
                 return View(editProfileViewModel);
             }
 
-            User? user = await userService.FindUserAsync(userId.Value);
+            UserEditDto? user = await userService.FindUserAsync(userId.Value);
             if (user == null)
             {
                 return ShowUnexpectedError();
@@ -70,7 +72,7 @@ namespace Vulyk.Controllers
             user.Email = editProfileViewModel.Email;
             user.Phone = editProfileViewModel.Phone;
             user.Name = editProfileViewModel.Name;
-            await userService.EditUserAsync(user);
+            await userService.EditUserAsync(userId.Value, user);
             ViewBag.SuccessMessage = "Credentials successful changed!";
             return View(editProfileViewModel);
         }

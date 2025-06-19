@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Vulyk.Models;
 
 namespace Vulyk.Data
 {
@@ -16,6 +17,8 @@ namespace Vulyk.Data
         public DbSet<Chat> Chat { get; set; }
 
         public DbSet<UserChat> UserChat { get; set; }
+
+        public DbSet<Message> Message { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

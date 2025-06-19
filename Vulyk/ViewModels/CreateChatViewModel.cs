@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Vulyk.Models
+namespace Vulyk.ViewModels
 {
     public class CreateChatViewModel : IValidatableObject
     {

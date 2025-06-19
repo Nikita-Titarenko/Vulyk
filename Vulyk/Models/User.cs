@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace Vulyk.Data
+namespace Vulyk.Models
 {
     [Index(nameof(Login), IsUnique = true)]
     [Index(nameof(Email), IsUnique = true)]

@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Vulyk.Data;
+using Vulyk.DTOs;
 using Vulyk.Models;
 using Vulyk.Services;
+using Vulyk.ViewModels;
 
 namespace Vulyk.Controllers
 {
@@ -39,7 +41,7 @@ namespace Vulyk.Controllers
                 }
                 return View(registrationViewModel);
             }
-            User user = new()
+            UserRegisterDto user = new()
             {
                 Id = registrationViewModel.Id,
                 Name = registrationViewModel.Name,
