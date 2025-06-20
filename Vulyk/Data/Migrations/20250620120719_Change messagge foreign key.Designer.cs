@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vulyk.Data;
 
@@ -11,9 +12,11 @@ using Vulyk.Data;
 namespace Vulyk.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250620120719_Change messagge foreign key")]
+    partial class Changemessaggeforeignkey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -255,12 +258,18 @@ namespace Vulyk.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UserChatChatId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserChatUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "ChatId");
+                    b.HasIndex("UserChatUserId", "UserChatChatId");
 
                     b.ToTable("Message");
                 });
@@ -377,7 +386,7 @@ namespace Vulyk.Data.Migrations
                 {
                     b.HasOne("Vulyk.Models.UserChat", "UserChat")
                         .WithMany("Messages")
-                        .HasForeignKey("UserId", "ChatId")
+                        .HasForeignKey("UserChatUserId", "UserChatChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

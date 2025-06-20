@@ -23,7 +23,7 @@ namespace Vulyk.Controllers
                 return RedirectToAction("Index", "Home");
             }
             ChatService chatService = new ChatService(_context);
-            ChatPageViewModel chatPageViewModel = new ChatPageViewModel
+            ChatListViewModel chatPageViewModel = new ChatListViewModel
             {
                 chatItemViewModels = (await chatService.GetChatsAsync(userId.Value))
                 .Select(c => new ChatListItemViewModel

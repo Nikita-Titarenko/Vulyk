@@ -30,6 +30,9 @@ html, body {
 .vertical-center {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 main {
@@ -37,6 +40,7 @@ main {
     justify-content: center;
     flex: 1;
     align-items: center;
+    overflow: hidden;
 }
 
 .custom-h{
@@ -117,12 +121,4 @@ footer{
 
 input{
     font-size: inherit;
-}
-
-.chat-panel{
-
-}
-
-.message-panel{
-
 }

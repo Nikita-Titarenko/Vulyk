@@ -1,0 +1,13 @@
+﻿.chat-panel {
+    flex: 1;
+    overflow: auto;
+    height: 100%;
+}
+
+.message-panel {
+    flex: 4;
+}
+
+.chat-page-container {
+    height: 100%;
+}

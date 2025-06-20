@@ -1,0 +1,15 @@
+﻿@using Vulyk.ViewModels
+@model Vulyk.ViewModels.MessageListViewModel
+<div class="horizontal-center">
+	<div class="custom-h left-menu">@Model.UserName</div>
+	<div class="right-menu">
+		<i class="fa fa-ellipsis-v fa-2x"></i>
+	</div>
+</div>
+@{
+	foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
+	{
+		<div>@messageListItemViewModel.Text</div>
+	}
+}
+@await Html.PartialAsync("_CreateMessagePartialView", new CreateMessageViewModel { ChatId = Model.ChatId })

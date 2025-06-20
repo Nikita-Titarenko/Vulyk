@@ -1,22 +1,28 @@
 ﻿@using Vulyk.ViewModels
-@model Vulyk.ViewModels.ChatPageViewModel
+@model Vulyk.ViewModels.ChatListViewModel
 @{
 	ViewData["Title"] = "Chats";
 }
+@section Styles {
+	<link rel="stylesheet" href="~/css/ChatPage.css" asp-append-version="true" />
+}
 
-<div class="horizontal-center">
-	<div class="vertical-center">
+<div class="horizontal-center chat-page-container">
+	<div class="vertical-center chat-panel">
 		@{
 			foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
 			{
-				<div class="vertical-center">
+				<div class="vertical-center" onclick="chooseChat(@chatItemViewModel.ChatId)">
 				<p>@chatItemViewModel.Name</p>
 				<p>@chatItemViewModel.LastMessageText</p>
 				</div>
 			}
 		}
 	</div>
-	<div class="vertical-center">
+	<div id="messages" class="vertical-center message-panel">
 
 	</div>
 </div>
+@section Scripts{
+	<script src="~/js/chatPage.js"></script>
+}
