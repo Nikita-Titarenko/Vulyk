@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Vulyk.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class addmessage : Migration
+    public partial class AddMessage : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

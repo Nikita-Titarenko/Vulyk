@@ -7,22 +7,21 @@
 	<link rel="stylesheet" href="~/css/ChatPage.css" asp-append-version="true" />
 }
 
-<div class="horizontal-center chat-page-container">
-	<div class="vertical-center chat-panel">
+<div class="horizontal chat-page-container">
+	<div class="vertical chat-panel start">
 		@{
 			foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
 			{
-				<div class="vertical-center" onclick="chooseChat(@chatItemViewModel.ChatId)">
-				<p>@chatItemViewModel.Name</p>
-				<p>@chatItemViewModel.LastMessageText</p>
+				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId">
+					<div class="chat-title">@chatItemViewModel.Name</div>
+					<div class="chat-title">@chatItemViewModel.LastMessageText</div>
 				</div>
 			}
 		}
 	</div>
-	<div id="messages" class="vertical-center message-panel">
-
+	<div id="messages" class="vertical message-panel">
 	</div>
 </div>
-@section Scripts{
-	<script src="~/js/chatPage.js"></script>
+@section Scripts {
+	<script src="~/js/chat.js"></script>
 }

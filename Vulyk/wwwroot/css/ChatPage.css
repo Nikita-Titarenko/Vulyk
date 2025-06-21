@@ -1,7 +1,9 @@
 ﻿.chat-panel {
     flex: 1;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     height: 100%;
+    width: 100%;
 }
 
 .message-panel {
@@ -10,4 +12,20 @@
 
 .chat-page-container {
     height: 100%;
+    width: 100%;
+}
+
+.chat-item{
+    margin: 10px;
+    width: 100%;
+    padding-left: 12px;
+}
+
+.chat-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
 }

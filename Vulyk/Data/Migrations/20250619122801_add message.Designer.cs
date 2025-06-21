@@ -13,7 +13,7 @@ namespace Vulyk.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20250619122801_add message")]
-    partial class addmessage
+    partial class AddMessage
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
