@@ -4,35 +4,35 @@
 	ViewData["Title"] = "Create new chat";
 }
 
-<form class="vertical center" asp-controller="Chat" asp-action="Create">
+<form class="vertical center auth-form" asp-controller="Chat" asp-action="Create">
 	<label asp-for="Login"></label>
 	<input asp-for="Login" readonly />
-	<div class="horizontal-center">
-		<label>
-			<input type="radio" name="CreateType" value="Login" checked asp-for="CreateType" />
-			Add using login
-		</label>
-		<label>
-			<input type="radio" name="CreateType" value="Phone" asp-for="CreateType" />
-			Add using phone
-		</label>
+	<div class="horizontal">
+		<div class="horizontal">
+			<input id="loginCreateType" type="radio" name="CreateType" value="Login" checked asp-for="CreateType" />
+			<label for="loginCreateType">Add using login</label>
+		</div>
+		<div class="horizontal">
+			<input id="phoneCreateType" type="radio" name="CreateType" value="Phone" asp-for="CreateType" />
+			<label for="phoneCreateType">Add using phone</label>
+		</div>
 	</div>
 	<div id="loginInput">
-		<div class="vertical-center">
+		<div class="vertical center">
 			<label asp-for="LoginToAdd"></label>
 			<input asp-for="LoginToAdd" />
 			<span asp-validation-for="LoginToAdd"></span>
 		</div>
 	</div>
 	<div id="phoneInput">
-		<div class="vertical-center">
+		<div class="vertical center">
 			<label asp-for="PhoneToAdd"></label>
 			<input asp-for="PhoneToAdd" />
 			<span asp-validation-for="PhoneToAdd"></span>
 		</div>
 	</div>
-	<div asp-validation-summary="ModelOnly"></div>
-	<input type="submit" value="Add" />
+	<div class="error-text" asp-validation-summary="ModelOnly"></div>
+	<input class="button" type="submit" value="Add" />
 </form>
 @section Scripts {
 	<script src="~/js/createChat.js"></script>

@@ -8,17 +8,21 @@ namespace Vulyk.Controllers
 {
     public class MessageController : BaseController
     {
-        private readonly ApplicationDbContext _context;
+        private readonly MessageService _messageService;
 
-        public MessageController(ApplicationDbContext context)
+        public MessageController(MessageService messageService)
         {
-            _context = context;
+            _messageService = messageService;
         }
 
         public async Task<IActionResult> Index(int chatId)
         {
-            MessageService messageService = new MessageService(_context);
-            MessageListDto messageListDto = await messageService.GetMessages(chatId);
+            int? userId = GetUserIdFromCookie();
+            if (userId == null)
+            {
+                ShowUnexpectedError();
+            }
+            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId.Value);
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
                 ChatId = chatId,
@@ -28,6 +32,7 @@ namespace Vulyk.Controllers
                     CreationDateTime = m.CreationDateTime,
                     Id = m.Id,
                     Text = m.Text,
+                    IsMine = m.IsMine,
                 }).ToList()
             };
 
@@ -45,8 +50,7 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            MessageService messageService = new MessageService(_context);
-            await messageService.CreateMessage(createMessageViewModel.ChatId, userId.Value, createMessageViewModel.Text);
+            await _messageService.CreateMessage(createMessageViewModel.ChatId, userId.Value, createMessageViewModel.Text);
             return Ok();
         }
     }

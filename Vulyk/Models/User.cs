@@ -21,6 +21,8 @@ namespace Vulyk.Models
         [Column(TypeName = "nvarchar(20)")]
         public string Name { get; set; } = string.Empty;
 
+        public DateTime LastOnline { get; set; } = DateTime.Now;
+
         public IEnumerable<UserChat> UserChats { get; set; } = new List<UserChat>();
     }
 }

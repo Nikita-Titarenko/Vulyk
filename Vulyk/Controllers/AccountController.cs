@@ -13,11 +13,11 @@ namespace Vulyk.Controllers
 {
     public class AccountController : BaseController
     {
-        private readonly ApplicationDbContext _context;
+        private readonly UserService _userService;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(UserService userService)
         {
-            _context = context;
+            _userService = userService;
         }
         public IActionResult Register()
         {
@@ -31,8 +31,7 @@ namespace Vulyk.Controllers
             {
                 return View(registrationViewModel);
             }
-            UserService userService = new UserService(_context);
-            Dictionary<string, string> errors = await userService.CheckUniqueColumnsAsync(null, registrationViewModel.Login, registrationViewModel.Email, registrationViewModel.Phone);
+            Dictionary<string, string> errors = await _userService.CheckUniqueColumnsAsync(null, registrationViewModel.Login, registrationViewModel.Email, registrationViewModel.Phone);
             if (errors.Any())
             {
                 foreach (var error in errors)
@@ -50,7 +49,7 @@ namespace Vulyk.Controllers
                 Login = registrationViewModel.Login,
                 Password = registrationViewModel.Password
             };
-            await userService.AddUserAsync(user);
+            await _userService.AddUserAsync(user);
 
             createCookie(user.Id.ToString());
 
@@ -69,8 +68,8 @@ namespace Vulyk.Controllers
             {
                 return View(user);
             }
-            UserService userService = new UserService(_context);
-            int? userId = await userService.FindUserAsync(user.Login, user.Password);
+
+            int? userId = await _userService.FindUserAsync(user.Login, user.Password);
             if (userId == null)
             {
                 ModelState.AddModelError(string.Empty, "Incorrect login or password!");

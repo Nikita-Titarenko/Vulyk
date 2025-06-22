@@ -10,10 +10,13 @@ namespace Vulyk.Controllers
 {
     public class ChatController : BaseController
     {
-        private ApplicationDbContext _context;
-        public ChatController(ApplicationDbContext context)
+        private readonly ChatService _chatService;
+
+        private readonly UserService _userService;
+        public ChatController(UserService userService, ChatService chatService)
         {
-            _context = context;
+            _userService = userService;
+            _chatService = chatService;
         }
         public async Task<IActionResult> Index()
         {
@@ -22,10 +25,10 @@ namespace Vulyk.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            ChatService chatService = new ChatService(_context);
+
             ChatListViewModel chatPageViewModel = new ChatListViewModel
             {
-                chatItemViewModels = (await chatService.GetChatsAsync(userId.Value))
+                chatItemViewModels = (await _chatService.GetChatsAsync(userId.Value))
                 .Select(c => new ChatListItemViewModel
                 {
                     LastMessageText = c.LastMessageText,
@@ -40,13 +43,12 @@ namespace Vulyk.Controllers
 
         public async Task<IActionResult> Create()
         {
-            UserService userService = new UserService(_context);
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
                 return ShowUnexpectedError();
             }
-            string? login = await userService.GetUserLoginAsync(userId.Value);
+            string? login = await _userService.GetUserLoginAsync(userId.Value);
             if (login == null)
             {
                 return ShowUnexpectedError();
@@ -66,7 +68,7 @@ namespace Vulyk.Controllers
             {
                 return View(createChatViewModel);
             }
-            ChatService chatService = new ChatService(_context);
+
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
@@ -74,7 +76,7 @@ namespace Vulyk.Controllers
             }
             try
             {
-                (CreateChatResult, int?) createChutResult = await chatService.CreateChatAsync(userId.Value, createChatViewModel.LoginToAdd, createChatViewModel.PhoneToAdd, createChatViewModel.CreateType);
+                (CreateChatResult, int?) createChutResult = await _chatService.CreateChatAsync(userId.Value, createChatViewModel.LoginToAdd!, createChatViewModel.PhoneToAdd!, createChatViewModel.CreateType);
                 if (createChutResult.Item1.Equals(CreateChatResult.NotFound))
                 {
                     ModelState.AddModelError(string.Empty, $"User with this {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")} not exist");

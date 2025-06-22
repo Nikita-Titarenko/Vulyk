@@ -3,19 +3,23 @@
 <div class="horizontal">
 	<div class="custom-h left-menu start p-small">@Model.UserName</div>
 	<div class="right-menu">
-		<i class="fa fa-ellipsis-v fa-2x"></i>
+		<i class="fa fa-ellipsis-v fa-2x icon"></i>
 	</div>
 </div>
 <div class="messageContainer">
 	@{
 		foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
 		{
-			<div>@messageListItemViewModel.Text</div>
+			string messageTypeClass = messageListItemViewModel.IsMine ? "your" : "partner";
+			<div class="message @messageTypeClass">
+				<div class="message-text">@messageListItemViewModel.Text</div>
+				<div class="message-time @messageTypeClass">@messageListItemViewModel.CreationDateTime.ToString("HH:mm")</div>
+			</div>
 		}
 	}
 </div>
-<form id="createMessageForm" class="horizontal">
-	<input asp-for="ChatId" hidden />
-	<input name="text" />
+<form id="createMessageForm" class="horizontal write-message-form">
+	<input asp-for="ChatId" hidden  />
+	<input name="text"/>
 	<button type="submit"><i class="fa fa-paper-plane fa-2x"></i></button>
 </form>

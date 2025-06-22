@@ -12,7 +12,7 @@
 		@{
 			foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
 			{
-				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId">
+				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId" data-userid="@chatItemViewModel">
 					<div class="chat-title">@chatItemViewModel.Name</div>
 					<div class="chat-title">@chatItemViewModel.LastMessageText</div>
 				</div>
