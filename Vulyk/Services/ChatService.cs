@@ -11,15 +11,18 @@ namespace Vulyk.Services
     {
         private readonly ApplicationDbContext _context;
 
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+
         private readonly ChatPartnerService _chatPartnerService;
 
         private readonly UserService _userService;
 
-        public ChatService(ApplicationDbContext context, ChatPartnerService chatPartnerService, UserService userService)
+        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService, UserService userService)
         {
             _context = context;
             _chatPartnerService = chatPartnerService;
             _userService = userService;
+            _contextFactory = contextFactory;
         }
 
         public async Task<(CreateChatResult, int?)> CreateChatAsync(int userId, string login, string phone, CreateType createType)
@@ -80,6 +83,7 @@ namespace Vulyk.Services
             var tasks = chatIds
                 .Select(async cId =>
                 {
+                    using ApplicationDbContext localContext = _contextFactory.CreateDbContext();
                     int chatId = cId;
 
                     var partner = await _chatPartnerService.GetChatPartnerAsync(userId, cId);
@@ -87,7 +91,7 @@ namespace Vulyk.Services
                     {
                         throw new InvalidOperationException("Chat partner not found");
                     }
-                    Message? lastMessage = await _context.Message
+                    Message? lastMessage = await localContext.Message
                     .Where(m => m.ChatId == cId)
                     .OrderByDescending(m => m.CreationDateTime).FirstOrDefaultAsync();
                     return new ChatListItemDto

@@ -42,16 +42,15 @@ namespace Vulyk.Controllers
             }
             UserRegisterDto user = new()
             {
-                Id = registrationViewModel.Id,
                 Name = registrationViewModel.Name,
                 Email = registrationViewModel.Email,
                 Phone = registrationViewModel.Phone,
                 Login = registrationViewModel.Login,
                 Password = registrationViewModel.Password
             };
-            await _userService.AddUserAsync(user);
+            int userId = await _userService.AddUserAsync(user);
 
-            createCookie(user.Id.ToString());
+            createCookie(userId.ToString());
 
             return RedirectToAction("Index", "Chat");
         }

@@ -1,7 +1,7 @@
 ﻿@using Vulyk.ViewModels
 @model Vulyk.ViewModels.MessageListViewModel
 <div class="horizontal">
-	<div class="custom-h left-menu start p-small">@Model.UserName</div>
+	<div class="custom-h left-menu start left-p">@Model.UserName</div>
 	<div class="right-menu">
 		<i class="fa fa-ellipsis-v fa-2x icon"></i>
 	</div>
@@ -23,3 +23,6 @@
 	<input name="text"/>
 	<button type="submit"><i class="fa fa-paper-plane fa-2x"></i></button>
 </form>
+@section Scripts {
+	<script src="~/js/message.js"></script>
+}

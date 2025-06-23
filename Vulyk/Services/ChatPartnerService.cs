@@ -6,16 +6,17 @@ namespace Vulyk.Services
 {
     public class ChatPartnerService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-        public ChatPartnerService(ApplicationDbContext context)
+        public ChatPartnerService(IDbContextFactory<ApplicationDbContext> context)
         {
-            _context = context;
+            _contextFactory = context;
         }
 
         internal async Task<ChatPartnerDto?> GetChatPartnerAsync(int userId, int chatId)
         {
-            return await _context.UserChat
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.UserChat
                 .Where(uc => uc.ChatId == chatId && uc.UserId != userId)
                 .Select(uc => new ChatPartnerDto
                 {

@@ -13,12 +13,20 @@
 .chat-page-container {
     height: 100%;
     width: 100%;
+    flex: 1;
 }
 
 .chat-item {
-    margin: 10px;
     width: 100%;
-    padding-left: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.last-message-data-time {
+    display: flex;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .chat-title {
@@ -27,22 +35,25 @@
     text-overflow: ellipsis;
     display: flex;
     justify-content: flex-start;
-    width: 100%;
 }
 
 .messageContainer {
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    overflow-y: auto;
+}
+
+.messageContainer > .message:first-child {
+    margin-top: auto;
 }
 
 .message {
     padding: 10px;
     margin: 5px 50px 5px 50px;
     border-radius: 10px;
-    display: flex;
     align-items: flex-end;
+    display: block;
 }
 
     .message.your {
@@ -71,4 +82,8 @@
 
 .write-message-form{
     margin: 50px;
+}
+
+.left-p{
+    padding-left: 50px;
 }

@@ -17,13 +17,12 @@ namespace Vulyk.Services
             _context = context;
         }
 
-        public async Task AddUserAsync(UserRegisterDto dto)
+        public async Task<int> AddUserAsync(UserRegisterDto dto)
         {
             User user = new User
             {
                 Email = dto.Email.Trim().ToLower().Trim(),
                 Name = dto.Name.Trim(),
-                Id = dto.Id,
                 Login = dto.Login.Trim().ToLower(),
                 Password = dto.Password.Trim(),
                 Phone = dto.Phone.Trim(),
@@ -31,6 +30,7 @@ namespace Vulyk.Services
 
             _context.Add(user);
             await _context.SaveChangesAsync();
+            return user.Id;
         }
 
         public async Task EditUserAsync(int userId, UserEditDto dto)

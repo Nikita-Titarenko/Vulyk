@@ -8,19 +8,29 @@
 }
 
 <div class="horizontal chat-page-container">
-	<div class="vertical chat-panel start">
-		@{
-			foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
+	@if (Model != null)
+	{
+		<div class="vertical chat-panel start">
+
+			@foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
 			{
 				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId" data-userid="@chatItemViewModel">
-					<div class="chat-title">@chatItemViewModel.Name</div>
-					<div class="chat-title">@chatItemViewModel.LastMessageText</div>
+					<div class="horizontal">
+						<div class="chat-title">@chatItemViewModel.Name</div>
+						<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>
+					</div>
+
+					<div class="chat-title secondary-text">@chatItemViewModel.LastMessageText</div>
 				</div>
 			}
-		}
-	</div>
-	<div id="messages" class="vertical message-panel">
-	</div>
+		</div>
+		<div id="messages" class="vertical message-panel">
+		</div>
+	} else
+	{
+		<div class="custom-h">You don't have any chats yet.</div>
+		<a href="Index/Create">Add chat</a>
+	}
 </div>
 @section Scripts {
 	<script src="~/js/chat.js"></script>
