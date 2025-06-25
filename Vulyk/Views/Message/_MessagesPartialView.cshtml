@@ -6,7 +6,7 @@
 		<i class="fa fa-ellipsis-v fa-2x icon"></i>
 	</div>
 </div>
-<div class="messageContainer">
+<div class="messageContainer" data-user-id="@Model.UserId">
 	@{
 		foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
 		{
@@ -19,10 +19,7 @@
 	}
 </div>
 <form id="createMessageForm" class="horizontal write-message-form">
-	<input asp-for="ChatId" hidden  />
+	<input asp-for="UserId" hidden  />
 	<input name="text"/>
 	<button type="submit"><i class="fa fa-paper-plane fa-2x"></i></button>
 </form>
-@section Scripts {
-	<script src="~/js/message.js"></script>
-}

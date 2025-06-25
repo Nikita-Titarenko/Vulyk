@@ -69,6 +69,11 @@ namespace Vulyk.Services
             return await _context.User.Where(u => u.Id == id).Select(u => u.Login).FirstOrDefaultAsync();
         }
 
+        public async Task<string?> GetUserNameAsync(int id)
+        {
+            return await _context.User.Where(u => u.Id == id).Select(u => u.Name).FirstOrDefaultAsync();
+        }
+
         public async Task<int?> FindUserAsync(string login, string phone, CreateType createType)
         {
             User? foundUser;

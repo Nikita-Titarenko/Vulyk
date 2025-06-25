@@ -15,33 +15,17 @@ namespace Vulyk.Services
 
         private readonly ChatPartnerService _chatPartnerService;
 
-        private readonly UserService _userService;
-
-        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService, UserService userService)
+        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService)
         {
             _context = context;
             _chatPartnerService = chatPartnerService;
-            _userService = userService;
             _contextFactory = contextFactory;
         }
 
-        public async Task<(CreateChatResult, int?)> CreateChatAsync(int userId, string login, string phone, CreateType createType)
+        public async Task<(CreateChatResult, int?)> GetOrCreateChatAsync(int userId, int userToAddId)
         {
-            int? foundUserId = await _userService.FindUserAsync(login, phone, createType);
-            if (foundUserId == null)
-            {
-                return (CreateChatResult.NotFound, null);
-            }
-            if (foundUserId == userId)
-            {
-                return (CreateChatResult.CanNotAddYourself, null);
-            }
-
-            int? existingChatId = await _context.Chat.Where(c =>
-                            c.UserChats.Any(uc => uc.UserId == userId) &&
-                            c.UserChats.Any(uc => uc.UserId == foundUserId)
-            ).Select(c => c.Id).FirstOrDefaultAsync();
-            if (existingChatId != 0)
+            int? existingChatId = await GetChatAsync(userId, userToAddId);
+            if (existingChatId != null)
             {
                 return (CreateChatResult.Success, existingChatId);
             }
@@ -59,7 +43,7 @@ namespace Vulyk.Services
                 UserChat secondUserChat = new UserChat()
                 {
                     ChatId = chat.Id,
-                    UserId = foundUserId.Value,
+                    UserId = userToAddId,
                 };
                 _context.UserChat.Add(firstUserChat);
                 _context.UserChat.Add(secondUserChat);
@@ -72,6 +56,14 @@ namespace Vulyk.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<int?> GetChatAsync(int userId, int userToAddId)
+        {
+            return await _context.Chat.Where(c =>
+                c.UserChats.Any(uc => uc.UserId == userId) &&
+                c.UserChats.Any(uc => uc.UserId == userToAddId)
+).Select(c => (int?)c.Id).FirstOrDefaultAsync();
         }
 
         public async Task<List<ChatListItemDto>> GetChatsAsync(int userId)
@@ -97,6 +89,7 @@ namespace Vulyk.Services
                     return new ChatListItemDto
                     {
                         ChatId = chatId,
+                        UserId = partner.Id,
                         Name = partner.Name,
                         LastMessageText = lastMessage?.Text,
                         LastMessageDateTime = lastMessage?.CreationDateTime

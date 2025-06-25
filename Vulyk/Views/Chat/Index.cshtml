@@ -8,30 +8,40 @@
 }
 
 <div class="horizontal chat-page-container">
-	@if (Model != null)
+	@if (Model.ChatItemsViewModels.Count() != 0)
 	{
 		<div class="vertical chat-panel start">
 
-			@foreach (ChatListItemViewModel chatItemViewModel in Model.chatItemViewModels)
+			@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
 			{
-				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId" data-userid="@chatItemViewModel">
+				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId">
 					<div class="horizontal">
 						<div class="chat-title">@chatItemViewModel.Name</div>
 						<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>
 					</div>
 
-					<div class="chat-title secondary-text">@chatItemViewModel.LastMessageText</div>
+					<div class="chat-title chat-last-message secondary-text">@chatItemViewModel.LastMessageText</div>
 				</div>
 			}
 		</div>
 		<div id="messages" class="vertical message-panel">
 		</div>
-	} else
+	}
+	else
 	{
-		<div class="custom-h">You don't have any chats yet.</div>
-		<a href="Index/Create">Add chat</a>
+		<div class="center vertical">
+			<div class="custom-h">You don't have any chats yet.</div>
+			<a class="button" asp-controller="Chat" asp-action="Create">Add chat</a>
+		</div>
 	}
 </div>
+<div id="chat-launcher"
+     data-your-user-id="@Model.UserId"
+	 data-user-to-add-id="@Model.NewUserId"
+	 data-chat-id="@Model.DisplayChatId"
+	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItemsViewModels.Select(c => c.ChatId.ToString()).ToList()))'>
+</div>
 @section Scripts {
+	<script src="~/lib/signalr/signalr.min.js"></script>
 	<script src="~/js/chat.js"></script>
 }

@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Vulyk.Data;
 using Vulyk.DTOs;
+using Vulyk.Hubs;
 using Vulyk.Models;
 using Vulyk.Services;
 using Vulyk.ViewModels;
+using static System.Net.Mime.MediaTypeNames;
 using static Vulyk.Services.ChatService;
 
 namespace Vulyk.Controllers
@@ -13,12 +16,17 @@ namespace Vulyk.Controllers
         private readonly ChatService _chatService;
 
         private readonly UserService _userService;
-        public ChatController(UserService userService, ChatService chatService)
+
+        private readonly IHubContext<ChatHub> _chatHub;
+        public ChatController(UserService userService, ChatService chatService, IHubContext<ChatHub> chatHub)
         {
             _userService = userService;
             _chatService = chatService;
+            _chatHub = chatHub;
         }
-        public async Task<IActionResult> Index()
+
+        [HttpGet]
+        public async Task<IActionResult> Index(int? userToAddId, int? chatId)
         {
             int? userId = GetUserIdFromCookie();
             if (userId == null)
@@ -26,19 +34,29 @@ namespace Vulyk.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            ChatListViewModel chatPageViewModel = new ChatListViewModel
-            {
-                chatItemViewModels = (await _chatService.GetChatsAsync(userId.Value))
-                .Select(c => new ChatListItemViewModel
-                {
-                    LastMessageText = c.LastMessageText,
-                    LastMessageDateTime = c.LastMessageDateTime,
-                    ChatId = c.ChatId,
-                    Name = c.Name
-                }).ToList()
-            };
+            ChatListViewModel chatListViewModel = await GetChatListViewModel(userId.Value);
 
-            return View(chatPageViewModel);
+            chatListViewModel.NewUserId = userToAddId;
+            chatListViewModel.DisplayChatId = chatId;
+            chatListViewModel.UserId = userId.Value;
+
+            return View(chatListViewModel);
+        }
+
+        public async Task<ChatListViewModel> GetChatListViewModel(int userId)
+        {
+            return new ChatListViewModel
+            {
+                ChatItemsViewModels = (await _chatService.GetChatsAsync(userId))
+    .Select(c => new ChatListItemViewModel
+    {
+        ChatId = c.ChatId,
+        UserId = c.UserId,
+        LastMessageText = c.LastMessageText,
+        LastMessageDateTime = c.LastMessageDateTime,
+        Name = c.Name
+    }).ToList()
+            };
         }
 
         public async Task<IActionResult> Create()
@@ -74,25 +92,19 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            try
+            int? userToAddId = await _userService.FindUserAsync(createChatViewModel.LoginToAdd!, createChatViewModel.PhoneToAdd!, createChatViewModel.CreateType);
+            if (userToAddId == null)
             {
-                (CreateChatResult, int?) createChutResult = await _chatService.CreateChatAsync(userId.Value, createChatViewModel.LoginToAdd!, createChatViewModel.PhoneToAdd!, createChatViewModel.CreateType);
-                if (createChutResult.Item1.Equals(CreateChatResult.NotFound))
-                {
-                    ModelState.AddModelError(string.Empty, $"User with this {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")} not exist");
-                    return View(createChatViewModel);
-                }
-                if (createChutResult.Item1.Equals(CreateChatResult.CanNotAddYourself))
-                {
-                    ModelState.AddModelError(string.Empty, $"It's your {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")}");
-                    return View(createChatViewModel);
-                }
-                return RedirectToAction("Index", "Chat");
+                ModelState.AddModelError(string.Empty, $"User with this {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")} not exist");
+                return View(createChatViewModel);
             }
-            catch
+            int? chatId = await _chatService.GetChatAsync(userId.Value, userToAddId.Value);
+            if (chatId == null)
             {
-                return ShowUnexpectedError();
+                return RedirectToAction("Index", "Chat", new { userToAddId });
             }
+
+            return RedirectToAction("Index", "Chat", new { chatId });
         }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
 using Vulyk.DTOs;
+using Vulyk.Models;
 using Vulyk.Services;
 using Vulyk.ViewModels;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Vulyk.Controllers
 {
@@ -10,9 +12,12 @@ namespace Vulyk.Controllers
     {
         private readonly MessageService _messageService;
 
-        public MessageController(MessageService messageService)
+        private readonly UserService _userService;
+
+        public MessageController(MessageService messageService, UserService userService)
         {
             _messageService = messageService;
+            _userService = userService;
         }
 
         public async Task<IActionResult> Index(int chatId)
@@ -25,7 +30,8 @@ namespace Vulyk.Controllers
             MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId.Value);
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
-                ChatId = chatId,
+                UserId = messageListDto.UserId,
+                //ChatId = chatId,
                 UserName = messageListDto.UserName,
                 Messages = messageListDto.Messages.Select(m => new MessageListItemViewModel
                 {
@@ -36,6 +42,17 @@ namespace Vulyk.Controllers
                 }).ToList()
             };
 
+            return PartialView("_MessagesPartialView", messageListViewModel);
+        }
+
+        public async Task<IActionResult> DisplayEmptyChat(int userId)
+        {
+            
+            MessageListViewModel messageListViewModel = new MessageListViewModel
+            {
+                UserName = await _userService.GetUserNameAsync(userId),
+                UserId = userId,
+            };
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
 
@@ -50,7 +67,7 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            await _messageService.CreateMessage(createMessageViewModel.ChatId, userId.Value, createMessageViewModel.Text);
+            await _messageService.CreateOrAddMessageToChat(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
             return Ok();
         }
     }
