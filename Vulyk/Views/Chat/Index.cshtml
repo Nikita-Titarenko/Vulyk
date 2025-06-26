@@ -8,13 +8,13 @@
 }
 
 <div class="horizontal chat-page-container">
-	@if (Model.ChatItemsViewModels.Count() != 0)
+	@if (Model.ChatItemsViewModels.Count() != 0 || Model.NewUserId != null)
 	{
 		<div class="vertical chat-panel start">
 
 			@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
 			{
-				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId">
+				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId" data-userid="@chatItemViewModel.UserId">
 					<div class="horizontal">
 						<div class="chat-title">@chatItemViewModel.Name</div>
 						<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>

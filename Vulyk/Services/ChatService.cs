@@ -1,7 +1,9 @@
 ﻿using System;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.DTOs;
+using Vulyk.Hubs;
 using Vulyk.Models;
 using Vulyk.ViewModels;
 
@@ -15,11 +17,14 @@ namespace Vulyk.Services
 
         private readonly ChatPartnerService _chatPartnerService;
 
-        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService)
+        private readonly IHubContext<ChatHub> _hubContext;
+
+        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _chatPartnerService = chatPartnerService;
             _contextFactory = contextFactory;
+            _hubContext = hubContext;
         }
 
         public async Task<(CreateChatResult, int?)> GetOrCreateChatAsync(int userId, int userToAddId)

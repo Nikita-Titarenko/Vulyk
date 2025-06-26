@@ -49,7 +49,7 @@ namespace Vulyk.Services
             return messageListDto;
         }
 
-        public async Task CreateOrAddMessageToChat(int userId, string text, int userToAddId)
+        public async Task<int> CreateOrAddMessageToChat(int userId, string text, int userToAddId)
         {
             var result = await _chatService.GetOrCreateChatAsync(userId, userToAddId);
             if (result.Item1 == ChatService.CreateChatResult.Success)
@@ -64,7 +64,7 @@ namespace Vulyk.Services
                 });
                 await _context.SaveChangesAsync();
             }
-            await _hubContext.Clients.Groups(result.Item2.Value.ToString()).SendAsync("ReceiveMessage", result.Item2.Value, userId, text);
+            return result.Item2.Value;
         }
     }
 }

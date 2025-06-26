@@ -31,7 +31,7 @@ namespace Vulyk.Controllers
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
                 UserId = messageListDto.UserId,
-                //ChatId = chatId,
+                ChatId = chatId,
                 UserName = messageListDto.UserName,
                 Messages = messageListDto.Messages.Select(m => new MessageListItemViewModel
                 {
@@ -67,8 +67,8 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            await _messageService.CreateOrAddMessageToChat(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
-            return Ok();
+            int chatId = await _messageService.CreateOrAddMessageToChat(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
+            return Ok(chatId);
         }
     }
 }
