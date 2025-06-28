@@ -1,4 +1,5 @@
-﻿using Vulyk.ViewModels;
+﻿using System.ComponentModel.DataAnnotations;
+using Vulyk.ViewModels;
 
 namespace Vulyk.DTOs
 {
@@ -7,8 +8,8 @@ namespace Vulyk.DTOs
         public int UserId { get; set; }
         public int ChatId { get; set; }
 
-        public List<MessageListItemDto> Messages = new List<MessageListItemDto>();
-
-        public string UserName = string.Empty;
+        public List<MessageListItemDto> Messages { get; set; } = new List<MessageListItemDto>();
+        [Required]
+        public string UserName { get; set; } = string.Empty;
     }
 }

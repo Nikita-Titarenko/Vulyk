@@ -6,7 +6,7 @@
 		<i class="fa fa-ellipsis-v fa-2x icon"></i>
 	</div>
 </div>
-<div class="messageContainer" data-user-id="@Model.UserId">
+<div class="message-container" data-user-id="@Model.UserId">
 	@{
 		foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
 		{
@@ -18,9 +18,9 @@
 		}
 	}
 </div>
+<div id="chatId" data-chat-id="@Model.ChatId" hidden></div>
 <form id="createMessageForm" class="horizontal write-message-form">
 	<input asp-for="UserId" hidden  />
-	<input id="chatId" asp-for="ChatId" hidden  />
 	<input name="text"/>
 	<button type="submit"><i class="fa fa-paper-plane fa-2x"></i></button>
 </form>

@@ -22,29 +22,33 @@
     box-sizing: border-box;
 }
 
+    .chat-item.selected {
+        background: #f7dc6f;
+    }
+
 .last-message-data-time {
     display: flex;
     justify-content: flex-end;
     box-sizing: border-box;
     width: 100%;
+    flex: 1;
 }
 
 .chat-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: flex;
-    justify-content: flex-start;
+    display: block;
 }
 
-.messageContainer {
+.message-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
 }
 
-.messageContainer > .message:first-child {
+.message-container > .message:first-child {
     margin-top: auto;
 }
 
@@ -86,4 +90,12 @@
 
 .left-p{
     padding-left: 50px;
+}
+
+#no-chats{
+    display: flex;
+}
+
+#no-chats.newUserAdded{
+    display: none;
 }

@@ -8,35 +8,32 @@
 }
 
 <div class="horizontal chat-page-container">
-	@if (Model.ChatItemsViewModels.Count() != 0 || Model.NewUserId != null)
-	{
-		<div class="vertical chat-panel start">
-
-			@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
-			{
-				<div class="chat-item" data-chatid="@chatItemViewModel.ChatId" data-userid="@chatItemViewModel.UserId">
-					<div class="horizontal">
-						<div class="chat-title">@chatItemViewModel.Name</div>
-						<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>
-					</div>
-
-					<div class="chat-title chat-last-message secondary-text">@chatItemViewModel.LastMessageText</div>
+	<div class="vertical chat-panel start">
+		@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
+		{
+			<div class="chat-item" data-chat-id="@chatItemViewModel.ChatId" data-user-id="@chatItemViewModel.UserId">
+				<div class="horizontal">
+					<div class="chat-title">@chatItemViewModel.Name</div>
+					<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>
 				</div>
-			}
-		</div>
-		<div id="messages" class="vertical message-panel">
-		</div>
-	}
-	else
+
+				<div class="chat-title chat-last-message secondary-text">@chatItemViewModel.LastMessageText</div>
+			</div>
+		}
+	</div>
+	<div id="messages" class="vertical message-panel">
+	</div>
+	@if (Model.ChatItemsViewModels.Count() == 0 && Model.NewUserId == null)
 	{
-		<div class="center vertical">
+		<div class="center vertical" id="no-chats">
 			<div class="custom-h">You don't have any chats yet.</div>
-			<a class="button" asp-controller="Chat" asp-action="Create">Add chat</a>
+			<a class="btn" asp-controller="Chat" asp-action="Create">Add chat</a>
 		</div>
 	}
 </div>
 <div id="chat-launcher"
-     data-your-user-id="@Model.UserId"
+	 data-your-user-id="@Model.UserId"
+	 data-your-name="@Model.Name"
 	 data-user-to-add-id="@Model.NewUserId"
 	 data-chat-id="@Model.DisplayChatId"
 	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItemsViewModels.Select(c => c.ChatId.ToString()).ToList()))'>

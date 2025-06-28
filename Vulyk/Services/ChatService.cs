@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
@@ -13,18 +14,9 @@ namespace Vulyk.Services
     {
         private readonly ApplicationDbContext _context;
 
-        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-
-        private readonly ChatPartnerService _chatPartnerService;
-
-        private readonly IHubContext<ChatHub> _hubContext;
-
-        public ChatService(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory, ChatPartnerService chatPartnerService, IHubContext<ChatHub> hubContext)
+        public ChatService(ApplicationDbContext context)
         {
             _context = context;
-            _chatPartnerService = chatPartnerService;
-            _contextFactory = contextFactory;
-            _hubContext = hubContext;
         }
 
         public async Task<(CreateChatResult, int?)> GetOrCreateChatAsync(int userId, int userToAddId)
@@ -65,42 +57,45 @@ namespace Vulyk.Services
 
         public async Task<int?> GetChatAsync(int userId, int userToAddId)
         {
-            return await _context.Chat.Where(c =>
+            return await _context.Chat
+                .Where(c =>
                 c.UserChats.Any(uc => uc.UserId == userId) &&
-                c.UserChats.Any(uc => uc.UserId == userToAddId)
-).Select(c => (int?)c.Id).FirstOrDefaultAsync();
+                c.UserChats.Any(uc => uc.UserId == userToAddId))
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<List<ChatListItemDto>> GetChatsAsync(int userId)
         {
-            List<int> chatIds = await _context.UserChat
-                .Where(uc => uc.UserId == userId)
-                .Select(uc => uc.ChatId)
-                .ToListAsync();
-            var tasks = chatIds
-                .Select(async cId =>
-                {
-                    using ApplicationDbContext localContext = _contextFactory.CreateDbContext();
-                    int chatId = cId;
+            return await _context.UserChat
+               .Where(uc => uc.UserId == userId)
+               .Select(uc => new
+               {
+                   uc.ChatId,
 
-                    var partner = await _chatPartnerService.GetChatPartnerAsync(userId, cId);
-                    if (partner == null)
-                    {
-                        throw new InvalidOperationException("Chat partner not found");
-                    }
-                    Message? lastMessage = await localContext.Message
-                    .Where(m => m.ChatId == cId)
-                    .OrderByDescending(m => m.CreationDateTime).FirstOrDefaultAsync();
-                    return new ChatListItemDto
-                    {
-                        ChatId = chatId,
-                        UserId = partner.Id,
-                        Name = partner.Name,
-                        LastMessageText = lastMessage?.Text,
-                        LastMessageDateTime = lastMessage?.CreationDateTime
-                    };
-                });
-            return (await Task.WhenAll(tasks)).ToList();
+                   Partner = _context.UserChat
+                   .Where(x => x.ChatId == uc.ChatId && x.UserId != userId)
+                   .Select(uc => new
+                   {
+                       Id = uc.UserId,
+                       uc.User.Name,
+                       uc.User.LastOnline
+                   }).FirstOrDefault(),
+
+                    LastMessage = _context.Message
+                    .Where(m => m.ChatId == uc.ChatId)
+                    .Select(m => new { m.Text, m.CreationDateTime }).OrderByDescending(m => m.CreationDateTime).FirstOrDefault()
+               })
+               .OrderByDescending(uc => uc.LastMessage != null ? uc.LastMessage.CreationDateTime : DateTime.MinValue)
+               .Select(uc => new ChatListItemDto
+               {
+                   ChatId = uc.ChatId,
+                   UserId = uc.Partner != null ? uc.Partner.Id : 0,
+                   Name = uc.Partner != null ? uc.Partner.Name : string.Empty,
+                   LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text : string.Empty,
+                   LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
+                   
+               }).Where(uc => uc.UserId != 0).ToListAsync();
         }
 
         public enum CreateChatResult

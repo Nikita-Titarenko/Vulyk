@@ -1,25 +1,65 @@
 ﻿const connection = new signalR.HubConnectionBuilder()
     .withUrl("/chathub").build();
 
-const promise = connection.start();
+var chatLauncher;
+var selectedChatList;
+async function startConnectionAndRun() {
+    await connection.start();
+    if (document.readyState == 'loading') {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await run();
+        });
+    } else {
+        await run();
+    }
+}
+async function run() {
+    chatLauncher = document.getElementById('chat-launcher');
+    if (chatLauncher.dataset.chatId) {
+        chooseChat(chatLauncher.dataset.chatId, chatLauncher.dataset.userToAddId);
+    } else if (chatLauncher.dataset.userToAddId) {
+        createEmptyChat(chatLauncher.dataset.userToAddId);
+    }
+    await connection.invoke('JoinUserGroupAsync', chatLauncher.dataset.yourUserId);
+
+    await connection.invoke("LoadChatsAsync", JSON.parse(chatLauncher.dataset.chatIds));
+}
+startConnectionAndRun();
 
 connection.on('ReceiveMessage', (userId, message) => {
-    updateChatList(userId, message, false);
+    updateChatList(userId, null, message, false);
 });
 
-function loadChats(chatIds) {
-    promise.then(() => {
-        connection.invoke("LoadChats", chatIds)
-    });
-}
+connection.on('CreateChat', async (userId, chatId, name, lastMessage) => {
+    await connection.invoke("LoadChatAsync", chatId.toString());
+    var noChatsDiv = document.getElementById('no-chats');
+    if (noChatsDiv) {
+        noChatsDiv.classList.add('newUserAdded');
+    }
+    createChatListItem(userId, chatId, lastMessage, name, getCurrentTime());
+    const chatIdDiv = document.getElementById('chatId');
+    if (chatIdDiv) {
+        chatIdDiv.dataset.chatId = chatId;
+    }
+});
 
-function chooseChat(chatId) {
-    fetch(`Message/Index?chatId=${chatId}`)
+function chooseChat(chatId, userId) {
+    fetch(`Message/Index?chatId=${chatId}&partnerUserId=${userId}`)
         .then(r => r.text())
         .then(html => {
             document.getElementById('messages').innerHTML = html;
             scrollMessageContainer();
         });
+    if (selectedChatList) {
+        selectedChatList.classList.remove('selected');
+    }
+    changeChatItemColor(chatId);
+}
+
+function changeChatItemColor(chatId) {
+    var newSelectedChatList = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    newSelectedChatList.classList.add('selected');
+    selectedChatList = newSelectedChatList;
 }
 
 function createEmptyChat(userId) {
@@ -36,16 +76,18 @@ if (chatPanel) {
         if (!e.target) {
             return;
         }
-        var chatId;
+        var chatId, userId;
         if (e.target.classList.contains('chat-item')) {
-            chatId = e.target.dataset.chatid;
+            chatId = e.target.dataset.chatId;
+            userId = e.target.dataset.userId;
         } else if (e.target.closest('.chat-item')) {
-            chatId = e.target.closest('.chat-item').dataset.chatid;
+            chatId = e.target.closest('.chat-item').dataset.chatId;
+            userId = e.target.closest('.chat-item').dataset.userId;
         }
         if (chatId == null) {
             return;
         }
-        chooseChat(chatId);
+        chooseChat(chatId, userId);
     });
 }
 
@@ -59,28 +101,28 @@ function CreateMessage(e) {
         body: formData
     }).then(async r => {
         if (r.ok) {
-            const inputChatId = document.getElementById('chatId');
-            var chatId = inputChatId.value;
+            const chatIdDiv = document.getElementById('chatId');
+            var chatId = chatIdDiv.dataset.chatId;
+            var userId = formData.get('UserId');
+            var yourUserId = chatLauncher.dataset.yourUserId;
+            var name = chatLauncher.dataset.yourName;
+            var text = formData.get("text");
             if (chatId == '') {
-                chatId = formData.get('ChatId');
-                if (chatId == '') {
-                    var chatId = await r.json();
-                    inputChatId.value = chatId;
-                    await promise;
-                    await connection.invoke("CreateChat", chatId.toString());
+                var result = await r.json();
+                chatId = result.chatId;
+                name = result.name;
+                chatIdDiv.dataset.chatId = chatId;
+                await connection.invoke("CreateChatAsync", userId, parseInt(yourUserId), chatId, name, text);
+            } else {
+                try {
+                    await connection.invoke("SendMessageAsync", chatId.toString(), parseInt(yourUserId), text);
+                }
+                catch (er) {
+                    console.log(er);
                 }
             }
-            await promise;
-            try {
-                var userId = formData.get("UserId");
-                var text = formData.get("text");
-                await connection.invoke("SendMessage", chatId.toString(), parseInt(userId), text);
-            }
-            catch (er) {
-                console.log(er);
-            }
 
-            updateChatList(formData.get("UserId"), formData.get("text"), true);
+            updateChatList(userId, chatId, formData.get("text"), true, name);
             form.reset();
         }
     });
@@ -93,40 +135,29 @@ document.addEventListener('submit', (e) => {
 })
 
 function scrollMessageContainer() {
-    const messageContainer = document.querySelector('.messageContainer');
+    const messageContainer = document.querySelector('.message-container');
     if (messageContainer == null) {
         return;
     }
     messageContainer.scrollTop = messageContainer.scrollHeight;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const chatLauncher = document.getElementById('chat-launcher');
-    if (chatLauncher.dataset.userToAddId) {
-        createEmptyChat(chatLauncher.dataset.userToAddId);
-    } else if (chatLauncher.dataset.chatId) {
-        chooseChat(chatLauncher.dataset.chatId);
-    }
-
-    loadChats(JSON.parse(chatLauncher.dataset.chatIds));
-});
-
-function updateChatList(userId, message, isYourMessage) {
+function updateChatList(userId, chatId, message, isYourMessage, userName) {
     try {
-        const chatLauncher = document.getElementById('chat-launcher');
-
         if (chatLauncher.dataset.yourUserId == userId) {
             return;
         }
-        var chatItem = document.querySelector(`[data-userid='${userId}']`);
+        var chatItem = document.querySelector(`.chat-item[data-user-id='${userId}']`);
+        const currentTime = getCurrentTime();
         if (chatItem == null) {
-            createChatList(userId, message);
+            createChatListItem(userId, chatId, message, userName, currentTime);
+            changeChatItemColor(chatId);
         } else {
             var lastMessageText = chatItem.querySelector('.chat-last-message');
             lastMessageText.textContent = message;
 
             var lastMessageDateTime = chatItem.querySelector('.last-message-data-time');
-            const currentTime = getCurrentTime();
+
             lastMessageDateTime.textContent = currentTime;
         }
 
@@ -137,14 +168,14 @@ function updateChatList(userId, message, isYourMessage) {
     }
 }
 
-function createChatList(userId, chatId, lastMessageText) {
-    const chatPanelDiv = document.getElementById('chat-panel');
-    chatPanelDiv.prepend(chatItemDiv);
+function createChatListItem(userId, chatId, lastMessageText, userName, currentTime) {
+    const chatPanelDiv = document.querySelector('.chat-panel');
 
     const chatItemDiv = document.createElement('div');
     chatItemDiv.classList.add('chat-item');
-    chatItemDiv.dataset.add('data-chatid', 0);
-    chatItemDiv.dataset.add('data-userid', userId);
+    chatItemDiv.dataset.chatId = chatId;
+    chatItemDiv.dataset.userId = userId;
+    chatPanelDiv.prepend(chatItemDiv);
 
     const horizontalDiv = document.createElement('div');
     horizontalDiv.classList.add('horizontal');
@@ -152,12 +183,13 @@ function createChatList(userId, chatId, lastMessageText) {
 
     const nameDiv = document.createElement('div');
     nameDiv.classList.add('chat-title');
+    nameDiv.textContent = userName;
     horizontalDiv.appendChild(nameDiv);
 
     const lastMessageDateTimeDiv = document.createElement('div');
     lastMessageDateTimeDiv.classList.add('last-message-data-time');
     lastMessageDateTimeDiv.classList.add('secondary-text');
-    lastMessageDateTimeDiv.textContent = getCurrentTime();
+    lastMessageDateTimeDiv.textContent = currentTime;
     horizontalDiv.appendChild(lastMessageDateTimeDiv);
 
     const lastMessageTextDiv = document.createElement('div');
@@ -176,7 +208,7 @@ function getCurrentTime() {
 }
 
 function appendMessage(time, userId, message, isYourMessage) {
-    var messageContainer = document.querySelector(`.messageContainer[data-user-id='${userId}']`);
+    var messageContainer = document.querySelector(`.message-container[data-user-id='${userId}']`);
     if (messageContainer) {
         messageDiv = document.createElement('div');
         messageDiv.classList.add('message');

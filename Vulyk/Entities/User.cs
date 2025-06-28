@@ -10,15 +10,15 @@ namespace Vulyk.Models
     public class User
     {
         public int Id { get; set; }
-        [Column(TypeName = "nvarchar(20)")]
+        [MaxLength(20)]
         public string Login { get; set; } = string.Empty;
-        [Column(TypeName = "nvarchar(20)")]
+        [MaxLength(20)]
         public string Password { get; set; } = string.Empty;
-        [Column(TypeName = "nvarchar(20)")]
+        [MaxLength(320), EmailAddress]
         public string Email { get; set; } = string.Empty;
-        [Column(TypeName = "nvarchar(20)")]
+        [MaxLength(20)]
         public string Phone { get; set; } = string.Empty;
-        [Column(TypeName = "nvarchar(20)")]
+        [MaxLength(20)]
         public string Name { get; set; } = string.Empty;
 
         public DateTime LastOnline { get; set; } = DateTime.Now;

@@ -12,49 +12,46 @@ namespace Vulyk.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ChatService _chatService;
-        private readonly ChatPartnerService _chatPartnerService;
-        private readonly IHubContext<ChatHub> _hubContext;
 
-        public MessageService(ApplicationDbContext context, ChatPartnerService chatPartnerService, ChatService chatService, IHubContext<ChatHub> hubContext)
+        public MessageService(ApplicationDbContext context, ChatService chatService)
         {
             _context = context;
-            _chatPartnerService = chatPartnerService;
             _chatService = chatService;
-            _hubContext = hubContext;
         }
 
-        public async Task<MessageListDto> GetMessagesAsync(int chatId, int userId)
+        public async Task<MessageListDto> GetMessagesAsync(int chatId, int userId, int partnerId)
         {
-            var partner = await _chatPartnerService.GetChatPartnerAsync(userId, chatId);
-            if (partner == null)
+            string? userName = await _context.User.Where(u => u.Id == partnerId).Select(u => u.Name).FirstOrDefaultAsync();
+            if (userName == null)
             {
-                throw new InvalidOperationException("User not found");
+                return new MessageListDto { };
             }
-            MessageListDto messageListDto = new MessageListDto
-            {
-                ChatId = chatId,
-                UserId = partner.Id,
-                UserName = partner.Name,
-                Messages = await _context.Message
+            List<MessageListItemDto> messages = await _context.Message
                 .Where(m => m.ChatId == chatId)
                 .Select(m => new MessageListItemDto
                 {
-                    Id = m.Id,
-                    UserId = m.UserId,
-                    CreationDateTime = m.CreationDateTime,
+                    IsMine = m.UserId == userId,
                     Text = m.Text,
-                    IsMine = m.UserId == userId
-                }).ToListAsync()
+                    CreationDateTime = m.CreationDateTime,
+                    UserId = m.UserId
+
+                }).OrderBy(m => m.CreationDateTime).ToListAsync();
+            return new MessageListDto
+            {
+                UserId = partnerId,
+                ChatId = chatId,
+                UserName = userName,
+                Messages = messages
             };
-            return messageListDto;
         }
 
-        public async Task<int> CreateOrAddMessageToChat(int userId, string text, int userToAddId)
+        public async Task<int> CreateOrAddMessageToChatAsync(int userId, string text, int userToAddId)
         {
-            var result = await _chatService.GetOrCreateChatAsync(userId, userToAddId);
-            if (result.Item1 == ChatService.CreateChatResult.Success)
+            var (result, chatIdNullable) = await _chatService.GetOrCreateChatAsync(userId, userToAddId);
+
+            if (result == ChatService.CreateChatResult.Success)
             {
-                int chatId = result.Item2.Value;
+                int chatId = chatIdNullable!.Value;
                 _context.Message.Add(new Message
                 {
                     UserId = userId,
@@ -64,7 +61,7 @@ namespace Vulyk.Services
                 });
                 await _context.SaveChangesAsync();
             }
-            return result.Item2.Value;
+            return chatIdNullable!.Value;
         }
     }
 }

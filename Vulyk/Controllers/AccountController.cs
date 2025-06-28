@@ -50,7 +50,7 @@ namespace Vulyk.Controllers
             };
             int userId = await _userService.AddUserAsync(user);
 
-            createCookie(userId.ToString());
+            CreateCookie(userId.ToString());
 
             return RedirectToAction("Index", "Chat");
         }
@@ -74,12 +74,12 @@ namespace Vulyk.Controllers
                 ModelState.AddModelError(string.Empty, "Incorrect login or password!");
                 return View(user);
             }
-            createCookie(userId.Value.ToString());
+            CreateCookie(userId.Value.ToString());
             return RedirectToAction("Index", "Chat");
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        private async void createCookie(string userId)
+        private async void CreateCookie(string userId)
         {
             var claims = new List<Claim>
             {

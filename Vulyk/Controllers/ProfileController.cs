@@ -22,7 +22,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return ShowUnexpectedError();
+                return RedirectToAction("Index", "Home");
             }
 
             UserEditDto? user = await _userService.FindUserAsync(userId.Value);
@@ -51,7 +51,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return ShowUnexpectedError();
+                return RedirectToAction("Index", "Home");
             }
             Dictionary<string, string> errors = await _userService.CheckUniqueColumnsAsync(userId.Value, null, editProfileViewModel.Email, editProfileViewModel.Phone);
             if (errors.Count != 0)

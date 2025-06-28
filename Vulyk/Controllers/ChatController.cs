@@ -17,12 +17,10 @@ namespace Vulyk.Controllers
 
         private readonly UserService _userService;
 
-        private readonly IHubContext<ChatHub> _chatHub;
-        public ChatController(UserService userService, ChatService chatService, IHubContext<ChatHub> chatHub)
+        public ChatController(UserService userService, ChatService chatService)
         {
             _userService = userService;
             _chatService = chatService;
-            _chatHub = chatHub;
         }
 
         [HttpGet]
@@ -39,7 +37,11 @@ namespace Vulyk.Controllers
             chatListViewModel.NewUserId = userToAddId;
             chatListViewModel.DisplayChatId = chatId;
             chatListViewModel.UserId = userId.Value;
-
+            string? userName = await _userService.GetUserNameAsync(chatListViewModel.UserId);
+            if (userName != null)
+            {
+                chatListViewModel.Name = userName;
+            }
             return View(chatListViewModel);
         }
 
@@ -64,7 +66,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return ShowUnexpectedError();
+                return RedirectToAction("Index", "Home");
             }
             string? login = await _userService.GetUserLoginAsync(userId.Value);
             if (login == null)
@@ -90,7 +92,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return ShowUnexpectedError();
+                return RedirectToAction("Index", "Home");
             }
             int? userToAddId = await _userService.FindUserAsync(createChatViewModel.LoginToAdd!, createChatViewModel.PhoneToAdd!, createChatViewModel.CreateType);
             if (userToAddId == null)
@@ -98,13 +100,14 @@ namespace Vulyk.Controllers
                 ModelState.AddModelError(string.Empty, $"User with this {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")} not exist");
                 return View(createChatViewModel);
             }
-            int? chatId = await _chatService.GetChatAsync(userId.Value, userToAddId.Value);
-            if (chatId == null)
+            if (userId == userToAddId)
             {
-                return RedirectToAction("Index", "Chat", new { userToAddId });
+                ModelState.AddModelError(string.Empty, "You don't can add yourself");
+                return View(createChatViewModel);
             }
+            int? chatId = await _chatService.GetChatAsync(userId.Value, userToAddId.Value);
 
-            return RedirectToAction("Index", "Chat", new { chatId });
+            return RedirectToAction("Index", "Chat", new { userToAddId, chatId });
         }
     }
 }

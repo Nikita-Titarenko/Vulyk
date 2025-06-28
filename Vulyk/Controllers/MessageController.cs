@@ -20,14 +20,14 @@ namespace Vulyk.Controllers
             _userService = userService;
         }
 
-        public async Task<IActionResult> Index(int chatId)
+        public async Task<IActionResult> Index(int chatId, int partnerUserId)
         {
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                ShowUnexpectedError();
+                return ShowUnexpectedError();
             }
-            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId.Value);
+            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId!.Value, partnerUserId);
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
                 UserId = messageListDto.UserId,
@@ -47,10 +47,14 @@ namespace Vulyk.Controllers
 
         public async Task<IActionResult> DisplayEmptyChat(int userId)
         {
-            
+            string? userName = await _userService.GetUserNameAsync(userId);
+            if (userName == null)
+            {
+                return BadRequest();
+            }
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
-                UserName = await _userService.GetUserNameAsync(userId),
+                UserName = userName,
                 UserId = userId,
             };
             return PartialView("_MessagesPartialView", messageListViewModel);
@@ -67,8 +71,13 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            int chatId = await _messageService.CreateOrAddMessageToChat(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
-            return Ok(chatId);
+            int chatId = await _messageService.CreateOrAddMessageToChatAsync(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
+            string? name = await _userService.GetUserNameAsync(createMessageViewModel.UserId);
+            if (name == null)
+            {
+                return NotFound("User not found");
+            }
+            return Ok(new {chatId, name});
         }
     }
 }
