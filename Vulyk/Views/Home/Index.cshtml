@@ -1,9 +1,28 @@
 ﻿@{
 	ViewData["Title"] = "Home Page";
 }
-
-<div>
-	<h1>Welcome in Vulyk</h1>
-	<a class="btn custom-text" asp-controller="Account" asp-action="Login">Login</a>
-	<a class="btn custom-text" asp-controller="Account" asp-action="Register">Register</a>
-</div>
+<section>
+	<div class="d-flex">
+		<div class="container">
+			<h1 class="hero-title">
+				Join our modern messenger — <span class="gradient-text">simple</span>, <span class="gradient-text">secure</span>, and <span class="gradient-text">built</span> for real communication
+			</h1>
+			<h5 class="subheading w-50">
+				Cut through the clutter with a messenger focused on what matters: real people, real conversations.
+			</h5>
+			<a asp-action="Login" asp-controller="Account" class="btn btn-primary text-white">
+				Begin learning today
+			</a>
+		</div>
+		<img src="~/images/hero-img.jpg" />
+	</div>
+</section>
+<section>
+	<h2 class="title">Why choose <span class="gradient-text">Vulyk?</span></h2>
+	<div class="container d-flex">
+		<img class="rounded-4" src="~/images/why-choose-you-img.jpg" width="600" />
+		<p>
+			Vulyk is a modern messenger designed to make communication simple, safe, and meaningful. Built with privacy in mind, Vulyk offers a distraction-free space for real conversations — whether you're chatting with friends, family, or your community. Our intuitive interface makes messaging effortless, while smart features like group chats, media sharing, and message reactions keep things fun and dynamic. With no ads, no tracking, and full encryption, Vulyk lets you connect freely and securely — just the way messaging should be.
+		</p>
+	</div>
+</section>
