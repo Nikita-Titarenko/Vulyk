@@ -1,28 +1,99 @@
 ﻿@{
 	ViewData["Title"] = "Home Page";
 }
-<section>
-	<div class="d-flex">
+<section id="hero-section">
+	<div class="d-flex hero-container">
 		<div class="container">
 			<h1 class="hero-title">
-				Join our modern messenger — <span class="gradient-text">simple</span>, <span class="gradient-text">secure</span>, and <span class="gradient-text">built</span> for real communication
+				Join our modern messenger — <span class="gradient-text">simple</span>, 
+				<span class="gradient-text">secure</span>, and 
+				<span class="gradient-text">built</span> for real communication
 			</h1>
-			<h5 class="subheading w-50">
+			<h5 class="subheading w-75">
 				Cut through the clutter with a messenger focused on what matters: real people, real conversations.
 			</h5>
 			<a asp-action="Login" asp-controller="Account" class="btn btn-primary text-white">
-				Begin learning today
+				Begin learning today >
 			</a>
 		</div>
-		<img src="~/images/hero-img.jpg" />
+		<img src="~/images/hero-img.jpg"/>
 	</div>
 </section>
-<section>
+<section id="why-choose-us">
 	<h2 class="title">Why choose <span class="gradient-text">Vulyk?</span></h2>
-	<div class="container d-flex">
+	<div class="container d-flex align-items-center">
 		<img class="rounded-4" src="~/images/why-choose-you-img.jpg" width="600" />
 		<p>
-			Vulyk is a modern messenger designed to make communication simple, safe, and meaningful. Built with privacy in mind, Vulyk offers a distraction-free space for real conversations — whether you're chatting with friends, family, or your community. Our intuitive interface makes messaging effortless, while smart features like group chats, media sharing, and message reactions keep things fun and dynamic. With no ads, no tracking, and full encryption, Vulyk lets you connect freely and securely — just the way messaging should be.
+			Vulyk is a modern messenger designed to make communication simple, safe, and meaningful. 
+			Built with privacy in mind, Vulyk offers a distraction-free space for real conversations — 
+			whether you're chatting with friends, family, or your community. 
+			Our intuitive interface makes messaging effortless, while smart features like group chats, media sharing, and message reactions keep things fun and dynamic. 
+			With no ads, no tracking, and full encryption, Vulyk lets you connect freely and securely — just the way messaging should be.
 		</p>
+	</div>
+</section>
+<section id="what-makes-us-different">
+	<h2 class="title">What makes us <span class="gradient-text">Different</span></h2>
+	<p class="text-center">
+		Vulyk offers a safe, streamlined messaging experience designed for real connection — without the noise, ads, or data tracking.
+	</p>
+	<div class="d-flex">
+		<div class="container">
+			<ul>
+				<li>
+					<div class="d-flex align-items-center gap-4">
+						<i class="fa fa-compass rounded-circle text-white"></i>
+						<div>
+							<h5 class="subtitle">
+								Simple & Intuitive
+							</h5>
+							<p>
+								A clean, user-friendly design that makes chatting effortless for everyone.
+							</p>
+						</div>
+					</div>
+				</li>
+				<li>
+					<div class="d-flex align-items-center gap-4">
+						<i class="fa fa-lock rounded-circle text-white"></i>
+						<div>
+							<h5 class="subtitle">
+								Privacy-First Approach
+							</h5>
+							<p>
+								Your messages are end-to-end encrypted — we don’t track, read, or sell your data. Ever.
+							</p>
+						</div>
+					</div>
+				</li>
+				<li>
+					<div class="d-flex align-items-center gap-4">
+						<i class="fa fa-comments rounded-circle text-white"></i>
+						<div>
+							<h5 class="subtitle">
+								Meaningful Communication
+							</h5>
+							<p>
+								Built to support focused, genuine conversations with features like quiet groups, message reactions, and media sharing.
+							</p>
+						</div>
+					</div>
+				</li>
+				<li>
+					<div class="d-flex align-items-center gap-4">
+						<i class="fa fa-ban rounded-circle text-white"></i>
+						<div>
+							<h5 class="subtitle">
+								Ad-Free & Distraction-Free
+							</h5>
+							<p>
+								No ads, no spam, no algorithmic clutter — just you and the people you care about.
+							</p>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<img src="~/images/what-makes-us-different.png"/>
 	</div>
 </section>
