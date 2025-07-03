@@ -15,11 +15,22 @@ html, body {
     flex-direction: column;
     color: black;
     background: #fda67f;
-    
+    overflow-x: hidden;
 }
 
-header{
+header {
     border-radius: 10px 10px 0px 0px;
+    padding: 2rem !important;
+    background: #fff9f4;
+}
+
+main {
+    overflow-x: visible;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    align-items: center;
 }
 
 footer {
@@ -29,30 +40,33 @@ footer {
     margin-bottom: 20px;
 }
 
-.start {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
+    footer i {
+        font-size: 1.5rem !important;
+        color: black;
+        width: 4rem;
+        height: 4rem;
+        flex: 0 0 1;
+        background: white;
+        padding: 1rem;
+        border-radius: 50%;
+        text-align: center;
+    }
+
+    footer ul{
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+        justify-content: start !important;
+    }
+
+    footer hr {
+        background-color: #fda67f;
+        height: 2px;
+    }
+
+section {
+    background: #fff4eb;
     width: 100%;
-    height: 100%;
-}
-
-.center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-}
-
-.horizontal {
-    display: flex;
-    flex-direction: row;
-}
-
-.vertical {
-    display: flex;
-    flex-direction: column;
 }
 
 :root {
@@ -81,10 +95,6 @@ footer {
         background-color: var(--main-color);
     }
 
-header {
-    padding: 2rem !important;
-}
-
 .navbar-brand span {
     white-space: nowrap;
 }
@@ -93,17 +103,9 @@ header {
     font-weight: bold;
 }
 
-ul{
+ul {
     list-style-type: none;
-}
-
-#what-makes-us-different i {
-    background: var(--main-color);
-    padding: 1rem;
-    font-size: 2rem;
-    width: 4rem;
-    height: 4rem;
-    text-align: center;
+    padding: 0 !important;
 }
 
 .btn {
@@ -123,43 +125,8 @@ ul{
     border: 2px solid var(--main-color);
 }
 
-main {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-    align-items: center;
-}
-
-.custom-h {
-    font-size: 30px;
-    font-weight: bold;
-    color: black;
-}
-
-.left-menu {
-    display: flex;
-    justify-content: start;
-    flex: 1;
-}
-
-.right-menu {
-    display: flex;
-    justify-content: end;
-    flex: 1;
-}
-
-.p-small {
-    padding: 20px;
-}
-
 a {
     text-decoration: none !important;
-}
-
-.icon {
-    padding: 0px 50px 0px 50px;
-    color: black;
 }
 
 .error-text {
@@ -199,59 +166,35 @@ input[type="radio"] {
     color: #909497;
 }
 
-.px-lg-7 {
-    padding: 0px 95px 0px 95px;
-}
-
 .navbar-nav {
     display: flex;
     gap: 20px;
 }
 
-.hero-title {
-    font-family: Tiro Devanagari Hindi;
+.container > * {
+    margin: 25px;
+}
+
+.title {
+    text-align: center;
+}
+
+.footer-title{
+    font-size: 1.5rem;
+}
+
+.subheading {
+    font-size: 1.5rem;
+}
+
+.navbar-brand {
+    font-size: 2rem;
 }
 
 @media (max-width: 576px) {
 
-    .navbar-brand {
-        font-size: 3rem;
-    }
-
-    .container > * {
-        margin: 25px;
-    }
-
-    #hero-section img {
-        max-width: 70%;
-        margin-bottom: auto;
-    }
-
-    .hero-title {
-        font-size: 2rem;
-    }
-
     .title {
         font-size: 1.5rem;
-        text-align: center;
-    }
-
-    .subheading {
-        font-size: 1.5rem;
-    }
-
-    .hero-container {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    #why-choose-us .container {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    #why-choose-us img {
-        max-width: 70%;
     }
 }
 
@@ -262,67 +205,17 @@ input[type="radio"] {
         justify-content: center;
     }
 
-    .navbar-brand {
-        font-size: 3rem;
-    }
-
-    #hero-section .container {
-        max-width: 60%;
-    }
-
-    #hero-section img {
-        max-width: 40%;
-    }
-
-    #hero-section img {
-        margin-bottom: auto;
-    }
-
-    #why-choose-us img {
-        max-width: 70%;
-    }
-
-    .hero-title {
-        font-size: 2rem;
-    }
-
     .title {
         font-size: 2rem;
-        text-align: center;
-    }
-
-    .subheading {
-        font-size: 1.5rem;
-    }
-
-    .container > * {
-        margin: 25px;
-    }
-
-    #why-choose-us .container{
-        flex-wrap: wrap;
-        justify-content: center;
     }
 }
 
 @media (min-width: 768px) {
 
-    #why-choose-us .container {
-        flex-wrap: nowrap;
-    }
-
-    #why-choose-us img {
-        max-width: 40%;
-    }
-
     .navbar-nav {
         width: 30%;
         display: flex;
         justify-content: center;
-    }
-
-    .hero-title {
-        font-size: 3rem;
     }
 
     .title {
@@ -346,6 +239,11 @@ input[type="radio"] {
 }
 
 @media (min-width: 1200px) {
+
+    .navbar-brand {
+        font-size: 3rem;
+    }
+
     .btn, .nav-link {
         font-size: 1.5rem;
     }

@@ -10,7 +10,7 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tiro+Devanagari+Hindi">
 </head>
 <body class="px-5 py-2">
-	<header class="navbar navbar-expand-lg bg-white">
+	<header class="navbar navbar-expand-lg">
 		<div class="container-fluid d-flex justify-content-between">
 			<a class="navbar-brand d-flex align-items-center" href="/">
 				<img src="~/images/logo-icon.png" width="60" height="60" />
@@ -49,12 +49,68 @@
 		</div>
 	</header>
 
-	<main role="main" class="bg-white">
+	<main role="main">
 		@RenderBody()
 	</main>
 
 	<footer>
-		&copy; 2025 - Vulyk - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+		<div class="d-flex justify-content-between">
+			<a class="navbar-brand d-flex align-items-center" href="/">
+				<img src="~/images/logo-icon-black.png" width="60" height="60" />
+				<span class="bold-text">Vulyk</span>
+			</a>
+			<div class="d-flex gap-4 flex-column">
+				<h2 class="footer-title bold-text">
+					Follow us on
+				</h2>
+				<ul class="d-flex gap-5">
+					<li>
+						<a href="/">
+							<i class="fa fa-facebook"></i>
+						</a>
+					</li>
+					<li>
+						<a href="/">
+							<i class="fa fa-instagram"></i>
+						</a>
+					</li>
+					<li>
+						<a href="/">
+							<i class="fa fa-twitter"></i>
+						</a>
+					</li>
+					<li>
+						<a href="/">
+							<i class="fa fa-linkedin"></i>
+						</a>
+					</li>
+					<li>
+						<a href="/">
+							<i class="fa fa-youtube"></i>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<ul class="navbar-nav">
+			<li class="nav-item text-center">
+				<a class="nav-link text-black bold-text" href="/">Home</a>
+			</li>
+			<li class="nav-item text-center">
+				<a class="nav-link text-secondary" href="/">About us</a>
+			</li>
+			<li class="nav-item text-center">
+				<a class="nav-link text-secondary" href="/">Contact</a>
+			</li>
+			<li class="nav-item text-center">
+				<a class="nav-link text-secondary" href="/">Services</a>
+			</li>
+			<li class="nav-item text-center">
+				<a class="nav-link text-secondary" href="/">Blog</a>
+			</li>
+		</ul>
+		<hr />
 	</footer>
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
