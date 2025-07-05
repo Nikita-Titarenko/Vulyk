@@ -3,37 +3,35 @@
 @{
 	ViewData["Title"] = "Create new chat";
 }
-
-<form class="vertical center auth-form" asp-controller="Chat" asp-action="Create">
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
+<div class="form-container">
+<h5 class="subheading bold-text">Create chat</h5>
+<h6 class="subtitle w-75 text-center">Find user using your login or phone</h6>
+<form class="form" asp-controller="Chat" asp-action="Create">
 	<label asp-for="Login"></label>
 	<input asp-for="Login" readonly />
-	<div class="horizontal">
-		<div class="horizontal">
+	<div class="d-flex">
+		<div class="d-flex">
 			<input id="loginCreateType" type="radio" name="CreateType" value="Login" checked asp-for="CreateType" />
 			<label for="loginCreateType">Add using login</label>
 		</div>
-		<div class="horizontal">
+		<div class="d-flex">
 			<input id="phoneCreateType" type="radio" name="CreateType" value="Phone" asp-for="CreateType" />
 			<label for="phoneCreateType">Add using phone</label>
 		</div>
 	</div>
-	<div id="loginInput">
-		<div class="vertical center">
-			<label asp-for="LoginToAdd"></label>
-			<input asp-for="LoginToAdd" />
-			<span asp-validation-for="LoginToAdd"></span>
-		</div>
-	</div>
-	<div id="phoneInput">
-		<div class="vertical center">
-			<label asp-for="PhoneToAdd"></label>
-			<input asp-for="PhoneToAdd" />
-			<span asp-validation-for="PhoneToAdd"></span>
-		</div>
-	</div>
-	<div class="error-text" asp-validation-summary="ModelOnly"></div>
-	<input class="btn" type="submit" value="Add" />
+	<label class="@(ViewData.ModelState["LoginToAdd"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="LoginToAdd"></label>
+	<input class="form-input @(ViewData.ModelState["LoginToAdd"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="LoginToAdd" placeholder="Login" />
+	<span class="invalid-validation-message" asp-validation-for="LoginToAdd"></span>
+	<label class="@(ViewData.ModelState["PhoneToAdd"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="PhoneToAdd"></label>
+	<input class="form-input @(ViewData.ModelState["PhoneToAdd"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="PhoneToAdd" placeholder="Phone" />
+	<span class="invalid-validation-message" asp-validation-for="PhoneToAdd"></span>
+	<div class="invalid-validation-message" asp-validation-summary="ModelOnly"></div>
+	<input class="btn btn-primary" type="submit" value="Add" />
 </form>
+</div>
 @section Scripts {
 	<script src="~/js/createChat.js"></script>
 }

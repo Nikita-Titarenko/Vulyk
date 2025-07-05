@@ -1,0 +1,69 @@
+﻿
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.form-container {
+    background: white;
+    padding: 4rem 0 4rem 0;
+    gap: 1.5rem;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-input {
+    border-radius: 10px;
+    padding: 1rem;
+    border: 2px solid #ededed;
+}
+
+.input-validation-error {
+    border-color: red;
+}
+
+.label-validation-error {
+    color: red;
+}
+
+.invalid-validation-message {
+    color: red;
+}
+
+h2, h5, p{
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 576px) {
+    .form {
+        width: 250px;
+    }
+
+    .form-container {
+        width: 300px;
+    }
+}
+
+@media (min-width: 576px){
+    .form {
+        width: 350px;
+    }
+
+    .form-container {
+        width: 400px;
+    }
+}
+
+@media (min-width: 768px) {
+    .form {
+        width: 500px;
+    }
+
+    .form-container {
+        width: 600px;
+    }
+}

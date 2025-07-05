@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tiro+Devanagari+Hindi">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tiro+Devanagari+Hindi&Roboto">
 </head>
 <body class="px-5 py-2">
 	<header class="navbar navbar-expand-lg">
@@ -22,19 +22,19 @@
 			<div class="collapse navbar-collapse" id="navbarContent">
 				<ul class="navbar-nav mx-auto">
 					<li class="nav-item text-center">
-						<a class="nav-link text-black bold-text center-underline" href="/">Home</a>
+						<a class="nav-link @(ViewData["CurrentPage"] as string == "Home" ? "header-choosed-page" : "text-secondary")" asp-action="Index" asp-controller="Home">Home</a>
 					</li>
 					<li class="nav-item text-center">
-						<a class="nav-link text-secondary" href="/">About us</a>
+						<a class="nav-link @(ViewData["CurrentPage"] as string == "AboutUs" ? "header-choosed-page" : "text-secondary")" asp-action="AboutUs" asp-controller="Home">About us</a>
 					</li>
 					<li class="nav-item text-center">
-						<a class="nav-link text-secondary" href="/">Contact</a>
+						<a class="nav-link @(ViewData["CurrentPage"] as string == "Contact" ? "header-choosed-page" : "text-secondary")" asp-action="Contact" asp-controller="Home">Contact</a>
 					</li>
 					<li class="nav-item text-center">
-						<a class="nav-link text-secondary" href="/">Services</a>
+						<a class="nav-link @(ViewData["CurrentPage"] as string == "Services" ? "header-choosed-page" : "text-secondary")" asp-action="Services" asp-controller="Home">Services</a>
 					</li>
 					<li class="nav-item text-center">
-						<a class="nav-link text-secondary" href="/">Blog</a>
+						<a class="nav-link @(ViewData["CurrentPage"] as string == "Blog" ? "header-choosed-page" : "text-secondary")" asp-action="Blog" asp-controller="Home">Blog</a>
 					</li>
 				</ul>
 				<ul class="navbar-nav" id="auth-container">
@@ -95,22 +95,24 @@
 
 		<ul class="navbar-nav">
 			<li class="nav-item text-center">
-				<a class="nav-link text-black bold-text" href="/">Home</a>
+				<a class="nav-link @(ViewData["CurrentPage"] as string == "Home" ? "footer-choosed-page" : "text-secondary")" asp-action="Index" asp-controller="Home">Home</a>
 			</li>
 			<li class="nav-item text-center">
-				<a class="nav-link text-secondary" href="/">About us</a>
+				<a class="nav-link @(ViewData["CurrentPage"] as string == "AboutUs" ? "footer-choosed-page" : "text-secondary")" asp-action="AboutUs" asp-controller="Home">About us</a>
 			</li>
 			<li class="nav-item text-center">
-				<a class="nav-link text-secondary" href="/">Contact</a>
+				<a class="nav-link @(ViewData["CurrentPage"] as string == "Contact" ? "footer-choosed-page" : "text-secondary")" asp-action="Contact" asp-controller="Home">Contact</a>
 			</li>
 			<li class="nav-item text-center">
-				<a class="nav-link text-secondary" href="/">Services</a>
+				<a class="nav-link @(ViewData["CurrentPage"] as string == "Services" ? "footer-choosed-page" : "text-secondary")" asp-action="Services" asp-controller="Home">Services</a>
 			</li>
 			<li class="nav-item text-center">
-				<a class="nav-link text-secondary" href="/">Blog</a>
+				<a class="nav-link @(ViewData["CurrentPage"] as string == "Blog" ? "footer-choosed-page" : "text-secondary")" asp-action="Blog" asp-controller="Home">Blog</a>
 			</li>
 		</ul>
 		<hr />
+		<p>Copyright ©2025 Vulyk | All Rights Reserved Terms and Conditions</p>
+		<p>| Privacy Policy</p>
 	</footer>
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>

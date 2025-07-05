@@ -1,24 +1,48 @@
 ﻿@using Vulyk.ViewModels
 @model RegistrationViewModel
 @{
+	Layout = "~/Views/Shared/AuthLayout.cshtml";
 	ViewData["Title"] = "Registration";
 }
-<form class="vertical center auth-form" asp-action="Register">
-	<div class="error-text" asp-validation-summary="ModelOnly"></div>
-	<label asp-for="Login"></label>
-	<input asp-for="Login" />
-	<span class="error-text" asp-validation-for="Login"></span>
-	<label asp-for="Password"></label>
-	<input asp-for="Password" />
-	<span class="error-text" asp-validation-for="Password"></span>
-	<label asp-for="Name"></label>
-	<input asp-for="Name" />
-	<span class="error-text" asp-validation-for="Name"></span>
-	<label asp-for="Email"></label>
-	<input asp-for="Email" />
-	<span class="error-text" asp-validation-for="Email"></span>
-	<label asp-for="Phone"></label>
-	<input asp-for="Phone" />
-	<span class="error-text" asp-validation-for="Phone"></span>
-	<input class="btn custom-text" type="submit" value="Register" />
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
+<h5 class="subheading bold-text">Welcome to Vulyk</h5>
+<h6 class="subtitle w-75 text-center">Create an account</h6>
+<form class="form" asp-controller="Account" asp-action="Register">
+	<label class="@(ViewData.ModelState["Login"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Login"></label>
+	<input class="form-input @(ViewData.ModelState["Login"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Login" placeholder="Login" />
+	<span class="invalid-validation-message" asp-validation-for="Login"></span>
+	<label class="@(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Password"></label>
+	<input class="form-input @(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Password" placeholder="Password" />
+	<span class="invalid-validation-message" asp-validation-for="Password"></span>
+	<label class="@(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Name"></label>
+	<input class="form-input @(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Name" placeholder="Name" />
+	<span class="invalid-validation-message" asp-validation-for="Name"></span>
+	<label class="@(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Email"></label>
+	<input class="form-input @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Email" placeholder="Email" />
+	<span class="invalid-validation-message" asp-validation-for="Email"></span>
+	<label class="@(ViewData.ModelState["Phone"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Phone"></label>
+	<input class="form-input @(ViewData.ModelState["Phone"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Phone" placeholder="Phone" />
+	<span class="invalid-validation-message" asp-validation-for="Phone"></span>
+	<div class="invalid-validation-message" asp-validation-summary="ModelOnly"></div>
+	<input class="btn btn-primary" type="submit" value="Sign up" />
 </form>
+<div id="g_id_onload"
+	 data-client_id="YOUR_GOOGLE_CLIENT_ID"
+	 data-login_uri="https://your.domain/your_login_endpoint"
+	 data-auto_prompt="false"
+	 class="collapse">
+</div>
+<div class="g_id_signin"
+	 data-type="standard"
+	 data-size="large"
+	 data-theme="outline"
+	 data-text="sign_in_with"
+	 data-shape="rectangular"
+	 data-logo_alignment="left">
+</div>
+<p>Have already an account? <span><a asp-action="Login" asp-controller="Account">Log in</a></span></p>
+@section Scripts {
+	<script src="https://accounts.google.com/gsi/client" async></script>
+}

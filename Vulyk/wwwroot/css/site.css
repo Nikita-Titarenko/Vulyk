@@ -1,4 +1,4 @@
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus {
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
@@ -80,12 +80,14 @@ section {
     -webkit-text-fill-color: transparent;
 }
 
-.center-underline {
+.header-choosed-page {
     display: block;
     position: relative;
+    color: black;
+    font-weight: bold;
 }
 
-    .center-underline::after {
+    .header-choosed-page::after {
         position: absolute;
         content: '';
         width: 50%;
@@ -94,6 +96,11 @@ section {
         height: 2px;
         background-color: var(--main-color);
     }
+
+.footer-choosed-page{
+    color: black;
+    font-weight: bold;
+}
 
 .navbar-brand span {
     white-space: nowrap;
@@ -129,10 +136,6 @@ a {
     text-decoration: none !important;
 }
 
-.error-text {
-    color: red;
-}
-
 .icon-button {
     all: unset;
     cursor: pointer;
@@ -140,22 +143,6 @@ a {
 
 .hidden {
     display: none;
-}
-
-/*input{
-    font-size: inherit;
-    width: 100%;
-}*/
-
-/*label{
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    width: 100%;
-}*/
-
-.auth-form {
-    max-width: 500px;
 }
 
 input[type="radio"] {
@@ -183,8 +170,17 @@ input[type="radio"] {
     font-size: 1.5rem;
 }
 
+.subtitle {
+    font-size: 1.2rem;
+}
+
 .subheading {
     font-size: 1.5rem;
+}
+
+p {
+    color: #939393;
+    font-family: 'Roboto';
 }
 
 .navbar-brand {

@@ -1,15 +1,39 @@
 ﻿@using Vulyk.ViewModels
 @model LoginViewModel
 @{
+	Layout = "~/Views/Shared/AuthLayout.cshtml";
 	ViewData["Title"] = "Login";
 }
-<form class="vertical center auth-form" asp-controller="Account" asp-action="Login">
-	<label asp-for="Login"></label>
-	<input asp-for="Login" />
-	<span class="error-text" asp-validation-for="Login"></span>
-	<label asp-for="Password"></label>
-	<input asp-for="Password" />
-	<span class="error-text" asp-validation-for="Password"></span>
-	<div class="error-text" asp-validation-summary="ModelOnly"></div>
-	<input class="btn custom-text" type="submit" value="Login" />
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
+<h5 class="subheading bold-text">Welcome back</h5>
+<h6 class="subtitle w-75 text-center">Hey, Enter your details to get sign in to your account</h6>
+<form class="form" asp-controller="Account" asp-action="Login">
+	<label class="@(ViewData.ModelState["Login"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Login"></label>
+	<input class="form-input @(ViewData.ModelState["Login"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Login" placeholder="Login" />
+	<span class="invalid-validation-message" asp-validation-for="Login"></span>
+	<label class="@(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Password"></label>
+	<input class="form-input @(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Password" placeholder="Password" />
+	<span class="invalid-validation-message" asp-validation-for="Password"></span>
+	<div class="invalid-validation-message" asp-validation-summary="ModelOnly"></div>
+	<input class="btn btn-primary" type="submit" value="Login" />
 </form>
+<div id="g_id_onload"
+	 data-client_id="YOUR_GOOGLE_CLIENT_ID"
+	 data-login_uri="https://your.domain/your_login_endpoint"
+	 data-auto_prompt="false"
+	 class="collapse">
+</div>
+<div class="g_id_signin"
+	 data-type="standard"
+	 data-size="large"
+	 data-theme="outline"
+	 data-text="sign_in_with"
+	 data-shape="rectangular"
+	 data-logo_alignment="left">
+</div>
+<p>Don't have an account? <span><a asp-action="Register" asp-controller="Account">Register Now</a></span></p>
+@section Scripts {
+	<script src="https://accounts.google.com/gsi/client" async></script>
+}

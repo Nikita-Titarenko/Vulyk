@@ -20,15 +20,43 @@ namespace Vulyk.Controllers
         {
             if (GetUserIdFromCookie() == null)
             {
+                ViewData["CurrentPage"] = "Home";
                 return View();
             }
-
             return RedirectToAction("Index", "Chat");
         }
 
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        public IActionResult ComingSoon(string page)
+        {
+            ViewData["CurrentPage"] = page;
+            return View();
+        }
+
+        public IActionResult AboutUs()
+        {
+            ViewData["CurrentPage"] = "AboutUs";
+            return RedirectToAction("ComingSoon", "Home", new { page = "AboutUs" });
+        }
+
+        public IActionResult Contact()
+        {
+            ViewData["CurrentPage"] = "Contact";
+            return RedirectToAction("ComingSoon", "Home", new { page = "Contact" });
+        }
+
+        public IActionResult Services()
+        {
+            return RedirectToAction("ComingSoon", "Home", new { page = "Services" });
+        }
+
+        public IActionResult Blog()
+        {
+            return RedirectToAction("ComingSoon", "Home", new { page = "Blog" });
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
