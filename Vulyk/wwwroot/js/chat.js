@@ -35,6 +35,8 @@ connection.on('CreateChat', async (userId, chatId, name, lastMessage) => {
     var noChatsDiv = document.getElementById('no-chats');
     if (noChatsDiv) {
         noChatsDiv.classList.add('newUserAdded');
+        document.querySelector('.chat-page-container').classList.add('newUserAdded');
+        document.querySelector('.chat-page-container').classList.remove('d-none');
     }
     createChatListItem(userId, chatId, lastMessage, name, getCurrentTime());
     const chatIdDiv = document.getElementById('chatId');

@@ -8,6 +8,7 @@ using Vulyk.DTOs;
 using Vulyk.Models;
 using Vulyk.Services;
 using Vulyk.ViewModels;
+using static Vulyk.Services.UserService;
 
 namespace Vulyk.Controllers
 {
@@ -19,60 +20,130 @@ namespace Vulyk.Controllers
         {
             _userService = userService;
         }
-        public IActionResult Register()
+        public IActionResult RegisterEmail()
         {
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegistrationViewModel registrationViewModel)
+        public async Task<IActionResult> RegisterEmail(EmailInputViewModel registrationViewModel)
         {
             if (!ModelState.IsValid)
             {
                 return View(registrationViewModel);
             }
-            Dictionary<string, string> errors = await _userService.CheckUniqueColumnsAsync(null, registrationViewModel.Login, registrationViewModel.Email, registrationViewModel.Phone);
-            if (errors.Any())
+            EmailInputDto user = new()
             {
-                foreach (var error in errors)
-                {
-                    ModelState.AddModelError(error.Key, error.Value);
-                }
+                Email = registrationViewModel.Email,
+            };
+            AddUserResult addUserResult = await _userService.AddUserAsync(user);
+            if (addUserResult == AddUserResult.EmailAlreadyExist)
+            {
+                ModelState.AddModelError(string.Empty, "Email is already taken");
                 return View(registrationViewModel);
             }
-            UserRegisterDto user = new()
-            {
-                Name = registrationViewModel.Name,
-                Email = registrationViewModel.Email,
-                Phone = registrationViewModel.Phone,
-                Login = registrationViewModel.Login,
-                Password = registrationViewModel.Password
-            };
-            int userId = await _userService.AddUserAsync(user);
 
-            CreateCookie(userId.ToString());
-
-            return RedirectToAction("Index", "Chat");
+            return RedirectToAction("VerificationCodeConfirm", "Account", new { user.Email });
         }
 
-        public IActionResult Login()
+        public IActionResult VerificationCodeConfirm(string email)
         {
-            return View(new LoginViewModel());
+            return View(new VerificationCodeConfirmViewModel {Email = email });
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel user)
+        public async Task<IActionResult> VerificationCodeConfirm(VerificationCodeConfirmViewModel verificationCodeConfirm)
         {
             if (!ModelState.IsValid)
             {
-                return View(user);
+                return View(verificationCodeConfirm);
+            }
+            bool isVerified = await _userService.CheckVerificationCodeAsync(new VerificationCodeConfirmDto
+            {
+                Email = verificationCodeConfirm.Email,
+                VerificationCode = verificationCodeConfirm.VerificationCode
+            });
+            if (!isVerified)
+            {
+                ModelState.AddModelError(string.Empty, "Confirmation code incorrect");
+                return View(verificationCodeConfirm);
+            }
+            return RedirectToAction("NameAndPasswordInput", "Account", new { verificationCodeConfirm.Email });
+        }
+
+        public IActionResult NameAndPasswordInput(string email)
+        {
+            return View(new NameAndPasswordInputViewModel { Email = email });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NameAndPasswordInput(NameAndPasswordInputViewModel nameAndPasswordInput)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(nameAndPasswordInput);
             }
 
-            int? userId = await _userService.FindUserAsync(user.Login, user.Password);
+            int userId = await _userService.AddNameAndPassword(new NameAndPasswordInputDto
+            {
+                Email = nameAndPasswordInput.Email,
+                Password = nameAndPasswordInput.Password
+            });
+            CreateCookie(userId.ToString());
+            return RedirectToAction("Index", "Chat");
+        }
+
+        public IActionResult LoginEmail()
+        {
+            return View(new EmailInputViewModel());
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginEmail(EmailInputViewModel emailInput)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(emailInput);
+            }
+
+            var result = await _userService.FindUserAsync(emailInput.Email);
+            if (result.Item2 == FindUserResult.NotFound)
+            {
+                ModelState.AddModelError(string.Empty, "Email not registered");
+                return View(emailInput);
+            }
+
+            if (result.Item2 == FindUserResult.EmailInputted)
+            {
+                return RedirectToAction("VerificationCodeConfirm", "Account", new { emailInput.Email });
+            }
+
+            if (result.Item2 == FindUserResult.VerificationCodeConfirmed)
+            {
+                return RedirectToAction("NameAndPasswordInput", "Account", new { emailInput.Email });
+            }
+
+            return RedirectToAction("LoginPassword", "Account", new {emailInput.Email});
+        }
+        public IActionResult LoginPassword(string email)
+        {
+            return View(new PasswordInputViewModel { Email = email});
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginPassword(PasswordInputViewModel passwordInput)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(passwordInput);
+            }
+
+            int? userId = await _userService.FindUserAsync(passwordInput.Email, passwordInput.Password);
             if (userId == null)
             {
-                ModelState.AddModelError(string.Empty, "Incorrect login or password!");
-                return View(user);
+                ModelState.AddModelError(string.Empty, "Password is incorrect");
+                return View(passwordInput);
             }
             CreateCookie(userId.Value.ToString());
             return RedirectToAction("Index", "Chat");

@@ -3,10 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Vulyk.ViewModels
 {
-    public class LoginViewModel
+    public class PasswordInputViewModel
     {
         [Required]
-        public string Login { get; set; } = string.Empty;
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;

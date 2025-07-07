@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.Data.Migrations;
@@ -17,18 +18,53 @@ namespace Vulyk.Services
             _context = context;
         }
 
-        public async Task<int> AddUserAsync(UserRegisterDto dto)
+        public async Task<AddUserResult> AddUserAsync(EmailInputDto dto)
         {
+            var result = await FindUserAsync(dto.Email);
+            if (result.Item2 != FindUserResult.NotFound)
+            {
+                return AddUserResult.EmailAlreadyExist;
+            }
+            Random random = new Random();
             User user = new User
             {
                 Email = dto.Email.Trim().ToLower().Trim(),
-                Name = dto.Name.Trim(),
-                Login = dto.Login.Trim().ToLower(),
-                Password = dto.Password.Trim(),
-                Phone = dto.Phone.Trim(),
+                VerificationCode = random.Next(1000000).ToString().PadLeft(6, '0'),
             };
 
             _context.Add(user);
+            await SendVerificationCodeAsync(dto);
+            await _context.SaveChangesAsync();
+            return AddUserResult.Success;
+        }
+
+        public enum AddUserResult
+        {
+            Success, EmailAlreadyExist
+        }
+
+        public async Task SendVerificationCodeAsync(EmailInputDto dto)
+        {
+
+        }
+
+        public async Task<bool> CheckVerificationCodeAsync(VerificationCodeConfirmDto dto)
+        {
+            var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
+            if (user == null || user.VerificationCode != dto.VerificationCode){
+                return false;
+            }
+            user.RegisterStatus = RegisterStatus.VerificationCodeConfirmed;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<int> AddNameAndPassword(NameAndPasswordInputDto dto)
+        {
+            var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
+            user.FullName = dto.Name;
+            user.Password = dto.Password;
+            user.RegisterStatus = RegisterStatus.Registered;
             await _context.SaveChangesAsync();
             return user.Id;
         }
@@ -42,13 +78,13 @@ namespace Vulyk.Services
             }
             user.Email = dto.Email.Trim().ToLower();
             user.Phone = dto.Phone.Trim();
-            user.Name = dto.Name.Trim();
+            user.FullName = dto.Name.Trim();
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int?> FindUserAsync(string login, string password)
+        public async Task<int?> FindUserAsync(string email, string password)
         {
-            User? foundUser = await _context.User.FirstOrDefaultAsync(u => login.ToLower() == u.Login.ToLower() && password == u.Password);
+            User? foundUser = await _context.User.FirstOrDefaultAsync(u => email.ToLower() == u.Email.ToLower() && password == u.Password && u.RegisterStatus == RegisterStatus.Registered);
             if (foundUser == null)
             {
                 return null;
@@ -59,58 +95,41 @@ namespace Vulyk.Services
         public async Task<UserEditDto?> FindUserAsync(int id)
         {
             return await _context.User
-                .Where(u => u.Id == id)
-                .Select(u => new UserEditDto { Email = u.Email, Name = u.Name, Phone = u.Phone})
+                .Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered)
+                .Select(u => new UserEditDto { Email = u.Email, Name = u.FullName, Phone = u.Phone})
                 .FirstOrDefaultAsync();
-        }
-
-        public async Task<string?> GetUserLoginAsync(int id)
-        {
-            return await _context.User.Where(u => u.Id == id).Select(u => u.Login).FirstOrDefaultAsync();
         }
 
         public async Task<string?> GetUserNameAsync(int id)
         {
-            return await _context.User.Where(u => u.Id == id).Select(u => u.Name).FirstOrDefaultAsync();
+            return await _context.User.Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered).Select(u => u.FullName).FirstOrDefaultAsync();
         }
 
-        public async Task<int?> FindUserAsync(string login, string phone, CreateType createType)
+        public async Task<(int?, FindUserResult)> FindUserAsync(string email)
         {
-            User? foundUser;
-            if (createType.Equals(CreateType.Login))
-            {
-                foundUser = await _context.User.FirstOrDefaultAsync(u => login == u.Login);
-            } else
-            {
-                foundUser = await _context.User.FirstOrDefaultAsync(u => phone == u.Phone);
-            }
+            User? foundUser = await _context.User.FirstOrDefaultAsync(u => email.ToLower() == u.Email.ToLower());
             if (foundUser == null)
             {
-                return null;
+                return (null, FindUserResult.NotFound);
             }
-            return foundUser.Id;
+            FindUserResult findUserResult = 0;
+            switch (foundUser.RegisterStatus) { 
+                case RegisterStatus.Registered:
+                    findUserResult = FindUserResult.Registered; 
+                    break;
+                case RegisterStatus.VerificationCodeConfirmed:
+                    findUserResult = FindUserResult.VerificationCodeConfirmed;
+                    break;
+                case RegisterStatus.EmailInputted:
+                    findUserResult = FindUserResult.EmailInputted;
+                    break;
+            }
+            return (foundUser.Id, findUserResult);
         }
 
-        public async Task<Dictionary<string, string>> CheckUniqueColumnsAsync(int? userId, string? login, string? email, string? phone)
+        public enum FindUserResult
         {
-            Dictionary<string, string> errors = new Dictionary<string, string>();
-            User? existingUser = await _context.User.FirstOrDefaultAsync(u => userId != u.Id && (u.Login == login || u.Email == email || u.Phone == phone));
-            if (existingUser != null)
-            {
-                if (existingUser.Login.Equals(login, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    errors.Add("Login", "This login have already taken! Choose another");
-                }
-                if (existingUser.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    errors.Add("Email", "This email have already taken! Choose another");
-                }
-                if (existingUser.Phone.Equals(phone, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    errors.Add("Phone", "This phone have already taken! Choose another");
-                }
-            }
-            return errors;
+            EmailInputted, VerificationCodeConfirmed, Registered, NotFound
         }
     }
 }

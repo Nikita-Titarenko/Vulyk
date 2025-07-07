@@ -26,6 +26,7 @@ namespace Vulyk.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int? userToAddId, int? chatId)
         {
+            ViewData["ChoosedPage"] = "Chats";
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
@@ -42,6 +43,7 @@ namespace Vulyk.Controllers
             {
                 chatListViewModel.Name = userName;
             }
+
             return View(chatListViewModel);
         }
 
@@ -61,29 +63,23 @@ namespace Vulyk.Controllers
             };
         }
 
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
+            ViewData["ChoosedPage"] = "CreateChat";
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
                 return RedirectToAction("Index", "Home");
             }
-            string? login = await _userService.GetUserLoginAsync(userId.Value);
-            if (login == null)
-            {
-                return ShowUnexpectedError();
-            }
-            CreateChatViewModel createChatViewModel = new CreateChatViewModel
-            {
-                Login = login
-            };
-            return View(createChatViewModel);
+
+            return View(new CreateChatViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateChatViewModel createChatViewModel)
         {
+            ViewData["ChoosedPage"] = "CreateChat";
             if (!ModelState.IsValid)
             {
                 return View(createChatViewModel);
@@ -94,20 +90,20 @@ namespace Vulyk.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            int? userToAddId = await _userService.FindUserAsync(createChatViewModel.LoginToAdd!, createChatViewModel.PhoneToAdd!, createChatViewModel.CreateType);
-            if (userToAddId == null)
+            var result = await _userService.FindUserAsync(createChatViewModel.Email);
+            if (result.Item2 != UserService.FindUserResult.Registered)
             {
-                ModelState.AddModelError(string.Empty, $"User with this {(createChatViewModel.CreateType.Equals(CreateType.Login) ? "login" : "phone")} not exist");
+                ModelState.AddModelError(string.Empty, $"User with this email not exist");
                 return View(createChatViewModel);
             }
-            if (userId == userToAddId)
+            if (userId == result.Item1)
             {
                 ModelState.AddModelError(string.Empty, "You don't can add yourself");
                 return View(createChatViewModel);
             }
-            int? chatId = await _chatService.GetChatAsync(userId.Value, userToAddId.Value);
+            int? chatId = await _chatService.GetChatAsync(userId.Value, result.Item1.Value);
 
-            return RedirectToAction("Index", "Chat", new { userToAddId, chatId });
+            return RedirectToAction("Index", "Chat", new { userToAddId = result.Item1, chatId });
         }
     }
 }

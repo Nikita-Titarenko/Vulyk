@@ -4,25 +4,31 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Vulyk.Models
 {
-    [Index(nameof(Login), IsUnique = true)]
     [Index(nameof(Email), IsUnique = true)]
     [Index(nameof(Phone), IsUnique = true)]
     public class User
     {
         public int Id { get; set; }
-        [MaxLength(20)]
-        public string Login { get; set; } = string.Empty;
-        [MaxLength(20)]
-        public string Password { get; set; } = string.Empty;
         [MaxLength(320), EmailAddress]
         public string Email { get; set; } = string.Empty;
+        public RegisterStatus RegisterStatus { get; set; }
         [MaxLength(20)]
-        public string Phone { get; set; } = string.Empty;
+        public string? VerificationCode { get; set; }
+        public DateTime? ExpirationTime { get; set; }
         [MaxLength(20)]
-        public string Name { get; set; } = string.Empty;
+        public string? Password { get; set; }
+        [MaxLength(20)]
+        public string? Phone { get; set; }
+        [MaxLength(20)]
+        public string? FullName { get; set; }
 
-        public DateTime LastOnline { get; set; } = DateTime.Now;
+        public DateTime? LastOnline { get; set; } = DateTime.Now;
 
         public IEnumerable<UserChat> UserChats { get; set; } = new List<UserChat>();
+    }
+
+    public enum RegisterStatus
+    {
+        EmailInputted, VerificationCodeConfirmed, Registered
     }
 }

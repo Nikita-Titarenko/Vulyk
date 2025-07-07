@@ -21,7 +21,7 @@ namespace Vulyk.Services
 
         public async Task<MessageListDto> GetMessagesAsync(int chatId, int userId, int partnerId)
         {
-            string? userName = await _context.User.Where(u => u.Id == partnerId).Select(u => u.Name).FirstOrDefaultAsync();
+            string? userName = await _context.User.Where(u => u.Id == partnerId).Select(u => u.FullName).FirstOrDefaultAsync();
             if (userName == null)
             {
                 return new MessageListDto { };

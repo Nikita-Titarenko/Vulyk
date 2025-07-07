@@ -19,6 +19,7 @@ namespace Vulyk.Controllers
         }
         public async Task<IActionResult> EditProfile()
         {
+            ViewData["ChoosedPage"] = "EditProfile";
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
@@ -43,6 +44,7 @@ namespace Vulyk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(EditProfileViewModel editProfileViewModel)
         {
+            ViewData["ChoosedPage"] = "EditProfile";
             if (!ModelState.IsValid)
             {
                 return View(editProfileViewModel);
@@ -52,15 +54,6 @@ namespace Vulyk.Controllers
             if (userId == null)
             {
                 return RedirectToAction("Index", "Home");
-            }
-            Dictionary<string, string> errors = await _userService.CheckUniqueColumnsAsync(userId.Value, null, editProfileViewModel.Email, editProfileViewModel.Phone);
-            if (errors.Count != 0)
-            {
-                foreach (var error in errors)
-                {
-                    ModelState.AddModelError(error.Key, error.Value);
-                }
-                return View(editProfileViewModel);
             }
 
             UserEditDto? user = await _userService.FindUserAsync(userId.Value);

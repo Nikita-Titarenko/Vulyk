@@ -1,12 +1,12 @@
 ﻿@using Vulyk.ViewModels
 @model Vulyk.ViewModels.MessageListViewModel
-<div class="horizontal">
+<div class="d-flex justify-content-between">
 	<div class="custom-h left-menu start left-p">@Model.UserName</div>
 	<div class="right-menu">
 		<i class="fa fa-ellipsis-v fa-2x icon"></i>
 	</div>
 </div>
-<div class="message-container" data-user-id="@Model.UserId">
+<div class="message-container mt-auto h-100" data-user-id="@Model.UserId">
 	@{
 		foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
 		{

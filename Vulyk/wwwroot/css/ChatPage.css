@@ -1,4 +1,6 @@
 ﻿.chat-panel {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     overflow-x: hidden;
     overflow-y: auto;
@@ -7,7 +9,9 @@
 }
 
 .message-panel {
-    flex: 4;
+    flex: 3;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-page-container {
@@ -42,7 +46,6 @@
 }
 
 .message-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -98,4 +101,8 @@
 
 #no-chats.newUserAdded{
     display: none;
+}
+
+.chat-page-container.newUserAdded {
+    display: flex;
 }

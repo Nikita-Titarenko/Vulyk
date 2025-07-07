@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Vulyk.ViewModels
 {
-    public class CreateChatViewModel
+    public class EmailInputViewModel
     {
+        public int Id { get; set; }
+        [Required]
+        [EmailAddress]
         public string Email { get; set; } = string.Empty;
     }
 }

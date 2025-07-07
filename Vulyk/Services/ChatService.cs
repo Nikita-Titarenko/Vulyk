@@ -78,7 +78,7 @@ namespace Vulyk.Services
                    .Select(uc => new
                    {
                        Id = uc.UserId,
-                       uc.User.Name,
+                       uc.User.FullName,
                        uc.User.LastOnline
                    }).FirstOrDefault(),
 
@@ -91,7 +91,7 @@ namespace Vulyk.Services
                {
                    ChatId = uc.ChatId,
                    UserId = uc.Partner != null ? uc.Partner.Id : 0,
-                   Name = uc.Partner != null ? uc.Partner.Name : string.Empty,
+                   Name = uc.Partner != null ? uc.Partner.FullName : string.Empty,
                    LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text : string.Empty,
                    LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
                    
