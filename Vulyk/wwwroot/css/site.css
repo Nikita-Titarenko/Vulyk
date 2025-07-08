@@ -18,7 +18,6 @@ html, body {
 
 header {
     padding: 2rem !important;
-    background: #fff9f4;
 }
 
 main {
@@ -68,7 +67,7 @@ section {
 
 :root {
     --main-color: #e66422;
-    --main-gradient: linear-gradient(to top, #e66422, #eb8d58);
+    --main-gradient: linear-gradient(to top, #e66422, #e66c2e);
 }
 
 .gradient-text {
@@ -167,12 +166,12 @@ input[type="radio"] {
     font-size: 1.5rem;
 }
 
-.subtitle {
-    font-size: 1.2rem;
-}
-
 .subheading {
     font-size: 1.5rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
 }
 
 p {

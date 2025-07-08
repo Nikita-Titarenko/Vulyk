@@ -1,10 +1,8 @@
 ﻿@using Vulyk.ViewModels
 @model Vulyk.ViewModels.MessageListViewModel
-<div class="d-flex justify-content-between">
-	<div class="custom-h left-menu start left-p">@Model.UserName</div>
-	<div class="right-menu">
-		<i class="fa fa-ellipsis-v fa-2x icon"></i>
-	</div>
+<div class="d-flex justify-content-between" id="chat-header">
+	<div class="subheading">@Model.UserName</div>
+	<i class="fa fa-ellipsis-v fa-2x i-chat-tool"></i>
 </div>
 <div class="message-container mt-auto h-100" data-user-id="@Model.UserId">
 	@{
@@ -19,8 +17,8 @@
 	}
 </div>
 <div id="chatId" data-chat-id="@Model.ChatId" hidden></div>
-<form id="createMessageForm" class="horizontal write-message-form">
-	<input asp-for="UserId" hidden  />
-	<input name="text"/>
-	<button type="submit"><i class="fa fa-paper-plane fa-2x"></i></button>
+<form id="createMessageForm" class="d-flex write-message-form">
+	<input asp-for="UserId" hidden />
+	<input class="form-input" name="text" placeholder="Write a message"/>
+	<button type="submit"><i class="fa fa-paper-plane fa-2x i-chat-tool"></i></button>
 </form>

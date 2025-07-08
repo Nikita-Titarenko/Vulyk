@@ -33,9 +33,10 @@ namespace Vulyk.Controllers
             }
             EditProfileViewModel editProfileViewModel = new EditProfileViewModel
             {
-                Name = user.Name,
+                FullName = user.FullName,
                 Email = user.Email,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Password = user.Password,
             };
 
             return View(editProfileViewModel);
@@ -63,7 +64,8 @@ namespace Vulyk.Controllers
             }
             user.Email = editProfileViewModel.Email;
             user.Phone = editProfileViewModel.Phone;
-            user.Name = editProfileViewModel.Name;
+            user.FullName = editProfileViewModel.FullName;
+            user.Password = editProfileViewModel.Password;
             await _userService.EditUserAsync(userId.Value, user);
             ViewBag.SuccessMessage = "Credentials successful changed!";
             return View(editProfileViewModel);

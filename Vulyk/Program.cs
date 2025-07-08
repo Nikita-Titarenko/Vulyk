@@ -20,6 +20,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MessageService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);

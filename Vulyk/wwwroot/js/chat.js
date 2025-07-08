@@ -180,24 +180,23 @@ function createChatListItem(userId, chatId, lastMessageText, userName, currentTi
     chatPanelDiv.prepend(chatItemDiv);
 
     const horizontalDiv = document.createElement('div');
-    horizontalDiv.classList.add('horizontal');
+    horizontalDiv.classList.add('d-flex');
     chatItemDiv.appendChild(horizontalDiv);
 
     const nameDiv = document.createElement('div');
     nameDiv.classList.add('chat-title');
+    nameDiv.classList.add('overflow-text');
     nameDiv.textContent = userName;
     horizontalDiv.appendChild(nameDiv);
 
     const lastMessageDateTimeDiv = document.createElement('div');
     lastMessageDateTimeDiv.classList.add('last-message-data-time');
-    lastMessageDateTimeDiv.classList.add('secondary-text');
     lastMessageDateTimeDiv.textContent = currentTime;
     horizontalDiv.appendChild(lastMessageDateTimeDiv);
 
     const lastMessageTextDiv = document.createElement('div');
-    lastMessageTextDiv.classList.add('chat-title');
+    lastMessageTextDiv.classList.add('overflow-text');
     lastMessageTextDiv.classList.add('chat-last-message');
-    lastMessageTextDiv.classList.add('secondary-text');
     lastMessageTextDiv.textContent = lastMessageText;
     chatItemDiv.appendChild(lastMessageTextDiv);
 }

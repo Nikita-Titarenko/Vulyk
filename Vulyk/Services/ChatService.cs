@@ -74,7 +74,7 @@ namespace Vulyk.Services
                    uc.ChatId,
 
                    Partner = _context.UserChat
-                   .Where(x => x.ChatId == uc.ChatId && x.UserId != userId)
+                   .Where(x => x.ChatId == uc.ChatId && x.UserId != userId && x.User.RegisterStatus == RegisterStatus.Registered)
                    .Select(uc => new
                    {
                        Id = uc.UserId,

@@ -45,6 +45,13 @@ namespace Vulyk.Controllers
 
             return RedirectToAction("VerificationCodeConfirm", "Account", new { user.Email });
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GoogleSignIn([FromBody] GoogleSignInDto googleSignInDto)
+        {
+            _userService.GoogleSignIn(googleSignInDto);
+            
+        }
 
         public IActionResult VerificationCodeConfirm(string email)
         {
@@ -88,7 +95,8 @@ namespace Vulyk.Controllers
             int userId = await _userService.AddNameAndPassword(new NameAndPasswordInputDto
             {
                 Email = nameAndPasswordInput.Email,
-                Password = nameAndPasswordInput.Password
+                Password = nameAndPasswordInput.Password,
+                FullName = nameAndPasswordInput.FullName
             });
             CreateCookie(userId.ToString());
             return RedirectToAction("Index", "Chat");

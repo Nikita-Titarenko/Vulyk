@@ -11,6 +11,7 @@ namespace Vulyk.Models
         public int Id { get; set; }
         [MaxLength(320), EmailAddress]
         public string Email { get; set; } = string.Empty;
+        public string? ProviderUserId { get; set; }
         public RegisterStatus RegisterStatus { get; set; }
         [MaxLength(20)]
         public string? VerificationCode { get; set; }

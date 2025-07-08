@@ -41,7 +41,7 @@ namespace Vulyk.Controllers
             string? userName = await _userService.GetUserNameAsync(chatListViewModel.UserId);
             if (userName != null)
             {
-                chatListViewModel.Name = userName;
+                chatListViewModel.FullName = userName;
             }
 
             return View(chatListViewModel);

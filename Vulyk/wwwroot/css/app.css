@@ -7,14 +7,21 @@
 
 i {
     font-size: 2rem !important;
-    color: #6f7579;
+    padding: 10px;
+    width: 52px;
+    border-radius: 10px;
+    color: white;
 }
 
 .i-choosed {
-    color: #e66422;
+    background: #F98E58;
 }
 
-.navbar-nav, .navbar {
+.i-chat-tool{
+    color: dimgray;
+}
+
+.navbar-nav, .navbar, .nav-link, i {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -24,8 +31,9 @@ i {
     padding-left: 4px;
 }
 
-.header{
+header {
     margin: 0px auto 0px auto;
+    background: var(--main-gradient);
 }
 
 button{

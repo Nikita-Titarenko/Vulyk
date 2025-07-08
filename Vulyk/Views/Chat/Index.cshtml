@@ -6,6 +6,7 @@
 }
 @section Styles {
 	<link rel="stylesheet" href="~/css/ChatPage.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/form.css" asp-append-version="true" />
 }
 @{
 	bool noChats = Model.ChatItemsViewModels.Count() == 0 && Model.NewUserId == null;
@@ -18,16 +19,16 @@
 	</div>
 }
 <div class="chat-page-container @(noChats ? "d-none" : "d-flex")">
-	<div class="vertical chat-panel start">
+	<div class="chat-panel">
 		@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
 		{
 			<div class="chat-item" data-chat-id="@chatItemViewModel.ChatId" data-user-id="@chatItemViewModel.UserId">
-				<div class="horizontal">
-					<div class="chat-title">@chatItemViewModel.Name</div>
-					<div class="last-message-data-time secondary-text">@chatItemViewModel.GetLastMessageDateForChat()</div>
+				<div class="d-flex">
+					<div class="chat-title overflow-text">@chatItemViewModel.Name</div>
+					<div class="last-message-data-time">@chatItemViewModel.GetLastMessageDateForChat()</div>
 				</div>
 
-				<div class="chat-title chat-last-message secondary-text">@chatItemViewModel.LastMessageText</div>
+				<div class="chat-last-message overflow-text">@chatItemViewModel.LastMessageText</div>
 			</div>
 		}
 	</div>
@@ -36,7 +37,7 @@
 </div>
 <div id="chat-launcher"
 	 data-your-user-id="@Model.UserId"
-	 data-your-name="@Model.Name"
+	 data-your-name="@Model.FullName"
 	 data-user-to-add-id="@Model.NewUserId"
 	 data-chat-id="@Model.DisplayChatId"
 	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItemsViewModels.Select(c => c.ChatId.ToString()).ToList()))'>

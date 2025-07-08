@@ -1,4 +1,6 @@
-﻿using Humanizer;
+﻿using System;
+using Google.Apis.Auth;
+using Humanizer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
@@ -13,9 +15,12 @@ namespace Vulyk.Services
     {
         private ApplicationDbContext _context;
 
-        public UserService(ApplicationDbContext context)
+        private EmailService _emailService;
+
+        public UserService(ApplicationDbContext context, EmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<AddUserResult> AddUserAsync(EmailInputDto dto)
@@ -26,16 +31,57 @@ namespace Vulyk.Services
                 return AddUserResult.EmailAlreadyExist;
             }
             Random random = new Random();
+            string verificationCode = random.Next(1000000).ToString().PadLeft(6, '0');
             User user = new User
             {
                 Email = dto.Email.Trim().ToLower().Trim(),
-                VerificationCode = random.Next(1000000).ToString().PadLeft(6, '0'),
+                VerificationCode = verificationCode,
             };
 
             _context.Add(user);
-            await SendVerificationCodeAsync(dto);
+            await SendVerificationCodeAsync(dto.Email, verificationCode);
             await _context.SaveChangesAsync();
             return AddUserResult.Success;
+        }
+
+        public async Task<GoogleSignInResultDto?> GoogleSignIn(GoogleSignInDto googleSignInDto)
+        {
+            try
+            {
+                var settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { "539615638742-r80f81961bev61udupdefg86dt6rfljp.apps.googleusercontent.com" }
+                };
+                var payload = await GoogleJsonWebSignature.ValidateAsync(googleSignInDto.IdToken, settings);
+
+                User? user = await _context.User.Where(u => u.ProviderUserId == payload.Subject).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    user = await _context.User.Where(u => u.Email == payload.Email).FirstOrDefaultAsync();
+                    if (user == null)
+                    {
+                        user = new User
+                        {
+                            Email = payload.Email,
+                            ProviderUserId = payload.Subject
+                        };
+                        _context.User.Add(user);
+                        await _context.SaveChangesAsync();
+                        return new GoogleSignInResultDto { FullName = payload.Name };
+                    }
+
+                    user.ProviderUserId = payload.Subject;
+                    await _context.SaveChangesAsync();
+                    return new GoogleSignInResultDto { UserId = user.Id };
+                }
+
+                return new GoogleSignInResultDto { UserId = user.Id };
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public enum AddUserResult
@@ -43,15 +89,16 @@ namespace Vulyk.Services
             Success, EmailAlreadyExist
         }
 
-        public async Task SendVerificationCodeAsync(EmailInputDto dto)
+        public async Task SendVerificationCodeAsync(string email, string verificationCode)
         {
-
+            await _emailService.SendEmailAsync(email, "Registration in Vulyk", $"<h1>Confirm your registration in Vulyk</h1><h1>Verification code: {verificationCode}</h1>");
         }
 
         public async Task<bool> CheckVerificationCodeAsync(VerificationCodeConfirmDto dto)
         {
             var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
-            if (user == null || user.VerificationCode != dto.VerificationCode){
+            if (user == null || user.VerificationCode != dto.VerificationCode)
+            {
                 return false;
             }
             user.RegisterStatus = RegisterStatus.VerificationCodeConfirmed;
@@ -62,7 +109,7 @@ namespace Vulyk.Services
         public async Task<int> AddNameAndPassword(NameAndPasswordInputDto dto)
         {
             var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
-            user.FullName = dto.Name;
+            user.FullName = dto.FullName;
             user.Password = dto.Password;
             user.RegisterStatus = RegisterStatus.Registered;
             await _context.SaveChangesAsync();
@@ -77,8 +124,11 @@ namespace Vulyk.Services
                 return;
             }
             user.Email = dto.Email.Trim().ToLower();
-            user.Phone = dto.Phone.Trim();
-            user.FullName = dto.Name.Trim();
+            if (user.Phone != null)
+            {
+                user.Phone = dto.Phone.Trim();
+            }
+            user.FullName = dto.FullName.Trim();
             await _context.SaveChangesAsync();
         }
 
@@ -96,7 +146,7 @@ namespace Vulyk.Services
         {
             return await _context.User
                 .Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered)
-                .Select(u => new UserEditDto { Email = u.Email, Name = u.FullName, Phone = u.Phone})
+                .Select(u => new UserEditDto { Email = u.Email, FullName = u.FullName, Phone = u.Phone, Password = u.Password })
                 .FirstOrDefaultAsync();
         }
 
@@ -113,9 +163,10 @@ namespace Vulyk.Services
                 return (null, FindUserResult.NotFound);
             }
             FindUserResult findUserResult = 0;
-            switch (foundUser.RegisterStatus) { 
+            switch (foundUser.RegisterStatus)
+            {
                 case RegisterStatus.Registered:
-                    findUserResult = FindUserResult.Registered; 
+                    findUserResult = FindUserResult.Registered;
                     break;
                 case RegisterStatus.VerificationCodeConfirmed:
                     findUserResult = FindUserResult.VerificationCodeConfirmed;
