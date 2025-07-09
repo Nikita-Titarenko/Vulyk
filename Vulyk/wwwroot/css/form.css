@@ -67,3 +67,17 @@ h2, h5, p{
         width: 600px;
     }
 }
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.btn-show-password {
+    font-size: 1.5rem;
+    color: dimgray;
+    position: absolute !important;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 20px;
+}

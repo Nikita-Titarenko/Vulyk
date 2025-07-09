@@ -12,8 +12,8 @@ using Vulyk.Data;
 namespace Vulyk.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250707095024_remove login, add verification code and expiration time from user")]
-    partial class Removeloginaddverificationcodeandexpirationtimefromuser
+    [Migration("20250709091322_Add ProviderUserId to User")]
+    partial class AddProviderUserIdtoUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -299,6 +299,12 @@ namespace Vulyk.Data.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ProviderUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RegisterStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("VerificationCode")
                         .HasMaxLength(20)

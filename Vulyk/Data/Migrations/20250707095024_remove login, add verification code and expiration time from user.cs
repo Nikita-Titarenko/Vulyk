@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Vulyk.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class removeloginaddverificationcodeandexpirationtimefromuser : Migration
+    public partial class Removeloginaddverificationcodeandexpirationtimefromuser : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -297,6 +297,9 @@ namespace Vulyk.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("ProviderUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("RegisterStatus")
                         .HasColumnType("int");
 

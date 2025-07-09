@@ -16,23 +16,23 @@
 			<ul class="navbar-nav h-100">
 				<li class="nav-item">
 					<a class="nav-link" asp-action="Index" asp-controller="Chat">
-						<i class="fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
+						<i class="i-nav fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
 					</a>
 				</li>
 				<li>
 					<a class="nav-link" asp-action="Create" asp-controller="Chat">
-						<i class="fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
+						<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
 					</a>
 				</li>
 				<li>
 					<a class="nav-link" asp-action="EditProfile" asp-controller="Profile">
-						<i class="fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
+						<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
 					</a>
 				</li>
 				<li class="mt-auto">
 					<form asp-action="LogOut" asp-controller="Account">
 						<button class="nav-link" type="submit">
-							<i class="fa fa-sign-out"></i>
+							<i class="i-nav fa fa-sign-out"></i>
 						</button>
 					</form>
 				</li>

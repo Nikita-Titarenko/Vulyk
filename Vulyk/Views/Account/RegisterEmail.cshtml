@@ -18,7 +18,7 @@
 </form>
 <div id="g_id_onload"
 	 data-client_id="539615638742-r80f81961bev61udupdefg86dt6rfljp.apps.googleusercontent.com"
-	 data-login_uri="/Account/GoogleSignIn"
+	 data-callback="handleCredentialResponse"
 	 data-auto_prompt="false"
 	 class="collapse">
 </div>
@@ -30,7 +30,8 @@
 	 data-shape="rectangular"
 	 data-logo_alignment="left">
 </div>
-<p>Have already an account? <span><a asp-action="Login" asp-controller="Account">Log in</a></span></p>
+<p>Have already an account? <span><a asp-action="LoginEmail" asp-controller="Account">Log in</a></span></p>
 @section Scripts {
 	<script src="https://accounts.google.com/gsi/client" async></script>
+	<script src="~/js/googleAuth.js"></script>
 }

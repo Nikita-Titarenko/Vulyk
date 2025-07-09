@@ -76,6 +76,11 @@ section {
     -webkit-text-fill-color: transparent;
 }
 
+button {
+    all: unset;
+    cursor: pointer;
+}
+
 .header-choosed-page {
     display: block;
     position: relative;

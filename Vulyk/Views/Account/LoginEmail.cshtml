@@ -17,8 +17,8 @@
 	<input class="btn btn-primary" type="submit" value="Login" />
 </form>
 <div id="g_id_onload"
-	 data-client_id="YOUR_GOOGLE_CLIENT_ID"
-	 data-login_uri="https://your.domain/your_login_endpoint"
+	 data-client_id="539615638742-r80f81961bev61udupdefg86dt6rfljp.apps.googleusercontent.com"
+	 data-callback="handleCredentialResponse"
 	 data-auto_prompt="false"
 	 class="collapse">
 </div>
@@ -32,5 +32,6 @@
 </div>
 <p>Don't have an account? <span><a asp-action="RegisterEmail" asp-controller="Account">Register Now</a></span></p>
 @section Scripts {
-	<script src="https://accounts.google.com/gsi/client" async></script>
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
+	<script src="~/js/googleAuth.js"></script>
 }

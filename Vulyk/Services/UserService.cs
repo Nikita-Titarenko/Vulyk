@@ -44,7 +44,7 @@ namespace Vulyk.Services
             return AddUserResult.Success;
         }
 
-        public async Task<GoogleSignInResultDto?> GoogleSignIn(GoogleSignInDto googleSignInDto)
+        public async Task<GoogleSignInResultDto?> GoogleSignIn(string id_token)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace Vulyk.Services
                 {
                     Audience = new[] { "539615638742-r80f81961bev61udupdefg86dt6rfljp.apps.googleusercontent.com" }
                 };
-                var payload = await GoogleJsonWebSignature.ValidateAsync(googleSignInDto.IdToken, settings);
+                var payload = await GoogleJsonWebSignature.ValidateAsync(id_token, settings);
 
                 User? user = await _context.User.Where(u => u.ProviderUserId == payload.Subject).FirstOrDefaultAsync();
 
@@ -68,12 +68,16 @@ namespace Vulyk.Services
                         };
                         _context.User.Add(user);
                         await _context.SaveChangesAsync();
-                        return new GoogleSignInResultDto { FullName = payload.Name };
+                        return new GoogleSignInResultDto { Email = payload.Email, FullName = payload.Name };
                     }
 
                     user.ProviderUserId = payload.Subject;
                     await _context.SaveChangesAsync();
-                    return new GoogleSignInResultDto { UserId = user.Id };
+                }
+
+                if (user.RegisterStatus != RegisterStatus.Registered)
+                {
+                    return new GoogleSignInResultDto { Email = payload.Email, FullName = payload.Name };
                 }
 
                 return new GoogleSignInResultDto { UserId = user.Id };
@@ -124,6 +128,7 @@ namespace Vulyk.Services
                 return;
             }
             user.Email = dto.Email.Trim().ToLower();
+            user.Password = dto.Password.Trim().ToLower();
             if (user.Phone != null)
             {
                 user.Phone = dto.Phone.Trim();
