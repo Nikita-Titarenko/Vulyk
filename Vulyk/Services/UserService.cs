@@ -3,6 +3,7 @@ using Google.Apis.Auth;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Security;
 using Vulyk.Data;
 using Vulyk.Data.Migrations;
 using Vulyk.DTOs;
@@ -113,6 +114,10 @@ namespace Vulyk.Services
         public async Task<int> AddNameAndPassword(NameAndPasswordInputDto dto)
         {
             var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                throw new InvalidKeyException();
+            }
             user.FullName = dto.FullName;
             user.Password = dto.Password;
             user.RegisterStatus = RegisterStatus.Registered;
@@ -128,11 +133,13 @@ namespace Vulyk.Services
                 return;
             }
             user.Email = dto.Email.Trim().ToLower();
-            user.Password = dto.Password.Trim().ToLower();
-            if (user.Phone != null)
+            if (dto.Password != null && dto.Password != "")
             {
-                user.Phone = dto.Phone.Trim();
+                user.Password = dto.Password.Trim().ToLower();
             }
+
+            user.Phone = dto.Phone?.Trim();
+
             user.FullName = dto.FullName.Trim();
             await _context.SaveChangesAsync();
         }
@@ -147,12 +154,18 @@ namespace Vulyk.Services
             return foundUser.Id;
         }
 
-        public async Task<UserEditDto?> FindUserAsync(int id)
+        public async Task<UserEditDto> FindUserAsync(int id)
         {
-            return await _context.User
+            UserEditDto? user = await _context.User
                 .Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered)
-                .Select(u => new UserEditDto { Email = u.Email, FullName = u.FullName, Phone = u.Phone, Password = u.Password })
+                .Select(u => new UserEditDto { Email = u.Email, FullName = u.FullName!, Phone = u.Phone })
                 .FirstOrDefaultAsync();
+            if (user == null)
+            {
+                throw new InvalidKeyException();
+            }
+
+            return user;
         }
 
         public async Task<string?> GetUserNameAsync(int id)
@@ -162,7 +175,8 @@ namespace Vulyk.Services
 
         public async Task<(int?, FindUserResult)> FindUserAsync(string email)
         {
-            User? foundUser = await _context.User.FirstOrDefaultAsync(u => email.ToLower() == u.Email.ToLower());
+            string emailNormalized = email.ToLower();
+            User? foundUser = await _context.User.FirstOrDefaultAsync(u => emailNormalized == u.Email.ToLower());
             if (foundUser == null)
             {
                 return (null, FindUserResult.NotFound);

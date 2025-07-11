@@ -5,9 +5,8 @@ namespace Vulyk.ViewModels
 {
     public class EditProfileViewModel
     {
-        [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+        public string? Password { get; set; }
         [Required]
         public string FullName { get; set; } = string.Empty;
         [Required]

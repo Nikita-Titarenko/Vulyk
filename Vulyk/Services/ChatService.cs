@@ -86,12 +86,13 @@ namespace Vulyk.Services
                     .Where(m => m.ChatId == uc.ChatId)
                     .Select(m => new { m.Text, m.CreationDateTime }).OrderByDescending(m => m.CreationDateTime).FirstOrDefault()
                })
+               .Where(uc => uc.Partner != null)
                .OrderByDescending(uc => uc.LastMessage != null ? uc.LastMessage.CreationDateTime : DateTime.MinValue)
                .Select(uc => new ChatListItemDto
                {
                    ChatId = uc.ChatId,
-                   UserId = uc.Partner != null ? uc.Partner.Id : 0,
-                   Name = uc.Partner != null ? uc.Partner.FullName : string.Empty,
+                   UserId = uc.Partner!.Id,
+                   Name = uc.Partner.FullName ?? string.Empty,
                    LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text : string.Empty,
                    LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
                    

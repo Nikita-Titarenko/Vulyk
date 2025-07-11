@@ -43,7 +43,13 @@ connection.on('CreateChat', async (userId, chatId, name, lastMessage) => {
     if (chatIdDiv) {
         chatIdDiv.dataset.chatId = chatId;
     }
+    makeSoundNotification();
 });
+
+function makeSoundNotification() {
+    const notificationSound = new Audio('sounds/notificationSound.wav');
+    notificationSound.play();
+}
 
 function chooseChat(chatId, userId) {
     fetch(`Message/Index?chatId=${chatId}&partnerUserId=${userId}`)
@@ -149,6 +155,7 @@ function updateChatList(userId, chatId, message, isYourMessage, userName) {
         if (chatLauncher.dataset.yourUserId == userId) {
             return;
         }
+
         var chatItem = document.querySelector(`.chat-item[data-user-id='${userId}']`);
         const currentTime = getCurrentTime();
         if (chatItem == null) {
@@ -228,5 +235,7 @@ function appendMessage(time, userId, message, isYourMessage) {
         messageContainer.appendChild(messageDiv);
 
         scrollMessageContainer();
+    } else {
+        makeSoundNotification();
     }
 }

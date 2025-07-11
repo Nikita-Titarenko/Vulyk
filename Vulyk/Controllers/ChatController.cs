@@ -90,20 +90,20 @@ namespace Vulyk.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            var result = await _userService.FindUserAsync(createChatViewModel.Email);
-            if (result.Item2 != UserService.FindUserResult.Registered)
+            var (foundUserId, findUserResult) = await _userService.FindUserAsync(createChatViewModel.Email);
+            if (findUserResult != UserService.FindUserResult.Registered)
             {
                 ModelState.AddModelError(string.Empty, $"User with this email not exist");
                 return View(createChatViewModel);
             }
-            if (userId == result.Item1)
+            if (userId == foundUserId)
             {
                 ModelState.AddModelError(string.Empty, "You don't can add yourself");
                 return View(createChatViewModel);
             }
-            int? chatId = await _chatService.GetChatAsync(userId.Value, result.Item1.Value);
+            int? chatId = await _chatService.GetChatAsync(userId.Value, foundUserId!.Value);
 
-            return RedirectToAction("Index", "Chat", new { userToAddId = result.Item1, chatId });
+            return RedirectToAction("Index", "Chat", new { userToAddId = foundUserId, chatId });
         }
     }
 }

@@ -88,7 +88,7 @@ namespace Vulyk.Controllers
 
         public IActionResult NameAndPasswordInput(string email, string? fullName)
         {
-            return View(new NameAndPasswordInputViewModel { Email = email, FullName = fullName });
+            return View(new NameAndPasswordInputViewModel { Email = email, FullName = fullName ?? string.Empty });
         }
 
         [HttpPost]

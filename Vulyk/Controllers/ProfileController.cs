@@ -57,15 +57,14 @@ namespace Vulyk.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            UserEditDto? user = await _userService.FindUserAsync(userId.Value);
-            if (user == null)
+            UserEditDto? user = new UserEditDto
             {
-                return ShowUnexpectedError();
-            }
-            user.Email = editProfileViewModel.Email;
-            user.Phone = editProfileViewModel.Phone;
-            user.FullName = editProfileViewModel.FullName;
-            user.Password = editProfileViewModel.Password;
+                Email = editProfileViewModel.Email,
+                Phone = editProfileViewModel.Phone,
+                FullName = editProfileViewModel.FullName,
+                Password = editProfileViewModel.Password,
+            };
+
             await _userService.EditUserAsync(userId.Value, user);
             ViewBag.SuccessMessage = "Credentials successful changed!";
             return View(editProfileViewModel);
