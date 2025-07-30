@@ -11,38 +11,44 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tiro+Devanagari+Hindi&Roboto">
 </head>
 <body>
-	<header>
-		<div class="navbar h-100">
-			<ul class="navbar-nav h-100">
-				<li class="nav-item">
-					<a class="nav-link" asp-action="Index" asp-controller="Chat">
-						<i class="i-nav fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
-					</a>
-				</li>
-				<li>
-					<a class="nav-link" asp-action="Create" asp-controller="Chat">
-						<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
-					</a>
-				</li>
-				<li>
-					<a class="nav-link" asp-action="EditProfile" asp-controller="Profile">
-						<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
-					</a>
-				</li>
-				<li class="mt-auto">
-					<form asp-action="LogOut" asp-controller="Account">
-						<button class="nav-link" type="submit">
-							<i class="i-nav fa fa-sign-out"></i>
-						</button>
-					</form>
-				</li>
-			</ul>
+	<button class="navbar-toggler-custom">
+		<i class="fa fa-bars"></i>
+	</button>
+	<div class="app">
+		<div class="sidebar sidebar-invisible">
+			<div class="navbar h-100">
+				<ul class="navbar-nav h-100">
+					<li class="nav-item">
+						<a class="nav-link" asp-action="Index" asp-controller="Chat">
+							<i class="i-nav fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					<li>
+						<a class="nav-link" asp-action="Create" asp-controller="Chat">
+							<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					<li>
+						<a class="nav-link" asp-action="EditProfile" asp-controller="Profile">
+							<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					<li class="mt-auto">
+						<form asp-action="LogOut" asp-controller="Account">
+							<button class="nav-link" type="submit">
+								<i class="i-nav fa fa-sign-out"></i>
+							</button>
+						</form>
+					</li>
+				</ul>
+			</div>
 		</div>
-	</header>
-	<main role="main">
-		@RenderBody()
-	</main>
+		<main role="main">
+			@RenderBody()
+		</main>
+	</div>
 	@await RenderSectionAsync("Styles", required: false)
+	<script src="~/js/app.js"></script>
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
 	<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>

@@ -12,6 +12,8 @@ namespace Vulyk.Services
 {
     public class ChatService
     {
+        private const int lastMessageLength = 26; 
+
         private readonly ApplicationDbContext _context;
 
         public ChatService(ApplicationDbContext context)
@@ -93,7 +95,7 @@ namespace Vulyk.Services
                    ChatId = uc.ChatId,
                    UserId = uc.Partner!.Id,
                    Name = uc.Partner.FullName ?? string.Empty,
-                   LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text : string.Empty,
+                   LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text.Substring(0, lastMessageLength) : string.Empty,
                    LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
                    
                }).Where(uc => uc.UserId != 0).ToListAsync();

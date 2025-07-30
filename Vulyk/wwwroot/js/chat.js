@@ -163,7 +163,7 @@ function updateChatList(userId, chatId, message, isYourMessage, userName) {
             changeChatItemColor(chatId);
         } else {
             var lastMessageText = chatItem.querySelector('.chat-last-message');
-            lastMessageText.textContent = message;
+            lastMessageText.textContent = message.slice(0, 26);
 
             var lastMessageDateTime = chatItem.querySelector('.last-message-data-time');
 
@@ -204,7 +204,7 @@ function createChatListItem(userId, chatId, lastMessageText, userName, currentTi
     const lastMessageTextDiv = document.createElement('div');
     lastMessageTextDiv.classList.add('overflow-text');
     lastMessageTextDiv.classList.add('chat-last-message');
-    lastMessageTextDiv.textContent = lastMessageText;
+    lastMessageTextDiv.textContent = lastMessageText.substring(0, 26);
     chatItemDiv.appendChild(lastMessageTextDiv);
 }
 

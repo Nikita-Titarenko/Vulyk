@@ -1,5 +1,6 @@
 ﻿:root {
     --secondary-gradient: linear-gradient(to top, #fda67f, #fcb190);
+    --sidebar-width: 116px;
 }
 
 .chat-panel {
@@ -11,12 +12,15 @@
     height: 100%;
     width: 100%;
     background: var(--secondary-gradient);
+    z-index: 1;
 }
 
 .message-panel {
     flex: 3;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    flex-shrink: 0;
 }
 
 .chat-page-container {
@@ -41,9 +45,9 @@
         color: white;
     }
 
-    .chat-item.selected .chat-title {
-        color: white;
-    }
+        .chat-item.selected .chat-title {
+            color: white;
+        }
 
 .last-message-data-time {
     display: flex;
@@ -64,18 +68,20 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    width: 100%;
 }
 
-.message-container > .message:first-child {
-    margin-top: auto;
-}
+    .message-container > .message:first-child {
+        margin-top: auto;
+    }
 
 .message {
     padding: 10px;
     margin: 5px 50px 5px 50px;
     border-radius: 10px;
-    align-items: flex-end;
-    display: block;
+    display: inline-block;
+    width: 150px;
+    overflow-wrap: break-word;
 }
 
     .message.your {
@@ -102,31 +108,55 @@
         color: #7d6608;
     }
 
-.write-message-form{
+.write-message-form {
     margin: 50px;
 }
 
-.left-p{
+.left-p {
     padding-left: 50px;
 }
 
-#no-chats{
+#no-chats {
     display: flex;
 }
 
-#no-chats.newUserAdded{
-    display: none;
-}
+    #no-chats.newUserAdded {
+        display: none;
+    }
 
 .chat-page-container.newUserAdded {
     display: flex;
 }
 
-#createMessageForm input{
+#createMessageForm input {
     width: 100%;
 }
 
 #chat-header {
     padding: 1rem;
     border: 2px solid #ededed;
+}
+
+.chat-panel-visible {
+    display: flex;
+    position: absolute;
+    left: var(--sidebar-width);
+    top: 0px;
+    width: 250px;
+}
+
+.chat-panel-invisible {
+    display: none;
+}
+
+@media (min-width: 768px) {
+
+    .chat-panel-invisible, .chat-panel-visible {
+        display: flex;
+        position: static;
+    }
+
+    .message-panel{
+        opacity: 100% !important;
+    }
 }
