@@ -13,6 +13,11 @@
     width: 100%;
     background: var(--secondary-gradient);
     z-index: 1;
+    position: absolute;
+    left: var(--sidebar-width);
+    top: 0px;
+    width: 250px;
+    transition: transform 0.3s ease-in-out;
 }
 
 .message-panel {
@@ -116,8 +121,10 @@
     padding-left: 50px;
 }
 
-#no-chats {
+#no-chats, #no-selected-chat {
     display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
     #no-chats.newUserAdded {
@@ -138,15 +145,11 @@
 }
 
 .chat-panel-visible {
-    display: flex;
-    position: absolute;
-    left: var(--sidebar-width);
-    top: 0px;
-    width: 250px;
+    transform: translateX(0);
 }
 
 .chat-panel-invisible {
-    display: none;
+    transform: translateX(-150%);
 }
 
 @media (min-width: 768px) {
@@ -154,6 +157,7 @@
     .chat-panel-invisible, .chat-panel-visible {
         display: flex;
         position: static;
+        transform: translateX(0);
     }
 
     .message-panel{

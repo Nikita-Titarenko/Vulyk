@@ -1,10 +1,16 @@
 ﻿var isOpen = false;
-
+var sidebar;
+var chatPanel;
+var messagePanel;
+var main;
 document.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.querySelector('.sidebar-invisible');
-    const chatPanel = document.querySelector('.chat-panel');
-    const messagePanel = document.querySelector('.message-panel');
-    const main = document.querySelector('main');
+    sidebar = document.querySelector('.sidebar');
+    if (sidebar.classList.contains('sidebar-visible')) {
+        isOpen = true;
+    }
+    chatPanel = document.querySelector('.chat-panel');
+    messagePanel = document.querySelector('.message-panel');
+    main = document.querySelector('main');
     document.querySelector('.navbar-toggler-custom').addEventListener('click', () => {
         changeSidebarVisibility(sidebar, chatPanel, messagePanel, main);
     });

@@ -29,35 +29,62 @@ main {
     align-items: center;
 }
 
+footer i::before {
+    display: flex;
+    font-size: 1.2rem;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    background: white;
+    padding: 1rem;
+    justify-content: center;
+    border-radius: 50%;
+    color: black;
+}
+
 footer {
     border-radius: 0px 0px 10px 10px;
     background: #ffd7b7;
-    padding: 50px;
+    padding: 1rem;
     margin-bottom: 20px;
 }
-
-    footer i {
-        font-size: 1.5rem !important;
-        color: black;
-        width: 4rem;
-        height: 4rem;
-        flex: 0 0 1;
-        background: white;
-        padding: 1rem;
-        border-radius: 50%;
-        text-align: center;
+    footer li {
+        width: 80px !important;
+        height: 80px;
     }
 
-    footer ul{
+    footer a {
+        text-align: center;
+        justify-content: center;
+        display: flex;
+    }
+
+        footer ul {
+            display: flex !important;
+            flex-direction: row;
+            width: 100% !important;
+            justify-content: start !important;
+            gap: 0.5rem;
+        }
+
+    footer > div{
+        flex-direction: column !important;
+    }
+
+    footer .navbar-nav {
         display: flex !important;
-        flex-direction: row !important;
-        width: 100% !important;
-        justify-content: start !important;
+        flex-direction: column;
+        align-items: center;
     }
 
     footer hr {
         background-color: #fda67f;
         height: 2px;
+    }
+
+    footer img{
+        width: 20px;
+        height: 20px;
     }
 
 section {
@@ -222,7 +249,30 @@ p {
     .subheading {
         font-size: 2rem;
     }
-}
+
+    footer i {
+        font-size: 2rem !important;
+        width: 60px;
+        height: 60px;
+    }
+
+    .footer-title {
+        font-size: 1.5rem;
+    }
+
+    footer > div {
+        flex-direction: row !important;
+    }
+
+    footer .navbar-nav {
+        flex-direction: row !important;
+    }
+
+    footer i::before {
+        font-size: 1.5rem;
+        width: 60px;
+        height: 60px;
+    }
 
 @media (min-width: 992px) {
 
@@ -232,6 +282,10 @@ p {
 
     .title {
         font-size: 4rem;
+    }
+
+    footer i {
+        font-size: 1.5rem !important;
     }
 }
 

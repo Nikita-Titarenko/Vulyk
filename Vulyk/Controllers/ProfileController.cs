@@ -20,6 +20,7 @@ namespace Vulyk.Controllers
         public async Task<IActionResult> EditProfile()
         {
             ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
@@ -46,6 +47,7 @@ namespace Vulyk.Controllers
         public async Task<IActionResult> EditProfile(EditProfileViewModel editProfileViewModel)
         {
             ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
             if (!ModelState.IsValid)
             {
                 return View(editProfileViewModel);

@@ -3,6 +3,7 @@
 
 var chatLauncher;
 var selectedChatList;
+var noSelectedChatMessage;
 async function startConnectionAndRun() {
     await connection.start();
     if (document.readyState == 'loading') {
@@ -61,6 +62,8 @@ function chooseChat(chatId, userId) {
     if (selectedChatList) {
         selectedChatList.classList.remove('selected');
     }
+    noSelectedChatMessage.classList.add('d-none');
+    changeSidebarVisibility(sidebar, chatPanel, messagePanel, main);
     changeChatItemColor(chatId);
 }
 
@@ -78,9 +81,10 @@ function createEmptyChat(userId) {
         });
 }
 
-const chatPanel = document.querySelector('.chat-panel');
-if (chatPanel) {
-    chatPanel.addEventListener('click', function (e) {
+const chatP = document.querySelector('.chat-panel');
+noSelectedChatMessage = document.getElementById('no-selected-chat');
+if (chatP) {
+    chatP.addEventListener('click', function (e) {
         if (!e.target) {
             return;
         }

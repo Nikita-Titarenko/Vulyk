@@ -38,14 +38,10 @@
 						<a class="nav-link @(ViewData["CurrentPage"] as string == "Blog" ? "header-choosed-page" : "text-secondary")" asp-action="Blog" asp-controller="Home">Blog</a>
 					</li>
 				</ul>
-				<ul class="navbar-nav" id="auth-container">
-					<li class="nav-item btn btn-secondary">
-						<a class="nav-link" asp-action="LoginEmail" asp-controller="Account">Login</a>
-					</li>
-					<li class="nav-item btn btn-primary">
-						<a class="nav-link text-white" asp-action="RegisterEmail" asp-controller="Account">Register</a>
-					</li>
-				</ul>
+				<div id="auth-container">
+					<a class="btn btn-secondary" asp-action="LoginEmail" asp-controller="Account">Login</a>
+					<a class="btn btn-primary text-white" asp-action="RegisterEmail" asp-controller="Account">Register</a>
+				</div>
 			</div>
 		</div>
 	</header>
@@ -58,13 +54,13 @@
 		<div class="d-flex justify-content-between">
 			<a class="navbar-brand d-flex align-items-center" href="/">
 				<img src="~/images/logo-icon-black.png" width="60" height="60" />
-				<span class="bold-text">Vulyk</span>
+				<span class="footer-title bold-text">Vulyk</span>
 			</a>
 			<div class="d-flex gap-4 flex-column">
 				<h2 class="footer-title bold-text">
 					Follow us on
 				</h2>
-				<ul class="d-flex gap-5">
+				<ul class="d-flex">
 					<li>
 						<a href="/">
 							<i class="fa fa-facebook"></i>

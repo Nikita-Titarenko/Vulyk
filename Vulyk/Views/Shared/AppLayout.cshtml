@@ -15,7 +15,7 @@
 		<i class="fa fa-bars"></i>
 	</button>
 	<div class="app">
-		<div class="sidebar sidebar-invisible">
+		<div class="sidebar @(ViewData["SidepanelVisibility"] as bool? == true ? "sidebar-visible" : "sidebar-invisible")">
 			<div class="navbar h-100">
 				<ul class="navbar-nav h-100">
 					<li class="nav-item">

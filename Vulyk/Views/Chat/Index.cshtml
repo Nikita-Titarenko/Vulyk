@@ -1,5 +1,4 @@
-﻿@using Vulyk.ViewModels
-@model Vulyk.ViewModels.ChatListViewModel
+﻿@model Vulyk.ViewModels.ChatListViewModel
 @{
 	Layout = "~/Views/Shared/AppLayout.cshtml";
 	ViewData["Title"] = "Chats";
@@ -13,13 +12,13 @@
 }
 @if (noChats)
 {
-	<div class="flex-column justify-content-center align-items-center gap-2" id="no-chats">
+	<div class="flex-column gap-2" id="no-chats">
 		<div class="subtitle secondary-text">You don't have any chats yet.</div>
 		<a class="btn btn-primary" asp-controller="Chat" asp-action="Create">Add chat</a>
 	</div>
 }
 <div class="chat-page-container @(noChats ? "d-none" : "d-flex")">
-	<div class="chat-panel chat-panel-invisible">
+	<div class="chat-panel chat-panel-visible">
 		@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
 		{
 			<div class="chat-item" data-chat-id="@chatItemViewModel.ChatId" data-user-id="@chatItemViewModel.UserId">
@@ -32,8 +31,16 @@
 			</div>
 		}
 	</div>
-	<div id="messages" class="message-panel">
+
+	<div id="messages" class="message-panel @(ViewData["SidepanelVisibility"] as bool? == true ? "opacity-50" : string.Empty)">
+		@if (Model.NewUserId == null && Model.DisplayChatId == null)
+		{
+			<div class="h-100" id="no-selected-chat">
+				<div class="subtitle secondary-text">Select chat to start messaging</div>
+			</div>
+		}
 	</div>
+
 </div>
 <div id="chat-launcher"
 	 data-your-user-id="@Model.UserId"

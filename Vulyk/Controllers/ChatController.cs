@@ -43,7 +43,7 @@ namespace Vulyk.Controllers
             {
                 chatListViewModel.FullName = userName;
             }
-
+            ViewData["SidepanelVisibility"] = true;
             return View(chatListViewModel);
         }
 
@@ -66,6 +66,7 @@ namespace Vulyk.Controllers
         public IActionResult Create()
         {
             ViewData["ChoosedPage"] = "CreateChat";
+            ViewData["SidepanelVisibility"] = false;
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
@@ -80,6 +81,7 @@ namespace Vulyk.Controllers
         public async Task<IActionResult> Create(CreateChatViewModel createChatViewModel)
         {
             ViewData["ChoosedPage"] = "CreateChat";
+            ViewData["SidepanelVisibility"] = false;
             if (!ModelState.IsValid)
             {
                 return View(createChatViewModel);

@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,12 @@ namespace Vulyk.Controllers
     {
         private readonly UserService _userService;
 
-        public AccountController(UserService userService)
+        private readonly IMapper _mapper;
+
+        public AccountController(UserService userService, IMapper mapper)
         {
             _userService = userService;
+            _mapper = mapper;
         }
         public IActionResult RegisterEmail()
         {
@@ -100,12 +104,7 @@ namespace Vulyk.Controllers
                 return View(nameAndPasswordInput);
             }
 
-            int userId = await _userService.AddNameAndPassword(new NameAndPasswordInputDto
-            {
-                Email = nameAndPasswordInput.Email,
-                Password = nameAndPasswordInput.Password,
-                FullName = nameAndPasswordInput.FullName
-            });
+            int userId = await _userService.AddNameAndPassword(_mapper.Map<NameAndPasswordInputDto>(nameAndPasswordInput));
             CreateCookie(userId.ToString());
             return RedirectToAction("Index", "Chat");
         }
