@@ -8,7 +8,7 @@
 	<link rel="stylesheet" href="~/css/form.css" asp-append-version="true" />
 }
 @{
-	bool noChats = Model.ChatItemsViewModels.Count() == 0 && Model.NewUserId == null;
+	bool noChats = Model.ChatItems.Count() == 0 && Model.NewUserId == null;
 }
 @if (noChats)
 {
@@ -19,7 +19,7 @@
 }
 <div class="chat-page-container @(noChats ? "d-none" : "d-flex")">
 	<div class="chat-panel chat-panel-visible">
-		@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItemsViewModels)
+		@foreach (ChatListItemViewModel chatItemViewModel in Model.ChatItems)
 		{
 			<div class="chat-item" data-chat-id="@chatItemViewModel.ChatId" data-user-id="@chatItemViewModel.UserId">
 				<div class="d-flex">
@@ -47,7 +47,7 @@
 	 data-your-name="@Model.FullName"
 	 data-user-to-add-id="@Model.NewUserId"
 	 data-chat-id="@Model.DisplayChatId"
-	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItemsViewModels.Select(c => c.ChatId.ToString()).ToList()))'>
+	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItems.Select(c => c.ChatId.ToString()).ToList()))'>
 </div>
 @section Scripts {
 	<script src="~/lib/signalr/signalr.min.js"></script>

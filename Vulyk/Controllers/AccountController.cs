@@ -36,10 +36,7 @@ namespace Vulyk.Controllers
             {
                 return View(registrationViewModel);
             }
-            EmailInputDto user = new()
-            {
-                Email = registrationViewModel.Email,
-            };
+            EmailInputDto user = _mapper.Map<EmailInputDto>(registrationViewModel);
             AddUserResult addUserResult = await _userService.AddUserAsync(user);
             if (addUserResult == AddUserResult.EmailAlreadyExist)
             {
@@ -47,7 +44,7 @@ namespace Vulyk.Controllers
                 return View(registrationViewModel);
             }
 
-            return RedirectToAction("VerificationCodeConfirm", "Account", new { user.Email });
+            return RedirectToAction(nameof(VerificationCodeConfirm), "Account", new { user.Email });
         }
         [HttpPost]
         public async Task<IActionResult> GoogleSignIn([FromBody] GoogleSignInDto googleSignInDto)
@@ -55,14 +52,14 @@ namespace Vulyk.Controllers
             GoogleSignInResultDto? googleSignInResultDto = await _userService.GoogleSignIn(googleSignInDto.IdToken);
             if (googleSignInResultDto == null)
             {
-                return RedirectToAction("RegisterEmail", "Account");
+                return RedirectToAction(nameof(RegisterEmail), "Account");
             }
             if (googleSignInResultDto.UserId == null)
             {
-                return RedirectToAction("NameAndPasswordInput", "Account", new { email = googleSignInResultDto.Email, fullName = googleSignInResultDto.FullName});
+                return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { email = googleSignInResultDto.Email, fullName = googleSignInResultDto.FullName});
             }
             CreateCookie(googleSignInResultDto.UserId.Value.ToString());
-            return RedirectToAction("Index", "Chat");
+            return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
 
         public IActionResult VerificationCodeConfirm(string email)
@@ -77,17 +74,13 @@ namespace Vulyk.Controllers
             {
                 return View(verificationCodeConfirm);
             }
-            bool isVerified = await _userService.CheckVerificationCodeAsync(new VerificationCodeConfirmDto
-            {
-                Email = verificationCodeConfirm.Email,
-                VerificationCode = verificationCodeConfirm.VerificationCode
-            });
+            bool isVerified = await _userService.CheckVerificationCodeAsync(_mapper.Map<VerificationCodeConfirmDto>(verificationCodeConfirm));
             if (!isVerified)
             {
                 ModelState.AddModelError(string.Empty, "Confirmation code incorrect");
                 return View(verificationCodeConfirm);
             }
-            return RedirectToAction("NameAndPasswordInput", "Account", new { verificationCodeConfirm.Email });
+            return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { verificationCodeConfirm.Email });
         }
 
         public IActionResult NameAndPasswordInput(string email, string? fullName)
@@ -106,7 +99,7 @@ namespace Vulyk.Controllers
 
             int userId = await _userService.AddNameAndPassword(_mapper.Map<NameAndPasswordInputDto>(nameAndPasswordInput));
             CreateCookie(userId.ToString());
-            return RedirectToAction("Index", "Chat");
+            return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
 
         public IActionResult LoginEmail()
@@ -131,23 +124,23 @@ namespace Vulyk.Controllers
 
             if (result.Item2 == FindUserResult.EmailInputted)
             {
-                return RedirectToAction("VerificationCodeConfirm", "Account", new { emailInput.Email });
+                return RedirectToAction(nameof(VerificationCodeConfirm), "Account", new { emailInput.Email });
             }
 
             if (result.Item2 == FindUserResult.VerificationCodeConfirmed)
             {
-                return RedirectToAction("NameAndPasswordInput", "Account", new { emailInput.Email });
+                return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { emailInput.Email });
             }
 
-            return RedirectToAction("LoginPassword", "Account", new {emailInput.Email});
+            return RedirectToAction(nameof(LoginPassword), "Account", new {emailInput.Email});
         }
         public IActionResult LoginPassword(string email)
         {
-            return View(new PasswordInputViewModel { Email = email});
+            return View(new EmailAndPasswordInputViewModel { Email = email});
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginPassword(PasswordInputViewModel passwordInput)
+        public async Task<IActionResult> LoginPassword(EmailAndPasswordInputViewModel passwordInput)
         {
             if (!ModelState.IsValid)
             {
@@ -161,7 +154,7 @@ namespace Vulyk.Controllers
                 return View(passwordInput);
             }
             CreateCookie(userId.Value.ToString());
-            return RedirectToAction("Index", "Chat");
+            return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -188,7 +181,7 @@ namespace Vulyk.Controllers
         public async Task<IActionResult> LogOut()
         {
             await HttpContext.SignOutAsync("Identity.Application");
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
     }
 }

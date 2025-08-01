@@ -1,8 +1,11 @@
-﻿namespace Vulyk.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Vulyk.ViewModels
 {
-    public class VerificationCodeConfirmViewModel
+    public class VerificationCodeConfirmViewModel : BaseEmailViewModel
     {
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [StringLength(6, MinimumLength = 6, ErrorMessage = "The verification code length needs to be 6 characters")]
         public string VerificationCode { get; set; } = string.Empty;
     }
 }

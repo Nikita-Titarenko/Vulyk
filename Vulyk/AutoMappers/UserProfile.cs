@@ -8,7 +8,10 @@ namespace Vulyk.AutoMappers
     {
         public UserProfile() {
             CreateMap<NameAndPasswordInputViewModel, NameAndPasswordInputDto>();
+            CreateMap<UserEditDto, EditProfileViewModel>();
+            CreateMap<EditProfileViewModel, UserEditDto>();
+            CreateMap<VerificationCodeConfirmViewModel, VerificationCodeConfirmDto>();
+            CreateMap<EmailInputViewModel, EmailInputDto>();
         }
-        
     }
 }

@@ -3,13 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Vulyk.ViewModels
 {
-    public class PasswordInputViewModel
+    public class EmailAndPasswordInputViewModel : BaseEmailViewModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-        [Required]
         [DataType(DataType.Password)]
+        [StringLength(20, MinimumLength = 10, ErrorMessage = "The password length needs to be from 10 to 20 characters")]
         public string Password { get; set; } = string.Empty;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Vulyk.Data;
 using Vulyk.DTOs;
@@ -17,10 +18,13 @@ namespace Vulyk.Controllers
 
         private readonly UserService _userService;
 
-        public ChatController(UserService userService, ChatService chatService)
+        private readonly IMapper _mapper;
+
+        public ChatController(UserService userService, ChatService chatService, IMapper mapper)
         {
             _userService = userService;
             _chatService = chatService;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -30,7 +34,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
             ChatListViewModel chatListViewModel = await GetChatListViewModel(userId.Value);
@@ -49,18 +53,7 @@ namespace Vulyk.Controllers
 
         public async Task<ChatListViewModel> GetChatListViewModel(int userId)
         {
-            return new ChatListViewModel
-            {
-                ChatItemsViewModels = (await _chatService.GetChatsAsync(userId))
-    .Select(c => new ChatListItemViewModel
-    {
-        ChatId = c.ChatId,
-        UserId = c.UserId,
-        LastMessageText = c.LastMessageText,
-        LastMessageDateTime = c.LastMessageDateTime,
-        Name = c.Name
-    }).ToList()
-            };
+            return _mapper.Map<ChatListViewModel>(await _chatService.GetChatsAsync(userId));
         }
 
         public IActionResult Create()
@@ -70,15 +63,15 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
-            return View(new CreateChatViewModel());
+            return View(new EmailInputViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateChatViewModel createChatViewModel)
+        public async Task<IActionResult> Create(EmailInputViewModel createChatViewModel)
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
@@ -90,7 +83,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
             var (foundUserId, findUserResult) = await _userService.FindUserAsync(createChatViewModel.Email);
             if (findUserResult != UserService.FindUserResult.Registered)
@@ -105,7 +98,7 @@ namespace Vulyk.Controllers
             }
             int? chatId = await _chatService.GetChatAsync(userId.Value, foundUserId!.Value);
 
-            return RedirectToAction("Index", "Chat", new { userToAddId = foundUserId, chatId });
+            return RedirectToAction(nameof(Index), "Chat", new { userToAddId = foundUserId, chatId });
         }
     }
 }

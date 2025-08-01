@@ -67,9 +67,11 @@ namespace Vulyk.Services
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<ChatListItemDto>> GetChatsAsync(int userId)
+        public async Task<ChatListDto> GetChatsAsync(int userId)
         {
-            return await _context.UserChat
+            return new ChatListDto
+            {
+                ChatItems = await _context.UserChat
                .Where(uc => uc.UserId == userId)
                .Select(uc => new
                {
@@ -84,7 +86,7 @@ namespace Vulyk.Services
                        uc.User.LastOnline
                    }).FirstOrDefault(),
 
-                    LastMessage = _context.Message
+                   LastMessage = _context.Message
                     .Where(m => m.ChatId == uc.ChatId)
                     .Select(m => new { m.Text, m.CreationDateTime }).OrderByDescending(m => m.CreationDateTime).FirstOrDefault()
                })
@@ -97,8 +99,9 @@ namespace Vulyk.Services
                    Name = uc.Partner.FullName ?? string.Empty,
                    LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text.Substring(0, lastMessageLength) : string.Empty,
                    LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
-                   
-               }).Where(uc => uc.UserId != 0).ToListAsync();
+
+               }).Where(uc => uc.UserId != 0).ToListAsync()
+            };
         }
 
         public enum CreateChatResult

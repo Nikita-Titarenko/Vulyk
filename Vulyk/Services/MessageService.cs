@@ -33,7 +33,6 @@ namespace Vulyk.Services
                     IsMine = m.UserId == userId,
                     Text = m.Text,
                     CreationDateTime = m.CreationDateTime,
-                    UserId = m.UserId
 
                 }).OrderBy(m => m.CreationDateTime).ToListAsync();
             return new MessageListDto

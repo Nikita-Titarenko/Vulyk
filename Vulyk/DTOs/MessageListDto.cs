@@ -9,7 +9,6 @@ namespace Vulyk.DTOs
         public int ChatId { get; set; }
 
         public List<MessageListItemDto> Messages { get; set; } = new List<MessageListItemDto>();
-        [Required]
         public string UserName { get; set; } = string.Empty;
     }
 }

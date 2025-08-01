@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
 using Vulyk.DTOs;
 using Vulyk.Models;
@@ -14,10 +15,13 @@ namespace Vulyk.Controllers
 
         private readonly UserService _userService;
 
-        public MessageController(MessageService messageService, UserService userService)
+        private readonly IMapper _mapper;
+
+        public MessageController(MessageService messageService, UserService userService, IMapper mapper)
         {
             _messageService = messageService;
             _userService = userService;
+            _mapper = mapper;
         }
 
         public async Task<IActionResult> Index(int chatId, int partnerUserId)
@@ -28,19 +32,8 @@ namespace Vulyk.Controllers
                 return ShowUnexpectedError();
             }
             MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId!.Value, partnerUserId);
-            MessageListViewModel messageListViewModel = new MessageListViewModel
-            {
-                UserId = messageListDto.UserId,
-                ChatId = chatId,
-                UserName = messageListDto.UserName,
-                Messages = messageListDto.Messages.Select(m => new MessageListItemViewModel
-                {
-                    CreationDateTime = m.CreationDateTime,
-                    Id = m.Id,
-                    Text = m.Text,
-                    IsMine = m.IsMine,
-                }).ToList()
-            };
+            MessageListViewModel messageListViewModel = _mapper.Map<MessageListViewModel>(messageListDto);
+            messageListViewModel.ChatId = chatId;
 
             return PartialView("_MessagesPartialView", messageListViewModel);
         }

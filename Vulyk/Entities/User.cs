@@ -9,11 +9,11 @@ namespace Vulyk.Models
     public class User
     {
         public int Id { get; set; }
-        [MaxLength(320), EmailAddress]
+        [MaxLength(320)]
         public string Email { get; set; } = string.Empty;
         public string? ProviderUserId { get; set; }
         public RegisterStatus RegisterStatus { get; set; }
-        [MaxLength(20)]
+        [MaxLength(6)]
         public string? VerificationCode { get; set; }
         public DateTime? ExpirationTime { get; set; }
         [MaxLength(20)]

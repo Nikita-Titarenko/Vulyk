@@ -7,15 +7,18 @@ using Vulyk.Services;
 using Vulyk.ViewModels;
 using Vulyk.Models;
 using Vulyk.DTOs;
+using AutoMapper;
 
 namespace Vulyk.Controllers
 {
     public class ProfileController : BaseController
     {
         private readonly UserService _userService;
-        public ProfileController(UserService userService)
+        private readonly IMapper _mapper;
+        public ProfileController(UserService userService, IMapper mapper)
         {
             _userService = userService;
+            _mapper = mapper;
         }
         public async Task<IActionResult> EditProfile()
         {
@@ -24,7 +27,7 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
             UserEditDto? user = await _userService.FindUserAsync(userId.Value);
@@ -32,13 +35,7 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            EditProfileViewModel editProfileViewModel = new EditProfileViewModel
-            {
-                FullName = user.FullName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Password = user.Password,
-            };
+            EditProfileViewModel editProfileViewModel = _mapper.Map<EditProfileViewModel>(user);
 
             return View(editProfileViewModel);
         }
@@ -56,16 +53,10 @@ namespace Vulyk.Controllers
             int? userId = GetUserIdFromCookie();
             if (userId == null)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
-            UserEditDto? user = new UserEditDto
-            {
-                Email = editProfileViewModel.Email,
-                Phone = editProfileViewModel.Phone,
-                FullName = editProfileViewModel.FullName,
-                Password = editProfileViewModel.Password,
-            };
+            UserEditDto? user = _mapper.Map<UserEditDto>(editProfileViewModel);
 
             await _userService.EditUserAsync(userId.Value, user);
             ViewBag.SuccessMessage = "Credentials successful changed!";

@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Vulyk.ViewModels
 {
-    public class EmailInputViewModel
+    public class EmailInputViewModel : BaseEmailViewModel
     {
-        public int Id { get; set; }
         [Required]
         [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        public new string Email { get => base.Email; set => base.Email = value; }
     }
 }
