@@ -5,6 +5,6 @@ namespace Vulyk.Services
 {
     public interface IEmailService
     {
-        Task SendConfirmationEmailAsync(IdentityUser user, string token);
+        Task SendConfirmationEmailAsync(IdentityUser user, string token, string? returnUrl);
     }
 }

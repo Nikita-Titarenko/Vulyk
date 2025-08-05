@@ -68,12 +68,12 @@ h2, h5, p{
     }
 }
 
-.password-wrapper {
+.input-wrapper {
     position: relative;
     width: 100%;
 }
 
-.btn-show-password {
+.input-right-element {
     font-size: 1.5rem;
     color: dimgray;
     position: absolute !important;
@@ -90,3 +90,16 @@ h2, h5, p{
     padding: 4px 20px 4px 20px;
     align-items: center;
 }
+
+.right-button-text {
+    font-size: 1rem;
+    border-radius: 10px;
+    color: black;
+    padding: 5px;
+    border: 2px solid #C5C5C5;
+}
+
+/*.left-text {
+    margin-right: auto;
+    padding: 1rem;
+}*/

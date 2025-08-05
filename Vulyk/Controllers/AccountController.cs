@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Org.BouncyCastle.Asn1.Cmp;
+using Org.BouncyCastle.Ocsp;
 using Vulyk.Data;
 using Vulyk.DTOs;
 using Vulyk.Filters;
@@ -41,14 +42,14 @@ namespace Vulyk.Controllers
         [DenyAuthenticatedAttribute]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel registrationViewModel)
+        public async Task<IActionResult> Register(RegisterViewModel registrationViewModel, string? returnUrl)
         {
             if (!ModelState.IsValid)
             {
                 return View(registrationViewModel);
             }
 
-            var result = await _userService.AddUserAsync(_mapper.Map<RegistrationDto>(registrationViewModel));
+            var result = await _userService.AddUserAsync(_mapper.Map<RegistrationDto>(registrationViewModel), returnUrl);
 
             if (result == UserService.AddUserResult.EmailAlreadyExist)
             {
@@ -56,7 +57,7 @@ namespace Vulyk.Controllers
                 return View(registrationViewModel);
             }
 
-            return RedirectToAction(nameof(VerifyEmail), "Account", new { registrationViewModel.Email });
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { registrationViewModel.Email, returnUrl });
         }
 
         public IActionResult ExternalLogin(string provider, string? returnUrl)
@@ -66,7 +67,7 @@ namespace Vulyk.Controllers
             return Challenge(properties, provider);
         }
 
-        public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
+        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl)
         {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
@@ -82,7 +83,11 @@ namespace Vulyk.Controllers
             {
                 return RedirectToAction(nameof(FullNameInput), "Account");
             }
-            return RedirectToAction(nameof(ChatController.Index), "Chat");
+            if (returnUrl == null)
+            {
+                return RedirectToAction(nameof(ChatController.Index), "Chat");
+            }
+            return Redirect(returnUrl);
         }
 
         [DenyAuthenticatedAttribute]
@@ -95,15 +100,19 @@ namespace Vulyk.Controllers
             return View(new EmailViewModel {Email = email });
         }
 
-        [DenyAuthenticatedAttribute]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        //[DenyAuthenticatedAttribute]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token, string? returnUrl)
         {
             bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, VerificationToken = token });
             if (!isVerified)
             {
-                return RedirectToAction(nameof(VerifyEmail), "Account", new {email = await _userService.GetEmailAsync(userId), tokenIncorrect = true});
+                return RedirectToAction(nameof(VerifyEmail), "Account", new {email = await _userService.GetEmailAsync(userId), tokenIncorrect = true, returnUrl});
             }
-            return RedirectToAction(nameof(ChatController.Index), "Chat");
+            if (returnUrl == null)
+            {
+                return RedirectToAction(nameof(ChatController.Index), "Chat");
+            }
+            return Redirect(returnUrl);
         }
 
         [Authorize]
@@ -115,7 +124,7 @@ namespace Vulyk.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FullNameInput(FullNameViewModel fullNameViewModel)
+        public async Task<IActionResult> FullNameInput(FullNameViewModel fullNameViewModel, string? returnUrl)
         {
             if (!ModelState.IsValid)
             {
@@ -124,7 +133,11 @@ namespace Vulyk.Controllers
 
             await _userService.EditFullNameAsync(GetUserId()!, fullNameViewModel.FullName);
 
-            return RedirectToAction(nameof(ChatController.Index), "Chat");
+            if (returnUrl == null)
+            {
+                return RedirectToAction(nameof(ChatController.Index), "Chat");
+            }
+            return Redirect(returnUrl);
         }
 
         [DenyAuthenticatedAttribute]
@@ -136,24 +149,28 @@ namespace Vulyk.Controllers
         [DenyAuthenticatedAttribute]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel emailInput)
+        public async Task<IActionResult> Login(LoginViewModel emailInput, string? returnUrl)
         {
             if (!ModelState.IsValid)
             {
                 return View(emailInput);
             }
 
-            var result = await _userService.LoginAsync(emailInput.Email, emailInput.Password);
+            var result = await _userService.LoginAsync(emailInput.Email, emailInput.Password, returnUrl);
             if (result == UserService.FindUserResult.EmailEntered)
             {
-                return RedirectToAction(nameof(ConfirmEmail), "Account", new { emailInput.Email });
+                return RedirectToAction(nameof(VerifyEmail), "Account", new { email = emailInput.Email, returnUrl });
             }
-            if (result == UserService.FindUserResult.NotFound)
+            if (result == UserService.FindUserResult.LoginFailed)
             {
                 ModelState.AddModelError(string.Empty, "Email or password incorrect");
                 return View(emailInput);
             }
 
+            if (returnUrl != null)
+            {
+                return Redirect(returnUrl);
+            }
             return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
 

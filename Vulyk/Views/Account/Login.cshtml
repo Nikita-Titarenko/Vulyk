@@ -2,20 +2,21 @@
 @{
 	Layout = "~/Views/Shared/AuthLayout.cshtml";
 	ViewData["Title"] = "Login";
+	var externalUrl = Context.Request.Query["ReturnUrl"].ToString();
 }
 @section Styles {
 	<link rel="stylesheet" href="~/css/form.css" />
 }
 <h5 class="subheading bold-text">Welcome back</h5>
 <h6 class="subtitle w-75 text-center">Hey, Enter your email to get sign in to your account</h6>
-<form class="form" asp-controller="Account" asp-action="@nameof(AccountController.Login)">
+<form class="form" asp-controller="Account" asp-action="@nameof(AccountController.Login)" asp-route-returnUrl="@externalUrl">
 	<label class="@(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Email"></label>
 	<input class="form-input @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Email" placeholder="@Html.DisplayNameFor(m => m.Email)" />
 	<span class="invalid-validation-message" asp-validation-for="Email"></span>
 	<label class="@(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Password"></label>
-	<div class="password-wrapper">
+	<div class="input-wrapper">
 		<input class="form-input password-input w-100 @(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Password" placeholder="@Html.DisplayNameFor(m => m.Password)" />
-		<button class="btn-show-password" type="button">
+		<button class="btn-show-password input-right-element" type="button">
 			<i class="fa fa-eye-slash eye-icon"></i>
 		</button>
 	</div>
@@ -23,8 +24,8 @@
 	<div class="invalid-validation-message" asp-validation-summary="ModelOnly"></div>
 	<input class="btn btn-primary" type="submit" value="Login" />
 </form>
-<p>Don't have an account? <span><a asp-action="@nameof(AccountController.Register)" asp-controller="Account">Register Now</a></span></p>
-<a class="text-black" asp-action="@nameof(AccountController.ExternalLogin)" asp-controller="Account" asp-route-provider="Google">
+<p>Don't have an account? <span><a asp-action="@nameof(AccountController.Register)" asp-controller="Account" asp-route-returnUrl="@externalUrl">Register Now</a></span></p>
+<a class="text-black" asp-action="@nameof(AccountController.ExternalLogin)" asp-controller="Account" asp-route-provider="Google" asp-route-returnUrl="@externalUrl">
 	<div class="google-button">
 		<img src="~/images/google-icon.webp" width="30" height="30" />
 		Google

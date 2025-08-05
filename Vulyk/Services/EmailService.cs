@@ -26,10 +26,10 @@ namespace Vulyk.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task SendConfirmationEmailAsync(IdentityUser user, string token)
+        public async Task SendConfirmationEmailAsync(IdentityUser user, string token, string? returnUrl)
         {
             var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext!);
-            var callBackUrl = urlHelper.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, token }, _httpContextAccessor.HttpContext!.Request.Scheme);
+            var callBackUrl = urlHelper.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, token, returnUrl }, _httpContextAccessor.HttpContext!.Request.Scheme);
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Vulyk", email));
             message.To.Add(new MailboxAddress(string.Empty, user.Email));

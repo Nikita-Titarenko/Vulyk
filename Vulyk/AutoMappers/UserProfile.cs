@@ -8,8 +8,8 @@ namespace Vulyk.AutoMappers
     {
         public UserProfile() {
             CreateMap<FullNameViewModel, FullNameDto>();
-            CreateMap<UserEditDto, EditProfileViewModel>();
-            CreateMap<EditProfileViewModel, UserEditDto>();
+            CreateMap<UserProfileEditDto, EditProfileViewModel>();
+            CreateMap<EditProfileViewModel, UserProfileEditDto>();
             CreateMap<EmailViewModel, EmailConfirmDto>();
             CreateMap<RegisterViewModel, RegistrationDto>();
         }

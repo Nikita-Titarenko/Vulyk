@@ -29,7 +29,7 @@ namespace Vulyk.Controllers
             ViewData["SidepanelVisibility"] = false;
             string? userId = GetUserId()!;
 
-            UserEditDto? user = await _userService.FindUserByIdAsync(userId);
+            UserProfileEditDto? user = await _userService.FindUserByIdAsync(userId);
             if (user == null)
             {
                 return ShowUnexpectedError();
@@ -53,11 +53,80 @@ namespace Vulyk.Controllers
 
             string? userId = GetUserId()!;
 
-            UserEditDto? user = _mapper.Map<UserEditDto>(editProfileViewModel);
+            UserProfileEditDto? user = _mapper.Map<UserProfileEditDto>(editProfileViewModel);
 
-            await _userService.EditUserAsync(userId, user);
+            await _userService.EditUserProfileAsync(userId, user);
             ViewBag.SuccessMessage = "Credentials successful changed!";
             return View(editProfileViewModel);
+        }
+
+        [Authorize]
+        public IActionResult AddPassword()
+        {
+            ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
+
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> AddPassword(AddPasswordViewModel model)
+        {
+            ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            string? userId = GetUserId()!;
+
+            UserProfileEditDto? user = await _userService.FindUserByIdAsync(userId);
+            if (user == null)
+            {
+                return ShowUnexpectedError();
+            }
+            await _userService.AddPasswordAsync(userId, model.NewPassword, model.NewPasswordConfirm);
+            ViewBag.SuccessMessage = "Password successful added!";
+
+            return View();
+        }
+
+        [Authorize]
+        public IActionResult EditPassword()
+        {
+            ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
+
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> EditPassword(EditPasswordViewModel model)
+        {
+            ViewData["ChoosedPage"] = "EditProfile";
+            ViewData["SidepanelVisibility"] = false;
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            string? userId = GetUserId()!;
+
+            UserProfileEditDto? user = await _userService.FindUserByIdAsync(userId);
+            if (user == null)
+            {
+                return ShowUnexpectedError();
+            }
+            var result = await _userService.EditPasswordAsync(userId, model.CurrentPassword, model.NewPassword, model.NewPasswordConfirm);
+            if (result == UserService.EditPasswordResult.CurrentPasswordIncorrect)
+            {
+                ModelState.AddModelError(string.Empty, "Current password incorrect");
+                return View(model);
+            }
+            ViewBag.SuccessMessage = "Password successful changed!";
+
+            return View();
         }
     }
 }

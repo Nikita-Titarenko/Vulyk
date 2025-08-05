@@ -54,6 +54,7 @@ namespace Vulyk.Controllers
             return _mapper.Map<ChatListViewModel>(await _chatService.GetChatsAsync(userId));
         }
 
+        [HttpGet]
         [Authorize]
         public IActionResult Create()
         {
@@ -78,7 +79,7 @@ namespace Vulyk.Controllers
             string? userId = GetUserId()!;
 
             var (foundUserId, findUserResult) = await _userService.FindUserByEmailAsync(createChatViewModel.Email);
-            if (findUserResult != UserService.FindUserResult.NotFound)
+            if (findUserResult != UserService.FindUserResult.LoginFailed)
             {
                 ModelState.AddModelError(string.Empty, $"User with this email not exist");
                 return View(createChatViewModel);

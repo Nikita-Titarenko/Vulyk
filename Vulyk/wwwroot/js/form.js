@@ -1,20 +1,20 @@
 ﻿var passwordVisible = false;
-var eyeIcon;
-var passwordInput;
+var eyeIcons;
+var passwordInputs;
 document.addEventListener('DOMContentLoaded', (e) => {
-    eyeIcon = document.querySelector('.eye-icon');
-    passwordInput = document.querySelector('.password-input');
-    document.querySelector('.btn-show-password').addEventListener('click', () => {
+    eyeIcons = document.querySelectorAll('.eye-icon');
+    passwordInputs = document.querySelectorAll('.password-input');
+    document.querySelectorAll('.btn-show-password').forEach(b => b.addEventListener('click', () => {
         if (passwordVisible) {
             passwordVisible = false;
-            eyeIcon.classList.add('fa-eye-slash');
-            eyeIcon.classList.remove('fa-eye');
-            passwordInput.type = 'password';
+            eyeIcons.forEach(b => b.classList.add('fa-eye-slash'));
+            eyeIcons.forEach(b => b.classList.remove('fa-eye'));
+            passwordInputs.forEach(b => b.type = 'password');
         } else {
             passwordVisible = true;
-            eyeIcon.classList.add('fa-eye');
-            eyeIcon.classList.remove('fa-eye-slash');
-            passwordInput.type = 'text';
+            eyeIcons.forEach(b => b.classList.add('fa-eye'));
+            eyeIcons.forEach(b => b.classList.remove('fa-eye-slash'));
+            passwordInputs.forEach(b => b.type = 'text');
         }
-    });
+    }));
 });
