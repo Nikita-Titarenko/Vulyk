@@ -1,92 +1,87 @@
 ﻿using System;
-using Google.Apis.Auth;
+using System.Security.Claims;
 using Humanizer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Security;
 using Vulyk.Data;
-using Vulyk.Data.Migrations;
 using Vulyk.DTOs;
 using Vulyk.Models;
 using Vulyk.ViewModels;
 
 namespace Vulyk.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
-        private ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        private EmailService _emailService;
+        private readonly IEmailService _emailService;
 
-        public UserService(ApplicationDbContext context, EmailService emailService)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+        public UserService(ApplicationDbContext context, IEmailService emailService, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _context = context;
             _emailService = emailService;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
-        public async Task<AddUserResult> AddUserAsync(EmailInputDto dto)
+        public async Task<AddUserResult> AddUserAsync(RegistrationDto dto)
         {
-            var result = await FindUserAsync(dto.Email);
-            if (result.Item2 != FindUserResult.NotFound)
+            var foundUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (foundUser == null)
+            {
+                foundUser = new ApplicationUser { UserName = dto.Email, Email = dto.Email };
+                await _userManager.CreateAsync(foundUser, dto.Password);
+            }
+            else if (foundUser.EmailConfirmed)
             {
                 return AddUserResult.EmailAlreadyExist;
             }
-            Random random = new Random();
-            string verificationCode = random.Next(1000000).ToString().PadLeft(6, '0');
-            User user = new User
-            {
-                Email = dto.Email.Trim().ToLower().Trim(),
-                VerificationCode = verificationCode,
-            };
-
-            _context.Add(user);
-            await SendVerificationCodeAsync(dto.Email, verificationCode);
+            foundUser.FullName = dto.FullName;
             await _context.SaveChangesAsync();
+            var token = await _userManager.GeneratePasswordResetTokenAsync(foundUser);
+            await _userManager.ResetPasswordAsync(foundUser, token, dto.Password);
+            token = await _userManager.GenerateEmailConfirmationTokenAsync(foundUser);
+            await _emailService.SendConfirmationEmailAsync(foundUser, token);
+
             return AddUserResult.Success;
         }
 
-        public async Task<GoogleSignInResultDto?> GoogleSignIn(string id_token)
+        public async Task<GoogleLoginResult> ProcessExternalLoginAsync(ExternalLoginInfo info)
         {
-            try
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
+            if (result.Succeeded)
             {
-                var settings = new GoogleJsonWebSignature.ValidationSettings
-                {
-                    Audience = new[] { "539615638742-r80f81961bev61udupdefg86dt6rfljp.apps.googleusercontent.com" }
-                };
-                var payload = await GoogleJsonWebSignature.ValidateAsync(id_token, settings);
-
-                User? user = await _context.User.Where(u => u.ProviderUserId == payload.Subject).FirstOrDefaultAsync();
-
-                if (user == null)
-                {
-                    user = await _context.User.Where(u => u.Email == payload.Email).FirstOrDefaultAsync();
-                    if (user == null)
-                    {
-                        user = new User
-                        {
-                            Email = payload.Email,
-                            ProviderUserId = payload.Subject
-                        };
-                        _context.User.Add(user);
-                        await _context.SaveChangesAsync();
-                        return new GoogleSignInResultDto { Email = payload.Email, FullName = payload.Name };
-                    }
-
-                    user.ProviderUserId = payload.Subject;
-                    await _context.SaveChangesAsync();
-                }
-
-                if (user.RegisterStatus != RegisterStatus.Registered)
-                {
-                    return new GoogleSignInResultDto { Email = payload.Email, FullName = payload.Name };
-                }
-
-                return new GoogleSignInResultDto { UserId = user.Id };
+                return GoogleLoginResult.Login;
             }
-            catch
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
             {
-                return null;
+                await _userManager.AddLoginAsync(user, info);
+                await _signInManager.SignInAsync(user, true);
+                return GoogleLoginResult.Login;
             }
+
+            user = new ApplicationUser { UserName = email, Email = email };
+            var signInResult = await _userManager.AddLoginAsync(user, info);
+            if (!signInResult.Succeeded)
+            {
+                return GoogleLoginResult.Error;
+            }
+            await _signInManager.SignInAsync(user, true);
+            return GoogleLoginResult.Register;
+        }
+
+        public enum GoogleLoginResult
+        {
+            Login, Register, Error
         }
 
         public enum AddUserResult
@@ -94,71 +89,80 @@ namespace Vulyk.Services
             Success, EmailAlreadyExist
         }
 
-        public async Task SendVerificationCodeAsync(string email, string verificationCode)
+        public async Task<bool> CheckVerificationTokenAsync(EmailConfirmDto dto)
         {
-            await _emailService.SendEmailAsync(email, "Registration in Vulyk", $"<h1>Confirm your registration in Vulyk</h1><h1>Verification code: {verificationCode}</h1>");
-        }
-
-        public async Task<bool> CheckVerificationCodeAsync(VerificationCodeConfirmDto dto)
-        {
-            var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
-            if (user == null || user.VerificationCode != dto.VerificationCode)
+            ApplicationUser? foundUser = await _userManager.FindByIdAsync(dto.UserId);
+            if (foundUser == null)
             {
                 return false;
             }
-            user.RegisterStatus = RegisterStatus.VerificationCodeConfirmed;
-            await _context.SaveChangesAsync();
+
+            var result = await _userManager.ConfirmEmailAsync(foundUser, dto.VerificationToken);
+
+            if (!result.Succeeded)
+            {
+                return false;
+            }
+
+            await _signInManager.SignInAsync(foundUser, true);
+
             return true;
         }
 
-        public async Task<int> AddNameAndPassword(NameAndPasswordInputDto dto)
+        public async Task EditUserAsync(string userId, UserEditDto dto)
         {
-            var user = await _context.User.Where(u => u.Email == dto.Email).FirstOrDefaultAsync();
-            if (user == null)
-            {
-                throw new InvalidKeyException();
-            }
-            user.FullName = dto.FullName;
-            user.Password = dto.Password;
-            user.RegisterStatus = RegisterStatus.Registered;
-            await _context.SaveChangesAsync();
-            return user.Id;
-        }
-
-        public async Task EditUserAsync(int userId, UserEditDto dto)
-        {
-            User? user = _context.User.Where(u => u.Id == userId).FirstOrDefault();
+            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return;
             }
             user.Email = dto.Email.Trim().ToLower();
-            if (dto.Password != null && dto.Password != "")
+            if (dto.NewPassword != null && dto.NewPassword != "" && dto.CurrentPassword != null && dto.CurrentPassword != "")
             {
-                user.Password = dto.Password.Trim().ToLower();
+                await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
             }
 
-            user.Phone = dto.Phone?.Trim();
-
+            user.PhoneNumber = dto.Phone?.Trim();
             user.FullName = dto.FullName.Trim();
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int?> FindUserAsync(string email, string password)
+        public async Task<FindUserResult> LoginAsync(string email, string password)
         {
-            User? foundUser = await _context.User.FirstOrDefaultAsync(u => email.ToLower() == u.Email.ToLower() && password == u.Password && u.RegisterStatus == RegisterStatus.Registered);
+            ApplicationUser? foundUser = await _userManager.FindByEmailAsync(email);
+
             if (foundUser == null)
             {
-                return null;
+                return FindUserResult.NotFound;
             }
-            return foundUser.Id;
+
+            var result = await _signInManager.CheckPasswordSignInAsync(foundUser, password, false);
+
+            if (result.IsNotAllowed)
+            {
+                return FindUserResult.EmailEntered;
+            }
+
+            if (!result.Succeeded)
+            {
+                return FindUserResult.NotFound;
+            }
+
+            await _signInManager.SignInAsync(foundUser, true);
+
+            return FindUserResult.EmailConfirmed;
         }
 
-        public async Task<UserEditDto> FindUserAsync(int id)
+        public async Task LogOutAsync()
         {
-            UserEditDto? user = await _context.User
-                .Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered)
-                .Select(u => new UserEditDto { Email = u.Email, FullName = u.FullName!, Phone = u.Phone })
+            await _signInManager.SignOutAsync();
+        }
+
+        public async Task<UserEditDto> FindUserByIdAsync(string id)
+        {
+            UserEditDto? user = await _context.ApplicationUser
+                .Where(u => u.Id == id && u.EmailConfirmed)
+                .Select(u => new UserEditDto { Email = u.Email!, FullName = u.FullName!, Phone = u.PhoneNumber })
                 .FirstOrDefaultAsync();
             if (user == null)
             {
@@ -168,38 +172,53 @@ namespace Vulyk.Services
             return user;
         }
 
-        public async Task<string?> GetUserNameAsync(int id)
+        public async Task<string?> GetFullNameAsync(string id)
         {
-            return await _context.User.Where(u => u.Id == id && u.RegisterStatus == RegisterStatus.Registered).Select(u => u.FullName).FirstOrDefaultAsync();
+            return await _context.ApplicationUser.Where(u => u.Id == id && u.EmailConfirmed).Select(u => u.FullName).FirstOrDefaultAsync();
         }
 
-        public async Task<(int?, FindUserResult)> FindUserAsync(string email)
+        public async Task EditFullNameAsync(string id, string fullName)
+        {
+            var foundUser = await _userManager.FindByIdAsync(id);
+            if (foundUser == null)
+            {
+                return;
+            }
+
+            foundUser.FullName = fullName;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<string?> GetEmailAsync(string id)
+        {
+            var foundUser = await _userManager.FindByIdAsync(id);
+            if (foundUser == null)
+            {
+                return null;
+            }
+            return await _userManager.GetEmailAsync(foundUser);
+        }
+
+        public async Task<(string?, FindUserResult)> FindUserByEmailAsync(string email)
         {
             string emailNormalized = email.ToLower();
-            User? foundUser = await _context.User.FirstOrDefaultAsync(u => emailNormalized == u.Email.ToLower());
+            ApplicationUser? foundUser = await _userManager.FindByEmailAsync(email);
+
             if (foundUser == null)
             {
                 return (null, FindUserResult.NotFound);
             }
-            FindUserResult findUserResult = 0;
-            switch (foundUser.RegisterStatus)
+
+            if (foundUser.EmailConfirmed)
             {
-                case RegisterStatus.Registered:
-                    findUserResult = FindUserResult.Registered;
-                    break;
-                case RegisterStatus.VerificationCodeConfirmed:
-                    findUserResult = FindUserResult.VerificationCodeConfirmed;
-                    break;
-                case RegisterStatus.EmailInputted:
-                    findUserResult = FindUserResult.EmailInputted;
-                    break;
+                return (foundUser.Id, FindUserResult.EmailConfirmed);
             }
-            return (foundUser.Id, findUserResult);
+            return (foundUser.Id, FindUserResult.EmailEntered);
         }
 
         public enum FindUserResult
         {
-            EmailInputted, VerificationCodeConfirmed, Registered, NotFound
+            EmailEntered, EmailConfirmed, NotFound
         }
     }
 }

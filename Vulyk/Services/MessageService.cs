@@ -8,20 +8,20 @@ using Vulyk.Models;
 
 namespace Vulyk.Services
 {
-    public class MessageService
+    public class MessageService : IMessageService
     {
         private readonly ApplicationDbContext _context;
-        private readonly ChatService _chatService;
+        private readonly IChatService _chatService;
 
-        public MessageService(ApplicationDbContext context, ChatService chatService)
+        public MessageService(ApplicationDbContext context, IChatService chatService)
         {
             _context = context;
             _chatService = chatService;
         }
 
-        public async Task<MessageListDto> GetMessagesAsync(int chatId, int userId, int partnerId)
+        public async Task<MessageListDto> GetMessagesAsync(int chatId, string userId, string partnerId)
         {
-            string? userName = await _context.User.Where(u => u.Id == partnerId).Select(u => u.FullName).FirstOrDefaultAsync();
+            string? userName = await _context.ApplicationUser.Where(u => u.Id == partnerId).Select(u => u.FullName).FirstOrDefaultAsync();
             if (userName == null)
             {
                 return new MessageListDto { };
@@ -44,7 +44,7 @@ namespace Vulyk.Services
             };
         }
 
-        public async Task<int> CreateOrAddMessageToChatAsync(int userId, string text, int userToAddId)
+        public async Task<int> CreateOrAddMessageToChatAsync(string userId, string text, string userToAddId)
         {
             var (result, chatIdNullable) = await _chatService.GetOrCreateChatAsync(userId, userToAddId);
 

@@ -4,7 +4,7 @@ namespace Vulyk.ViewModels
 {
     public class CreateMessageViewModel
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         [Required]
         public string Text { get; set; } = string.Empty;
     }

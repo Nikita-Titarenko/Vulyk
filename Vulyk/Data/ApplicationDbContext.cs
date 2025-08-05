@@ -12,7 +12,7 @@ namespace Vulyk.Data
             
         }
 
-        public DbSet<User> User { get; set; }
+        public DbSet<ApplicationUser> ApplicationUser { get; set; }
 
         public DbSet<Chat> Chat { get; set; }
 
@@ -24,15 +24,7 @@ namespace Vulyk.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<User>().Property(u => u.FullName).HasMaxLength(20);
-
-            builder.Entity<User>().Property(u => u.Password).HasMaxLength(20);
-
-            builder.Entity<User>().Property(u => u.Phone).HasMaxLength(20);
-
-            builder.Entity<User>().Property(u => u.Email).HasMaxLength(320);
-
-            builder.Entity<User>().Property(u => u.VerificationCode).HasMaxLength(6);
+            builder.Entity<ApplicationUser>().Property(u => u.FullName).HasMaxLength(20);
 
             builder.Entity<Message>().Property(m => m.Text).HasMaxLength(1000);
 

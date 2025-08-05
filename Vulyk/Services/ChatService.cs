@@ -10,9 +10,9 @@ using Vulyk.ViewModels;
 
 namespace Vulyk.Services
 {
-    public class ChatService
+    public class ChatService : IChatService
     {
-        private const int lastMessageLength = 26; 
+        private const int lastMessageLength = 26;
 
         private readonly ApplicationDbContext _context;
 
@@ -21,7 +21,7 @@ namespace Vulyk.Services
             _context = context;
         }
 
-        public async Task<(CreateChatResult, int?)> GetOrCreateChatAsync(int userId, int userToAddId)
+        public async Task<(CreateChatResult, int?)> GetOrCreateChatAsync(string userId, string userToAddId)
         {
             int? existingChatId = await GetChatAsync(userId, userToAddId);
             if (existingChatId != null)
@@ -57,7 +57,7 @@ namespace Vulyk.Services
             }
         }
 
-        public async Task<int?> GetChatAsync(int userId, int userToAddId)
+        public async Task<int?> GetChatAsync(string userId, string userToAddId)
         {
             return await _context.Chat
                 .Where(c =>
@@ -67,7 +67,7 @@ namespace Vulyk.Services
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<ChatListDto> GetChatsAsync(int userId)
+        public async Task<ChatListDto> GetChatsAsync(string userId)
         {
             return new ChatListDto
             {
@@ -78,12 +78,12 @@ namespace Vulyk.Services
                    uc.ChatId,
 
                    Partner = _context.UserChat
-                   .Where(x => x.ChatId == uc.ChatId && x.UserId != userId && x.User.RegisterStatus == RegisterStatus.Registered)
+                   .Where(x => x.ChatId == uc.ChatId && x.UserId != userId && x.ApplicationUser.EmailConfirmed)
                    .Select(uc => new
                    {
                        Id = uc.UserId,
-                       uc.User.FullName,
-                       uc.User.LastOnline
+                       uc.ApplicationUser.FullName,
+                       uc.ApplicationUser.LastOnline
                    }).FirstOrDefault(),
 
                    LastMessage = _context.Message
@@ -100,7 +100,7 @@ namespace Vulyk.Services
                    LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text.Substring(0, lastMessageLength) : string.Empty,
                    LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
 
-               }).Where(uc => uc.UserId != 0).ToListAsync()
+               }).ToListAsync()
             };
         }
 

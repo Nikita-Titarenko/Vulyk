@@ -1,186 +1,168 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
+using Humanizer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Org.BouncyCastle.Asn1.Cmp;
 using Vulyk.Data;
 using Vulyk.DTOs;
+using Vulyk.Filters;
 using Vulyk.Models;
 using Vulyk.Services;
 using Vulyk.ViewModels;
-using static Vulyk.Services.UserService;
 
 namespace Vulyk.Controllers
 {
     public class AccountController : BaseController
     {
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
 
         private readonly IMapper _mapper;
 
-        public AccountController(UserService userService, IMapper mapper)
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+        public AccountController(IUserService userService, IMapper mapper, SignInManager<ApplicationUser> signInManager)
         {
             _userService = userService;
             _mapper = mapper;
+            _signInManager = signInManager;
         }
-        public IActionResult RegisterEmail()
+
+        [DenyAuthenticatedAttribute]
+        public IActionResult Register()
         {
             return View();
         }
+
+        [DenyAuthenticatedAttribute]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RegisterEmail(EmailInputViewModel registrationViewModel)
+        public async Task<IActionResult> Register(RegisterViewModel registrationViewModel)
         {
             if (!ModelState.IsValid)
             {
                 return View(registrationViewModel);
             }
-            EmailInputDto user = _mapper.Map<EmailInputDto>(registrationViewModel);
-            AddUserResult addUserResult = await _userService.AddUserAsync(user);
-            if (addUserResult == AddUserResult.EmailAlreadyExist)
+
+            var result = await _userService.AddUserAsync(_mapper.Map<RegistrationDto>(registrationViewModel));
+
+            if (result == UserService.AddUserResult.EmailAlreadyExist)
             {
-                ModelState.AddModelError(string.Empty, "Email is already taken");
+                ModelState.AddModelError(string.Empty, "Email already exist");
                 return View(registrationViewModel);
             }
 
-            return RedirectToAction(nameof(VerificationCodeConfirm), "Account", new { user.Email });
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { registrationViewModel.Email });
         }
-        [HttpPost]
-        public async Task<IActionResult> GoogleSignIn([FromBody] GoogleSignInDto googleSignInDto)
+
+        public IActionResult ExternalLogin(string provider, string? returnUrl)
         {
-            GoogleSignInResultDto? googleSignInResultDto = await _userService.GoogleSignIn(googleSignInDto.IdToken);
-            if (googleSignInResultDto == null)
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new {returnUrl});
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
             {
-                return RedirectToAction(nameof(RegisterEmail), "Account");
+                return RedirectToAction(nameof(AccountController.Login), "Account");
             }
-            if (googleSignInResultDto.UserId == null)
+            var result = await _userService.ProcessExternalLoginAsync(info);
+            if (result == UserService.GoogleLoginResult.Error)
             {
-                return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { email = googleSignInResultDto.Email, fullName = googleSignInResultDto.FullName});
+                return RedirectToAction(nameof(Login), "Account");
             }
-            CreateCookie(googleSignInResultDto.UserId.Value.ToString());
+            if (result == UserService.GoogleLoginResult.Register)
+            {
+                return RedirectToAction(nameof(FullNameInput), "Account");
+            }
             return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
 
-        public IActionResult VerificationCodeConfirm(string email)
+        [DenyAuthenticatedAttribute]
+        public IActionResult VerifyEmail(string email, bool? tokenIncorrect)
         {
-            return View(new VerificationCodeConfirmViewModel {Email = email });
-        }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VerificationCodeConfirm(VerificationCodeConfirmViewModel verificationCodeConfirm)
-        {
-            if (!ModelState.IsValid)
+            if (tokenIncorrect != null)
             {
-                return View(verificationCodeConfirm);
+                ModelState.AddModelError(string.Empty, "Your email could not be verified");
             }
-            bool isVerified = await _userService.CheckVerificationCodeAsync(_mapper.Map<VerificationCodeConfirmDto>(verificationCodeConfirm));
+            return View(new EmailViewModel {Email = email });
+        }
+
+        [DenyAuthenticatedAttribute]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, VerificationToken = token });
             if (!isVerified)
             {
-                ModelState.AddModelError(string.Empty, "Confirmation code incorrect");
-                return View(verificationCodeConfirm);
+                return RedirectToAction(nameof(VerifyEmail), "Account", new {email = await _userService.GetEmailAsync(userId), tokenIncorrect = true});
             }
-            return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { verificationCodeConfirm.Email });
-        }
-
-        public IActionResult NameAndPasswordInput(string email, string? fullName)
-        {
-            return View(new NameAndPasswordInputViewModel { Email = email, FullName = fullName ?? string.Empty });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> NameAndPasswordInput(NameAndPasswordInputViewModel nameAndPasswordInput)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(nameAndPasswordInput);
-            }
-
-            int userId = await _userService.AddNameAndPassword(_mapper.Map<NameAndPasswordInputDto>(nameAndPasswordInput));
-            CreateCookie(userId.ToString());
             return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
 
-        public IActionResult LoginEmail()
+        [Authorize]
+        public IActionResult FullNameInput(string? fullName)
         {
-            return View(new EmailInputViewModel());
+            return View(new FullNameViewModel {FullName = fullName ?? string.Empty });
         }
+
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginEmail(EmailInputViewModel emailInput)
+        public async Task<IActionResult> FullNameInput(FullNameViewModel fullNameViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(fullNameViewModel);
+            }
+
+            await _userService.EditFullNameAsync(GetUserId()!, fullNameViewModel.FullName);
+
+            return RedirectToAction(nameof(ChatController.Index), "Chat");
+        }
+
+        [DenyAuthenticatedAttribute]
+        public IActionResult Login()
+        {
+            return View(new LoginViewModel());
+        }
+
+        [DenyAuthenticatedAttribute]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel emailInput)
         {
             if (!ModelState.IsValid)
             {
                 return View(emailInput);
             }
 
-            var result = await _userService.FindUserAsync(emailInput.Email);
-            if (result.Item2 == FindUserResult.NotFound)
+            var result = await _userService.LoginAsync(emailInput.Email, emailInput.Password);
+            if (result == UserService.FindUserResult.EmailEntered)
             {
-                ModelState.AddModelError(string.Empty, "Email not registered");
+                return RedirectToAction(nameof(ConfirmEmail), "Account", new { emailInput.Email });
+            }
+            if (result == UserService.FindUserResult.NotFound)
+            {
+                ModelState.AddModelError(string.Empty, "Email or password incorrect");
                 return View(emailInput);
             }
 
-            if (result.Item2 == FindUserResult.EmailInputted)
-            {
-                return RedirectToAction(nameof(VerificationCodeConfirm), "Account", new { emailInput.Email });
-            }
-
-            if (result.Item2 == FindUserResult.VerificationCodeConfirmed)
-            {
-                return RedirectToAction(nameof(NameAndPasswordInput), "Account", new { emailInput.Email });
-            }
-
-            return RedirectToAction(nameof(LoginPassword), "Account", new {emailInput.Email});
-        }
-        public IActionResult LoginPassword(string email)
-        {
-            return View(new EmailAndPasswordInputViewModel { Email = email});
-        }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginPassword(EmailAndPasswordInputViewModel passwordInput)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(passwordInput);
-            }
-
-            int? userId = await _userService.FindUserAsync(passwordInput.Email, passwordInput.Password);
-            if (userId == null)
-            {
-                ModelState.AddModelError(string.Empty, "Password is incorrect");
-                return View(passwordInput);
-            }
-            CreateCookie(userId.Value.ToString());
             return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        private async void CreateCookie(string userId)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId)
-            };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.Now.AddDays(30),
-            };
-
-            await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(claimsIdentity), authProperties);
-        }
-
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOut()
         {
-            await HttpContext.SignOutAsync("Identity.Application");
+            await _userService.LogOutAsync();
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
     }

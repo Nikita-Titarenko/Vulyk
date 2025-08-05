@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
 using Vulyk.DTOs;
@@ -11,36 +12,35 @@ namespace Vulyk.Controllers
 {
     public class MessageController : BaseController
     {
-        private readonly MessageService _messageService;
+        private readonly IMessageService _messageService;
 
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
 
         private readonly IMapper _mapper;
 
-        public MessageController(MessageService messageService, UserService userService, IMapper mapper)
+        public MessageController(IMessageService messageService, IUserService userService, IMapper mapper)
         {
             _messageService = messageService;
             _userService = userService;
             _mapper = mapper;
         }
 
-        public async Task<IActionResult> Index(int chatId, int partnerUserId)
+        [Authorize]
+        public async Task<IActionResult> Index(int chatId, string partnerUserId)
         {
-            int? userId = GetUserIdFromCookie();
-            if (userId == null)
-            {
-                return ShowUnexpectedError();
-            }
-            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId!.Value, partnerUserId);
+            string userId = GetUserId()!;
+
+            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId, partnerUserId);
             MessageListViewModel messageListViewModel = _mapper.Map<MessageListViewModel>(messageListDto);
             messageListViewModel.ChatId = chatId;
 
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
 
-        public async Task<IActionResult> DisplayEmptyChat(int userId)
+        [Authorize]
+        public async Task<IActionResult> DisplayEmptyChat(string userId)
         {
-            string? userName = await _userService.GetUserNameAsync(userId);
+            string? userName = await _userService.GetFullNameAsync(userId);
             if (userName == null)
             {
                 return BadRequest();
@@ -53,19 +53,17 @@ namespace Vulyk.Controllers
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
 
+        [Authorize]
         public async Task<IActionResult> CreateMessage(CreateMessageViewModel createMessageViewModel)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
-            int? userId = GetUserIdFromCookie();
-            if (userId == null)
-            {
-                return ShowUnexpectedError();
-            }
-            int chatId = await _messageService.CreateOrAddMessageToChatAsync(userId.Value, createMessageViewModel.Text, createMessageViewModel.UserId);
-            string? name = await _userService.GetUserNameAsync(createMessageViewModel.UserId);
+            string userId = GetUserId()!;
+
+            int chatId = await _messageService.CreateOrAddMessageToChatAsync(userId, createMessageViewModel.Text, createMessageViewModel.UserId);
+            string? name = await _userService.GetFullNameAsync(createMessageViewModel.UserId);
             if (name == null)
             {
                 return NotFound("User not found");

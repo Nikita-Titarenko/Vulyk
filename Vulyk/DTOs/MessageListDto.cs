@@ -5,7 +5,7 @@ namespace Vulyk.DTOs
 {
     public class MessageListDto
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public int ChatId { get; set; }
 
         public List<MessageListItemDto> Messages { get; set; } = new List<MessageListItemDto>();

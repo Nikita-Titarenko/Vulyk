@@ -9,7 +9,7 @@
 <div class="form-container">
 	<h5 class="subheading bold-text">Edit profile</h5>
 	<h6 class="subtitle bold-text">Change your personal data</h6>
-	<form class="form" asp-controller="Profile" asp-action="EditProfile">
+	<form class="form" asp-controller="Profile" asp-action="@nameof(ProfileController.EditProfile)">
 		<label class="@(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Password"></label>
 		<div class="password-wrapper">
 			<input class="form-input password-input w-100 @(ViewData.ModelState["Password"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Password" placeholder="Create new password" />

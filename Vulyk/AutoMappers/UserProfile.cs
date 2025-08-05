@@ -7,11 +7,11 @@ namespace Vulyk.AutoMappers
     public class UserProfile : Profile
     {
         public UserProfile() {
-            CreateMap<NameAndPasswordInputViewModel, NameAndPasswordInputDto>();
+            CreateMap<FullNameViewModel, FullNameDto>();
             CreateMap<UserEditDto, EditProfileViewModel>();
             CreateMap<EditProfileViewModel, UserEditDto>();
-            CreateMap<VerificationCodeConfirmViewModel, VerificationCodeConfirmDto>();
-            CreateMap<EmailInputViewModel, EmailInputDto>();
+            CreateMap<EmailViewModel, EmailConfirmDto>();
+            CreateMap<RegisterViewModel, RegistrationDto>();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Vulyk.Data;
@@ -14,35 +15,32 @@ namespace Vulyk.Controllers
 {
     public class ChatController : BaseController
     {
-        private readonly ChatService _chatService;
+        private readonly IChatService _chatService;
 
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
 
         private readonly IMapper _mapper;
 
-        public ChatController(UserService userService, ChatService chatService, IMapper mapper)
+        public ChatController(IChatService chatService, IMapper mapper, IUserService userService)
         {
-            _userService = userService;
             _chatService = chatService;
             _mapper = mapper;
+            _userService = userService;
         }
 
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Index(int? userToAddId, int? chatId)
+        public async Task<IActionResult> Index(string? userToAddId, int? chatId)
         {
             ViewData["ChoosedPage"] = "Chats";
-            int? userId = GetUserIdFromCookie();
-            if (userId == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
+            string userId = GetUserId()!;
 
-            ChatListViewModel chatListViewModel = await GetChatListViewModel(userId.Value);
+            ChatListViewModel chatListViewModel = await GetChatListViewModel(userId);
 
             chatListViewModel.NewUserId = userToAddId;
             chatListViewModel.DisplayChatId = chatId;
-            chatListViewModel.UserId = userId.Value;
-            string? userName = await _userService.GetUserNameAsync(chatListViewModel.UserId);
+            chatListViewModel.UserId = userId;
+            string? userName = await _userService.GetFullNameAsync(chatListViewModel.UserId);
             if (userName != null)
             {
                 chatListViewModel.FullName = userName;
@@ -51,27 +49,24 @@ namespace Vulyk.Controllers
             return View(chatListViewModel);
         }
 
-        public async Task<ChatListViewModel> GetChatListViewModel(int userId)
+        public async Task<ChatListViewModel> GetChatListViewModel(string userId)
         {
             return _mapper.Map<ChatListViewModel>(await _chatService.GetChatsAsync(userId));
         }
 
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
-            int? userId = GetUserIdFromCookie();
-            if (userId == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
 
-            return View(new EmailInputViewModel());
+            return View(new LoginViewModel());
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(EmailInputViewModel createChatViewModel)
+        public async Task<IActionResult> Create(LoginViewModel createChatViewModel)
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
@@ -80,13 +75,10 @@ namespace Vulyk.Controllers
                 return View(createChatViewModel);
             }
 
-            int? userId = GetUserIdFromCookie();
-            if (userId == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
-            var (foundUserId, findUserResult) = await _userService.FindUserAsync(createChatViewModel.Email);
-            if (findUserResult != UserService.FindUserResult.Registered)
+            string? userId = GetUserId()!;
+
+            var (foundUserId, findUserResult) = await _userService.FindUserByEmailAsync(createChatViewModel.Email);
+            if (findUserResult != UserService.FindUserResult.NotFound)
             {
                 ModelState.AddModelError(string.Empty, $"User with this email not exist");
                 return View(createChatViewModel);
@@ -96,7 +88,7 @@ namespace Vulyk.Controllers
                 ModelState.AddModelError(string.Empty, "You don't can add yourself");
                 return View(createChatViewModel);
             }
-            int? chatId = await _chatService.GetChatAsync(userId.Value, foundUserId!.Value);
+            int? chatId = await _chatService.GetChatAsync(userId, foundUserId!);
 
             return RedirectToAction(nameof(Index), "Chat", new { userToAddId = foundUserId, chatId });
         }

@@ -18,12 +18,8 @@ namespace Vulyk.Controllers
 
         public IActionResult Index()
         {
-            if (GetUserIdFromCookie() == null)
-            {
-                ViewData["CurrentPage"] = "Home";
-                return View();
-            }
-            return RedirectToAction(nameof(ChatController.Index), "Chat");
+            ViewData["CurrentPage"] = "Home";
+            return View();
         }
 
         public IActionResult Privacy()

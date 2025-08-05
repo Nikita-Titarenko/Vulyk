@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Vulyk.ViewModels
 {
-    public class EditProfileViewModel : EmailInputViewModel
+    public class EditProfileViewModel : LoginViewModel
     {
         [DataType(DataType.Password)]
         [StringLength(20, MinimumLength = 10, ErrorMessage = "The password length needs to be from 10 to 20 characters")]

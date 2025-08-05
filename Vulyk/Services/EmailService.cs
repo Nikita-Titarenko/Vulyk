@@ -1,30 +1,49 @@
-﻿using MailKit.Net.Smtp;
+﻿using System.Net.Mail;
+using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using MimeKit;
 using Org.BouncyCastle.Crypto;
+using Vulyk.Controllers;
 
 namespace Vulyk.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
+        private readonly IUrlHelperFactory _urlHelperFactory;
+        private readonly IActionContextAccessor _actionContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
         private const string email = "vulyk.messenger@gmail.com";
-        private const string password = "bdfomjzqtrkhqojn"; 
-        public async Task SendEmailAsync(string emailToSend, string title, string body)
+        private const string password = "bdfomjzqtrkhqojn";
+
+        public EmailService(IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor, IHttpContextAccessor httpContextAccessor)
         {
+            _urlHelperFactory = urlHelperFactory;
+            _actionContextAccessor = actionContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        public async Task SendConfirmationEmailAsync(IdentityUser user, string token)
+        {
+            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext!);
+            var callBackUrl = urlHelper.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, token }, _httpContextAccessor.HttpContext!.Request.Scheme);
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Vulyk", email));
-            message.To.Add(new MailboxAddress(string.Empty, emailToSend));
-            message.Subject = title;
+            message.To.Add(new MailboxAddress(string.Empty, user.Email));
+            message.Subject = "Confirm Auth in Vulyk";
             message.Body = new TextPart("html")
             {
-                Text = body
-                
+                Text = $"<h2>{callBackUrl}</h2>"
             };
-            using (var smtpClient = new SmtpClient())
+            using (var smtp = new MailKit.Net.Smtp.SmtpClient())
             {
-                await smtpClient.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                await smtpClient.AuthenticateAsync(email, password);
-                await smtpClient.SendAsync(message);
-                await smtpClient.DisconnectAsync(true);
+                await smtp.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(email, password);
+                smtp.Send(message);
+                await smtp.DisconnectAsync(true);
             }
         }
     }

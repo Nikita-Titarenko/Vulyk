@@ -5,14 +5,14 @@ namespace Vulyk.Controllers
 {
     public class BaseController : Controller
     {
-        public int? GetUserIdFromCookie()
+        public string? GetUserId()
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
                 return null;
             }
-            return int.Parse(userId);
+            return userId;
         }
 
         public IActionResult ShowUnexpectedError()
