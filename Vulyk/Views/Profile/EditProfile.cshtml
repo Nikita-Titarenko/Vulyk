@@ -31,14 +31,14 @@
 		<div class="input-wrapper">
 			<input class="form-input password-input w-100" value="@(Model.IsPasswordExist ? "123456" : "")" type="password" readonly/>
 			<a class="input-right-element" asp-action="@(Model.IsPasswordExist ? nameof(ProfileController.EditPassword) : nameof(ProfileController.AddPassword))" asp-controller="Profile">
-				<p class="right-button-text">@(Model.IsPasswordExist ? "Edit password" : "Add password")</p>
+				<p class="right-button-text right-text">@(Model.IsPasswordExist ? "Edit password" : "Add password")</p>
 			</a>
 		</div>
 		<label class="@(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "label-validation-error" : "")" asp-for="Email"></label>
 		<div class="input-wrapper">
 			<input class="form-input w-100 @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Email" placeholder="@Html.DisplayNameFor(m => m.Email)" readonly/>
-			<a class="input-right-element" asp-action="@nameof(ProfileController.EditPassword)" asp-controller="Profile">
-				<p class="right-button-text">Edit email</p>
+			<a class="input-right-element right-text" asp-action="@nameof(ProfileController.EditEmail)" asp-controller="Profile">
+				<p class="right-button-text right-text">Edit email</p>
 			</a>
 		</div>
 	</form>

@@ -4,5 +4,6 @@
     {
         public string UserId { get; set; } = string.Empty;
         public string VerificationToken { get; set; } = string.Empty;
+        public string? NewEmail { get; set; }
     }
 }

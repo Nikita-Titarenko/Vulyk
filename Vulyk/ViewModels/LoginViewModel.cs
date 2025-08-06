@@ -4,11 +4,8 @@ using Vulyk.Filters;
 
 namespace Vulyk.ViewModels
 {
-    public class LoginViewModel : EmailViewModel
+    public class LoginViewModel : EmailInputViewModel
     {
-        [Required]
-        [EmailAddress]
-        public new string Email { get => base.Email; set => base.Email = value; }
         [Required]
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "The password length needs to be from 6 characters")]

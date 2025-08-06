@@ -12,6 +12,8 @@ namespace Vulyk.Models
 
         public DateTime? LastOnline { get; set; } = DateTime.Now;
 
+        public string? PendingNewEmail { get; set; }
+
         public IEnumerable<UserChat> UserChats { get; set; } = new List<UserChat>();
     }
 }

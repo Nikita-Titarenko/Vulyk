@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using Vulyk.Filters;
 
 namespace Vulyk.ViewModels
@@ -9,6 +10,7 @@ namespace Vulyk.ViewModels
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "The password length needs to be from 6 characters")]
         [StrongPassword]
+        [DisplayName("Current password")]
         public string CurrentPassword { get; set; } = string.Empty;
     }
 }

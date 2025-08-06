@@ -1,4 +1,6 @@
-﻿using System.Security.Claims;
+﻿using System.Reflection.Emit;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using AutoMapper;
 using Humanizer;
 using Microsoft.AspNetCore.Authentication;
@@ -64,6 +66,7 @@ namespace Vulyk.Controllers
         {
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new {returnUrl});
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            properties.Items["prompt"] = "consent select_account";
             return Challenge(properties, provider);
         }
 
@@ -90,8 +93,13 @@ namespace Vulyk.Controllers
             return Redirect(returnUrl);
         }
 
-        [DenyAuthenticatedAttribute]
-        public IActionResult VerifyEmail(string email, bool? tokenIncorrect)
+        public async Task<IActionResult> SendVerificationToken(UserService.EmailConfirmation emailConfirmation, string? returnUrl)
+        {
+            await _userService.SendEmailConfirmationTokenAsync(GetUserId()!, emailConfirmation, returnUrl);
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { email = await _userService.GetEmailAsync(GetUserId()!) });
+        }
+
+        public IActionResult VerifyEmail(string email, bool? tokenIncorrect, string? returnUrl)
         {
             if (tokenIncorrect != null)
             {
@@ -101,9 +109,9 @@ namespace Vulyk.Controllers
         }
 
         //[DenyAuthenticatedAttribute]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token, string? returnUrl)
+        public async Task<IActionResult> ConfirmEmail(string userId, string token, string? returnUrl, UserService.EmailConfirmation emailConfirmation)
         {
-            bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, VerificationToken = token });
+            bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, VerificationToken = token }, emailConfirmation);
             if (!isVerified)
             {
                 return RedirectToAction(nameof(VerifyEmail), "Account", new {email = await _userService.GetEmailAsync(userId), tokenIncorrect = true, returnUrl});
@@ -181,6 +189,47 @@ namespace Vulyk.Controllers
         {
             await _userService.LogOutAsync();
             return RedirectToAction(nameof(HomeController.Index), "Home");
+        }
+
+        [DenyAuthenticatedAttribute]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [DenyAuthenticatedAttribute]
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(EmailInputViewModel emailViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(emailViewModel);
+            }
+            await _userService.SendEmailConfirmationTokenAsync(emailViewModel.Email, UserService.EmailConfirmation.ResetPassword);
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { emailViewModel.Email });
+        }
+
+        [DenyAuthenticatedAttribute]
+        public IActionResult ResetPassword(string userId, string token)
+        {
+            return View(new ResetPasswordViewModel { UserId = userId, Token = token});
+        }
+
+        [DenyAuthenticatedAttribute]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel addPasswordViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(addPasswordViewModel);
+            }
+            var result = await _userService.ResetPasswordAsync(addPasswordViewModel.UserId, addPasswordViewModel.Token, addPasswordViewModel.NewPassword, addPasswordViewModel.NewPasswordConfirm);
+            if (result == UserService.EditPasswordResult.CurrentPasswordOrTokenIncorrect)
+            {
+                ModelState.AddModelError(string.Empty, "Token is incorrect");
+                return View(addPasswordViewModel);
+            }
+            return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
     }
 }

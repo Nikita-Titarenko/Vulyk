@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using MimeKit;
 using Org.BouncyCastle.Crypto;
 using Vulyk.Controllers;
+using Vulyk.Models;
+using static Vulyk.Services.UserService;
 
 namespace Vulyk.Services
 {
@@ -26,17 +28,45 @@ namespace Vulyk.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task SendConfirmationEmailAsync(IdentityUser user, string token, string? returnUrl)
+        public async Task SendConfirmationEmailAsync(ApplicationUser user, string token, EmailConfirmation emailConfirmation, string? returnUrl)
         {
             var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext!);
-            var callBackUrl = urlHelper.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, token, returnUrl }, _httpContextAccessor.HttpContext!.Request.Scheme);
+            string? action = null;
+            string? controller = null;
             var message = new MimeMessage();
+            if (emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
+            {
+                action = nameof(ProfileController.NewEmailInput);
+                controller = "Profile";
+                message.Subject = "Confirm changing email in Vulyk";
+            }
+            else if (emailConfirmation == EmailConfirmation.ResetPassword)
+            {
+                action = nameof(AccountController.ResetPassword);
+                controller = "Account";
+                message.Subject = "Confirm reset password in Vulyk";
+            }
+            else if (emailConfirmation == EmailConfirmation.ConfirmRegister)
+            {
+                action = nameof(AccountController.ConfirmEmail);
+                controller = "Account";
+                message.Subject = "Confirm Registration in Vulyk";
+            }
+            else if (emailConfirmation == EmailConfirmation.ConfirmNewEmail)
+            {
+                action = nameof(AccountController.ConfirmEmail);
+                controller = "Account";
+                message.Subject = "Confirm changing email in Vulyk";
+            }
+
+            var callBackUrl = urlHelper.Action(action, controller, new { userId = user.Id, token, emailConfirmation, returnUrl }, _httpContextAccessor.HttpContext!.Request.Scheme);
+
             message.From.Add(new MailboxAddress("Vulyk", email));
-            message.To.Add(new MailboxAddress(string.Empty, user.Email));
-            message.Subject = "Confirm Auth in Vulyk";
+            message.To.Add(new MailboxAddress(string.Empty, emailConfirmation == EmailConfirmation.ConfirmNewEmail ? user.PendingNewEmail : user.Email));
+
             message.Body = new TextPart("html")
             {
-                Text = $"<h2>{callBackUrl}</h2>"
+                Text = $"<h1>{"Click below to verify your account."}</h1><h2>{callBackUrl}</h2>"
             };
             using (var smtp = new MailKit.Net.Smtp.SmtpClient())
             {

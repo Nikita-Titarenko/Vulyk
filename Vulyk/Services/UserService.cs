@@ -48,21 +48,57 @@ namespace Vulyk.Services
             await _context.SaveChangesAsync();
             var token = await _userManager.GeneratePasswordResetTokenAsync(foundUser);
             await _userManager.ResetPasswordAsync(foundUser, token, dto.Password);
-            await SendEmailConfirmationTokenAsync(foundUser, returnUrl);
+            await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmRegister, returnUrl);
 
             return AddUserResult.Success;
         }
 
-        private async Task SendEmailConfirmationTokenAsync(ApplicationUser user, string? returnUrl)
+        public async Task SendEmailConfirmationTokenAsync(string email, EmailConfirmation emailConfirmation)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            await _emailService.SendConfirmationEmailAsync(user, token, returnUrl);
+            ApplicationUser? user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return;
+            }
+            await SendEmailConfirmationTokenAsync(user, emailConfirmation, null);
+        }
+
+        public async Task SendEmailConfirmationTokenAsync(string userId, EmailConfirmation emailConfirmation, string? returnUrl)
+        {
+            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return;
+            }
+            await SendEmailConfirmationTokenAsync(user, emailConfirmation, returnUrl);
+        }
+
+        private async Task SendEmailConfirmationTokenAsync(ApplicationUser user, EmailConfirmation emailConfirmation, string? returnUrl)
+        {
+            string? token;
+            if (emailConfirmation == EmailConfirmation.ConfirmNewEmail && user.PendingNewEmail != null)
+            {
+                token = await _userManager.GenerateChangeEmailTokenAsync(user, user.PendingNewEmail);
+            }
+            else if (emailConfirmation == EmailConfirmation.ResetPassword)
+            {
+                token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            } else
+            {
+                token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            }
+
+            await _emailService.SendConfirmationEmailAsync(user, token, emailConfirmation, returnUrl);
         }
 
         public async Task<GoogleLoginResult> ProcessExternalLoginAsync(ExternalLoginInfo info)
         {
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+            {
+                return GoogleLoginResult.Error;
+            }
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user != null && !result.Succeeded)
@@ -102,7 +138,12 @@ namespace Vulyk.Services
             Success, EmailAlreadyExist
         }
 
-        public async Task<bool> CheckVerificationTokenAsync(EmailConfirmDto dto)
+        public enum EmailConfirmation
+        {
+            ConfirmRegister, ConfirmCurrentEmail, ConfirmNewEmail, ResetPassword
+        }
+
+        public async Task<bool> CheckVerificationTokenAsync(EmailConfirmDto dto, EmailConfirmation emailConfirmation)
         {
             ApplicationUser? foundUser = await _userManager.FindByIdAsync(dto.UserId);
             if (foundUser == null)
@@ -110,13 +151,30 @@ namespace Vulyk.Services
                 return false;
             }
 
-            var result = await _userManager.ConfirmEmailAsync(foundUser, dto.VerificationToken);
+            IdentityResult? result = null;
+            if (emailConfirmation == EmailConfirmation.ConfirmRegister || emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
+            {
+                result = await _userManager.ConfirmEmailAsync(foundUser, dto.VerificationToken);
+            }
+            else if (foundUser.PendingNewEmail != null && emailConfirmation == EmailConfirmation.ConfirmNewEmail)
+            {
+                result = await _userManager.ChangeEmailAsync(foundUser, foundUser.PendingNewEmail, dto.VerificationToken);
+                if (result == IdentityResult.Success) {
+                    result = await _userManager.SetUserNameAsync(foundUser, foundUser.PendingNewEmail);
+                }
+            }
 
-            if (!result.Succeeded)
+
+            if (result == null || !result.Succeeded)
             {
                 return false;
             }
 
+            if (emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
+            {
+                foundUser.PendingNewEmail = dto.NewEmail;
+                await _context.SaveChangesAsync();
+            }
             await _signInManager.SignInAsync(foundUser, true);
 
             return true;
@@ -133,16 +191,6 @@ namespace Vulyk.Services
             user.PhoneNumber = dto.Phone?.Trim();
             user.FullName = dto.FullName.Trim();
             await _context.SaveChangesAsync();
-        }
-
-        public async Task EditEmailAsync(string userId)
-        {
-            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return;
-            }
-            await _userManager.ChangeEmailAsync();
         }
 
         public async Task<EditPasswordResult> AddPasswordAsync(string userId, string newPassword, string newPasswordConfirm)
@@ -170,7 +218,7 @@ namespace Vulyk.Services
             return EditPasswordResult.Success;
         }
 
-        public async Task<EditPasswordResult> EditPasswordAsync(string userId, string currentPassword, string newPassword, string newPasswordConfirm)
+        public async Task<EditPasswordResult> EditPasswordByCurrentPasswordAsync(string userId, string currentPassword, string newPassword, string newPasswordConfirm)
         {
             ApplicationUser? user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -186,15 +234,39 @@ namespace Vulyk.Services
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPasswordConfirm);
             if (!result.Succeeded)
             {
-                return EditPasswordResult.CurrentPasswordIncorrect;
+                return EditPasswordResult.CurrentPasswordOrTokenIncorrect;
             }
 
             return EditPasswordResult.Success;
         }
 
+        public async Task<EditPasswordResult> ResetPasswordAsync(string userId, string token, string newPassword, string newPasswordConfirm)
+        {
+            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return EditPasswordResult.UserNotFound;
+            }
+
+            if (newPassword != newPasswordConfirm)
+            {
+                return EditPasswordResult.newPasswordsIsDifferent;
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, token, newPasswordConfirm);
+            if (!result.Succeeded)
+            {
+                return EditPasswordResult.CurrentPasswordOrTokenIncorrect;
+            }
+            await _signInManager.SignInAsync(user, true);
+            user.EmailConfirmed = true;
+            await _context.SaveChangesAsync();
+            return EditPasswordResult.Success;
+        }
+
         public enum EditPasswordResult
         {
-            Success, CurrentPasswordIncorrect, newPasswordsIsDifferent, UserNotFound, PasswordAlreadyExist
+            Success, CurrentPasswordOrTokenIncorrect, newPasswordsIsDifferent, UserNotFound, PasswordAlreadyExist
         }
 
         public async Task<FindUserResult> LoginAsync(string email, string password, string? returnUrl)
@@ -207,13 +279,13 @@ namespace Vulyk.Services
             }
             if (!foundUser.EmailConfirmed)
             {
-                await SendEmailConfirmationTokenAsync(foundUser, returnUrl);
+                await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmRegister, returnUrl);
                 return FindUserResult.EmailEntered;
             }
             if (!await _userManager.HasPasswordAsync(foundUser))
             {
                 await _userManager.AddPasswordAsync(foundUser, password);
-                await SendEmailConfirmationTokenAsync(foundUser, returnUrl);
+                await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmRegister, returnUrl);
                 return FindUserResult.EmailEntered;
             }
 
@@ -242,7 +314,8 @@ namespace Vulyk.Services
         public async Task<UserProfileEditDto> FindUserByIdAsync(string id)
         {
             var foundUser = await _userManager.FindByIdAsync(id);
-            if (foundUser == null) {
+            if (foundUser == null)
+            {
                 throw new InvalidParameterException();
             }
             var isPasswordExist = await _userManager.HasPasswordAsync(foundUser);
