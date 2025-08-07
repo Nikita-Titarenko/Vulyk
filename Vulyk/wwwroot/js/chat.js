@@ -124,10 +124,10 @@ function CreateMessage(e) {
                 chatId = result.chatId;
                 name = result.name;
                 chatIdDiv.dataset.chatId = chatId;
-                await connection.invoke("CreateChatAsync", userId, parseInt(yourUserId), chatId, name, text);
+                await connection.invoke("CreateChatAsync", userId, yourUserId, chatId, name, text);
             } else {
                 try {
-                    await connection.invoke("SendMessageAsync", chatId.toString(), parseInt(yourUserId), text);
+                    await connection.invoke("SendMessageAsync", chatId.toString(), yourUserId, text);
                 }
                 catch (er) {
                     console.log(er);

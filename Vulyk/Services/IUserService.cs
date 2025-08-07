@@ -19,9 +19,10 @@ namespace Vulyk.Services
         Task EditFullNameAsync(string id, string fullName);
         Task<GoogleLoginResult> ProcessExternalLoginAsync(ExternalLoginInfo info);
         Task<EditPasswordResult> AddPasswordAsync(string userId, string newPassword, string newPasswordConfirm);
-        Task<EditPasswordResult> EditPasswordByCurrentPasswordAsync(string userId, string currentPassword, string newPassword, string newPasswordConfirm);
-        Task<EditPasswordResult> ResetPasswordAsync(string userId, string token, string newPassword, string newPasswordConfirm);
+        Task<EditPasswordResult> EditPasswordByCurrentPasswordAsync(EditPasswordByCurrentPasswordDto dto);
+        Task<EditPasswordResult> ResetPasswordAsync(ResetPasswordDto dto);
         Task SendEmailConfirmationTokenAsync(string email, EmailConfirmation emailConfirmation);
         Task SendEmailConfirmationTokenAsync(string userId, EmailConfirmation emailConfirmation, string? returnUrl);
+        Task<string?> GetPendingNewEmailAsync(string id);
     }
 }

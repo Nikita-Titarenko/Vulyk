@@ -2,7 +2,7 @@
 
 namespace Vulyk.ViewModels
 {
-    public class EmailConfirmViewModel
+    public class NewEmailConfirmViewModel
     {
         public string VerificationToken { get; set; } = string.Empty;
         [Required]

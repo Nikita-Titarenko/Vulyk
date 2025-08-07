@@ -30,6 +30,10 @@ namespace Vulyk.Data
 
             builder.Entity<UserChat>().HasKey(uc => new { uc.UserId, uc.ChatId });
 
+            builder.Entity<UserChat>().HasOne(m => m.ApplicationUser).WithMany(m => m.UserChats).HasForeignKey(uc => uc.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserChat>().HasOne(m => m.Chat).WithMany(m => m.UserChats).HasForeignKey(uc => uc.ChatId).OnDelete(DeleteBehavior.Cascade);
+
             builder.Entity<Message>().HasOne(m => m.UserChat).WithMany(m => m.Messages).HasForeignKey(uc => new { uc.UserId, uc.ChatId }).OnDelete(DeleteBehavior.Cascade);
         }
     }

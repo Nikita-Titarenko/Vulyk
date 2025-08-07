@@ -12,6 +12,8 @@ namespace Vulyk.AutoMappers
             CreateMap<EditProfileViewModel, UserProfileEditDto>();
             CreateMap<EmailViewModel, EmailConfirmDto>();
             CreateMap<RegisterViewModel, RegistrationDto>();
+            CreateMap<EditPasswordViewModel, EditPasswordByCurrentPasswordDto>();
+            CreateMap<ResetPasswordViewModel, ResetPasswordDto>();
         }
     }
 }

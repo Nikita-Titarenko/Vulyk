@@ -120,8 +120,10 @@ namespace Vulyk.Controllers
             {
                 return ShowUnexpectedError();
             }
-            var result = await _userService.EditPasswordByCurrentPasswordAsync(userId, model.CurrentPassword, model.NewPassword, model.NewPasswordConfirm);
-            if (result == UserService.EditPasswordResult.CurrentPasswordOrTokenIncorrect)
+            var dto = _mapper.Map<EditPasswordByCurrentPasswordDto>(model);
+            dto.UserId = userId;
+            var result = await _userService.EditPasswordByCurrentPasswordAsync(dto);
+            if (result == UserService.EditPasswordResult.CurrentPasswordIncorrect)
             {
                 ModelState.AddModelError(string.Empty, "Current password incorrect");
                 return View(model);
@@ -132,7 +134,7 @@ namespace Vulyk.Controllers
         }
 
         [Authorize]
-        public IActionResult EditEmail(EditProfileViewModel editProfileViewModel)
+        public IActionResult EditEmail(string email)
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
@@ -141,7 +143,7 @@ namespace Vulyk.Controllers
                 "Account",
                 new
                 {
-                    email = editProfileViewModel.Email,
+                    email,
                     returnUrl = "/Profile/NewEmailInput",
                     emailConfirmation = EmailConfirmation.ConfirmCurrentEmail
                 }
@@ -154,22 +156,26 @@ namespace Vulyk.Controllers
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
 
-            return View(new EmailConfirmViewModel { VerificationToken = token! });
+            return View(new NewEmailConfirmViewModel { VerificationToken = token! });
         }
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> NewEmailInput(EmailConfirmViewModel model)
+        public async Task<IActionResult> NewEmailInput(NewEmailConfirmViewModel model)
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
             string userId = GetUserId()!;
             bool result = await _userService.CheckVerificationTokenAsync(
                 new EmailConfirmDto
                 {
                     UserId = userId,
                     NewEmail = model.NewEmail,
-                    VerificationToken = model.VerificationToken
+                    Token = model.VerificationToken
                 },
                 EmailConfirmation.ConfirmCurrentEmail);
             if (!result)
@@ -177,7 +183,7 @@ namespace Vulyk.Controllers
                 return RedirectToAction(nameof(AccountController.ConfirmEmail), "Account", new { userId, tokenIncorrect = true});
             }
             await _userService.SendEmailConfirmationTokenAsync(userId, EmailConfirmation.ConfirmNewEmail, "/Profile/EditProfile");
-            return RedirectToAction(nameof(AccountController.VerifyEmail), "Account", new { emailConfirmation = EmailConfirmation.ConfirmNewEmail});
+            return RedirectToAction(nameof(AccountController.VerifyEmail), "Account", new { email = model.NewEmail, emailConfirmation = EmailConfirmation.ConfirmNewEmail, token = model.VerificationToken});
         }
     }
 }

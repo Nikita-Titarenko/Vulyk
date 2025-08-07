@@ -46,7 +46,7 @@ namespace Vulyk.Services
                 controller = "Account";
                 message.Subject = "Confirm reset password in Vulyk";
             }
-            else if (emailConfirmation == EmailConfirmation.ConfirmRegister)
+            else if (emailConfirmation == EmailConfirmation.ConfirmRegister || emailConfirmation == EmailConfirmation.ConfirmLogin)
             {
                 action = nameof(AccountController.ConfirmEmail);
                 controller = "Account";

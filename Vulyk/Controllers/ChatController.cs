@@ -67,27 +67,27 @@ namespace Vulyk.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(LoginViewModel createChatViewModel)
+        public async Task<IActionResult> Create(EmailInputViewModel emailInputChatViewModel)
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
             if (!ModelState.IsValid)
             {
-                return View(createChatViewModel);
+                return View(emailInputChatViewModel);
             }
 
             string? userId = GetUserId()!;
 
-            var (foundUserId, findUserResult) = await _userService.FindUserByEmailAsync(createChatViewModel.Email);
-            if (findUserResult != UserService.FindUserResult.LoginFailed)
+            var (foundUserId, findUserResult) = await _userService.FindUserByEmailAsync(emailInputChatViewModel.Email);
+            if (findUserResult == UserService.FindUserResult.LoginFailed)
             {
                 ModelState.AddModelError(string.Empty, $"User with this email not exist");
-                return View(createChatViewModel);
+                return View(emailInputChatViewModel);
             }
             if (userId == foundUserId)
             {
                 ModelState.AddModelError(string.Empty, "You don't can add yourself");
-                return View(createChatViewModel);
+                return View(emailInputChatViewModel);
             }
             int? chatId = await _chatService.GetChatAsync(userId, foundUserId!);
 

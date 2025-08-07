@@ -59,7 +59,13 @@ namespace Vulyk.Controllers
                 return View(registrationViewModel);
             }
 
-            return RedirectToAction(nameof(VerifyEmail), "Account", new { registrationViewModel.Email, returnUrl });
+            if (result == UserService.AddUserResult.PasswordTooWeak)
+            {
+                ModelState.AddModelError(string.Empty, "Email does not meet the requiements");
+                return View(registrationViewModel);
+            }
+
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { registrationViewModel.Email, emailConfirmation = UserService.EmailConfirmation.ConfirmRegister, returnUrl });
         }
 
         public IActionResult ExternalLogin(string provider, string? returnUrl)
@@ -93,28 +99,62 @@ namespace Vulyk.Controllers
             return Redirect(returnUrl);
         }
 
-        public async Task<IActionResult> SendVerificationToken(UserService.EmailConfirmation emailConfirmation, string? returnUrl)
+        public IActionResult InputWrongEmail(UserService.EmailConfirmation emailConfirmation, string? returnUrl, string? token)
         {
-            await _userService.SendEmailConfirmationTokenAsync(GetUserId()!, emailConfirmation, returnUrl);
-            return RedirectToAction(nameof(VerifyEmail), "Account", new { email = await _userService.GetEmailAsync(GetUserId()!) });
+            if (emailConfirmation == UserService.EmailConfirmation.ConfirmCurrentEmail)
+            {
+                return RedirectToAction(nameof(ProfileController.EditProfile), "Profile");
+            }
+
+            if (emailConfirmation == UserService.EmailConfirmation.ConfirmNewEmail)
+            {
+                return RedirectToAction(nameof(ProfileController.NewEmailInput), "Profile", new { token });
+            }
+
+            if (emailConfirmation == UserService.EmailConfirmation.ConfirmLogin)
+            {
+                return RedirectToAction(nameof(Login), "Account", new {returnUrl});
+            }
+
+            if (emailConfirmation == UserService.EmailConfirmation.ConfirmRegister)
+            {
+                return RedirectToAction(nameof(Register), "Account", new { returnUrl });
+            }
+
+            if (emailConfirmation == UserService.EmailConfirmation.ResetPassword)
+            {
+                return RedirectToAction(nameof(ForgotPassword), "Account", new { returnUrl });
+            }
+
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
-        public IActionResult VerifyEmail(string email, bool? tokenIncorrect, string? returnUrl)
+        public async Task<IActionResult> SendVerificationToken(UserService.EmailConfirmation emailConfirmation, string email, string? token, string? returnUrl)
         {
-            if (tokenIncorrect != null)
-            {
-                ModelState.AddModelError(string.Empty, "Your email could not be verified");
-            }
-            return View(new EmailViewModel {Email = email });
+            await _userService.SendEmailConfirmationTokenAsync(email, emailConfirmation);
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { email, emailConfirmation, token, returnUrl });
+        }
+
+        public IActionResult VerifyEmail(VerifyEmailViewModel model)
+        {
+            return View(model);
         }
 
         //[DenyAuthenticatedAttribute]
         public async Task<IActionResult> ConfirmEmail(string userId, string token, string? returnUrl, UserService.EmailConfirmation emailConfirmation)
         {
-            bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, VerificationToken = token }, emailConfirmation);
+            bool isVerified = await _userService.CheckVerificationTokenAsync(new EmailConfirmDto { UserId = userId, Token = token }, emailConfirmation);
+            string? email;
+            if (emailConfirmation == UserService.EmailConfirmation.ConfirmNewEmail)
+            {
+                email = await _userService.GetPendingNewEmailAsync(userId);
+            } else
+            {
+                email = await _userService.GetEmailAsync(userId);
+            }
             if (!isVerified)
             {
-                return RedirectToAction(nameof(VerifyEmail), "Account", new {email = await _userService.GetEmailAsync(userId), tokenIncorrect = true, returnUrl});
+                return RedirectToAction(nameof(VerifyEmail), "Account", new { email, emailConfirmation, tokenIncorrect = true, returnUrl });
             }
             if (returnUrl == null)
             {
@@ -167,7 +207,7 @@ namespace Vulyk.Controllers
             var result = await _userService.LoginAsync(emailInput.Email, emailInput.Password, returnUrl);
             if (result == UserService.FindUserResult.EmailEntered)
             {
-                return RedirectToAction(nameof(VerifyEmail), "Account", new { email = emailInput.Email, returnUrl });
+                return RedirectToAction(nameof(VerifyEmail), "Account", new { email = emailInput.Email, emailConfirmation = UserService.EmailConfirmation.ConfirmLogin, returnUrl });
             }
             if (result == UserService.FindUserResult.LoginFailed)
             {
@@ -206,7 +246,7 @@ namespace Vulyk.Controllers
                 return View(emailViewModel);
             }
             await _userService.SendEmailConfirmationTokenAsync(emailViewModel.Email, UserService.EmailConfirmation.ResetPassword);
-            return RedirectToAction(nameof(VerifyEmail), "Account", new { emailViewModel.Email });
+            return RedirectToAction(nameof(VerifyEmail), "Account", new { emailViewModel.Email, emailConfirmation = UserService.EmailConfirmation.ResetPassword });
         }
 
         [DenyAuthenticatedAttribute]
@@ -217,17 +257,17 @@ namespace Vulyk.Controllers
 
         [DenyAuthenticatedAttribute]
         [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel addPasswordViewModel)
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel resetPasswordViewModel)
         {
             if (!ModelState.IsValid)
             {
-                return View(addPasswordViewModel);
+                return View(resetPasswordViewModel);
             }
-            var result = await _userService.ResetPasswordAsync(addPasswordViewModel.UserId, addPasswordViewModel.Token, addPasswordViewModel.NewPassword, addPasswordViewModel.NewPasswordConfirm);
-            if (result == UserService.EditPasswordResult.CurrentPasswordOrTokenIncorrect)
+            var result = await _userService.ResetPasswordAsync(_mapper.Map<ResetPasswordDto>(resetPasswordViewModel));
+            if (result == UserService.EditPasswordResult.TokenIncorrect)
             {
                 ModelState.AddModelError(string.Empty, "Token is incorrect");
-                return View(addPasswordViewModel);
+                return View(resetPasswordViewModel);
             }
             return RedirectToAction(nameof(ChatController.Index), "Chat");
         }
