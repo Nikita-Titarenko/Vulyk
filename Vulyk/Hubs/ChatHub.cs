@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Vulyk.Models;
+using Vulyk.Entities;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Vulyk.Hubs

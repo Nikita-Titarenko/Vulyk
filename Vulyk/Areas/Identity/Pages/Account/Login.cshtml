@@ -1,0 +1,67 @@
+﻿@page
+@model LoginModel
+
+@{
+	Layout = "~/Views/Shared/AuthLayout.cshtml";
+	ViewData["Title"] = "Log in";
+}
+
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
+
+<section>
+	<form id="account" method="post" class="form">
+		<h2 class="subheading mx-auto">Welcome back</h2>
+		<h6 class="subtitle w-75 text-center mx-auto">Hey, Enter your email to get sign in to your account</h6>
+		<div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+		<div class="form-floating mb-3 w-100">
+			<input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+			<label asp-for="Input.Email" class="form-label">Email</label>
+			<span asp-validation-for="Input.Email" class="text-danger"></span>
+		</div>
+		<div class="form-floating mb-3 w-100">
+			<input asp-for="Input.Password" class="form-control password-input" autocomplete="current-password" aria-required="true" placeholder="password" />
+			<label asp-for="Input.Password" class="form-label">Password</label>
+			<span asp-validation-for="Input.Password" class="text-danger"></span>
+			<button class="btn-show-password input-right-element" type="button">
+				<i class="fa fa-eye-slash eye-icon"></i>
+			</button>
+		</div>
+		<p class="w-100">
+			<a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+		</p>
+		<div class="checkbox mb-3 w-100">
+			<label asp-for="Input.RememberMe" class="form-label">
+				<input class="form-check-input" asp-for="Input.RememberMe" />
+				@Html.DisplayNameFor(m => m.Input.RememberMe)
+			</label>
+		</div>
+		<div class="w-100">
+			<button id="login-submit" type="submit" class="w-100 btn btn-primary">Log in</button>
+		</div>
+		<div>
+			<p class="w-100 d-flex justify-content-center gap-2">
+				<span>Don't have an account?</span>
+				<a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register Now</a>
+			</p>
+		</div>
+	</form>
+</section>
+<section>
+		<div>
+			<p>
+				@foreach (var provider in Model.ExternalLogins!)
+				{
+					<a asp-page="/Account/ExternalLogin" class="google-button" name="provider" asp-route-provider="@provider.Name" title="Log in using your @provider.DisplayName account" asp-route-returnUrl="@Model.ReturnUrl">
+						<img src="~/images/google-icon.webp" width="30" height="30" />
+						@provider.DisplayName
+					</a>
+				}
+			</p>
+		</div>
+</section>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

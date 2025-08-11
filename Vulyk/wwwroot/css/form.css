@@ -74,11 +74,14 @@ h2, h5, p{
 }
 
 .input-right-element {
-/*    color: dimgray;*/
     position: absolute !important;
     top: 50%;
     transform: translateY(-50%);
     right: 20px;
+}
+
+.password-input {
+    padding-right: 60px !important;
 }
 
 .google-button {
@@ -92,6 +95,10 @@ h2, h5, p{
 
 .right-text {
     font-size: 1rem;
+}
+
+.input-with-button{
+    padding-right: 100px;
 }
 
 .right-button-text {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
 using Vulyk.DTOs;
-using Vulyk.Models;
+using Vulyk.Entities;
 using Vulyk.Services;
 using Vulyk.ViewModels;
 using static System.Net.Mime.MediaTypeNames;

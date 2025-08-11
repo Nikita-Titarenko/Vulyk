@@ -7,3 +7,8 @@ header {
     border-radius: 10px 10px 0px 0px;
     background: #fff9f4;
 }
+
+.section-page {
+    background: #fff4eb;
+    width: 100%;
+}

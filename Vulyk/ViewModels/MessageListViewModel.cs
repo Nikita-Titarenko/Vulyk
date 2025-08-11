@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Vulyk.Models;
+using Vulyk.Entities;
 
 namespace Vulyk.ViewModels
 {

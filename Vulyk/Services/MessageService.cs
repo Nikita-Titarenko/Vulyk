@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.DTOs;
 using Vulyk.Hubs;
-using Vulyk.Models;
+using Vulyk.Entities;
 
 namespace Vulyk.Services
 {

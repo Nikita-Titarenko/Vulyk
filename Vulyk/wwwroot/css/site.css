@@ -87,11 +87,6 @@ footer {
         height: 20px;
     }
 
-section {
-    background: #fff4eb;
-    width: 100%;
-}
-
 :root {
     --main-color: #e66422;
     --main-gradient: linear-gradient(to top, #e66422, #e66c2e);
@@ -144,6 +139,7 @@ ul {
 }
 
 .btn {
+    box-sizing: border-box;
     padding: 10px 25px 10px 25px;
     border: 2px solid;
     border-radius: 20px;

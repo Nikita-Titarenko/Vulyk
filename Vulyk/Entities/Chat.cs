@@ -1,4 +1,4 @@
-﻿namespace Vulyk.Models
+﻿namespace Vulyk.Entities
 {
     public class Chat
     {

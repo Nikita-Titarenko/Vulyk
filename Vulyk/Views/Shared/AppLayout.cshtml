@@ -29,12 +29,12 @@
 						</a>
 					</li>
 					<li>
-						<a class="nav-link" asp-action="@nameof(ProfileController.EditProfile)" asp-controller="Profile">
+						<a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index">
 							<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
 					<li class="mt-auto">
-						<form asp-action="@nameof(AccountController.LogOut)" asp-controller="Account">
+						<form asp-area="Identity" asp-page="/Account/LogOut">
 							<button class="nav-link" type="submit">
 								<i class="i-nav fa fa-sign-out"></i>
 							</button>

@@ -1,0 +1,47 @@
+﻿@page
+@model IndexModel
+@{
+	Layout = "~/Views/Shared/AppLayout.cshtml";
+	ViewData["Title"] = "Profile";
+}
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
+<partial name="_StatusMessage" for="StatusMessage" />
+<div class="form-container">
+	<div class="form">
+		<form id="profile-form" method="post">
+			<h6 class="subtitle bold-text left-text my-3">Profile</h6>
+			<div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+			<div class="form-floating mb-3 w-100">
+				<input asp-for="Input.FullName" class="form-control" placeholder="Full name" />
+				<label asp-for="Input.FullName" class="form-label"></label>
+			</div>
+			<div class="form-floating mb-3 w-100">
+				<input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
+				<label asp-for="Input.PhoneNumber" class="form-label"></label>
+				<span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+			</div>
+			<button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+			<h6 class="subtitle bold-text left-text my-3">Account security</h6>
+			<div class="input-wrapper form-floating mb-3 w-100">
+				<input class="form-input w-100 form-control input-with-button" value="@(Model.Input.IsPasswordExist ? "••••••" : "")" readonly type="text" />
+				<label class="form-label">Password</label>
+				<a class="input-right-element" asp-page="@(Model.Input.IsPasswordExist ? "/Account/Manage/ChangePassword" : "/Account/Manage/SetPassword")">
+					<p class="right-button-text right-text">@(Model.Input.IsPasswordExist ? "Edit password" : "Add password")</p>
+				</a>
+			</div>
+		</form>
+		<form asp-page-handler="RequestCurrentEmailConfirmation" method="post">
+			<div class="input-wrapper form-floating mb-3 w-100">
+				<input class="form-input w-100 form-control input-with-button @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "input-validation-error" : "")" asp-for="Input.Email" readonly />
+				<label class="@(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "label-validation-error" : "") form-label" asp-for="Input.Email"></label>
+				<button class="right-button-text right-text input-right-element">Edit email</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

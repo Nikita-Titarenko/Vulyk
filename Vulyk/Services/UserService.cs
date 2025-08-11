@@ -1,16 +1,22 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Security.Claims;
+using System.Text;
+using FluentResults;
 using Humanizer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Security;
 using Vulyk.Data;
 using Vulyk.DTOs;
-using Vulyk.Models;
+using Vulyk.Entities;
 using Vulyk.ViewModels;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace Vulyk.Services
 {
@@ -18,103 +24,235 @@ namespace Vulyk.Services
     {
         private readonly ApplicationDbContext _context;
 
-        private readonly IEmailService _emailService;
-
         private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public UserService(ApplicationDbContext context, IEmailService emailService, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly ILogger<UserService> _logger;
+
+        public UserService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
+            ILogger<UserService> logger)
         {
             _context = context;
-            _emailService = emailService;
             _userManager = userManager;
             _signInManager = signInManager;
+            _logger = logger;
         }
 
-        public async Task<AddUserResult> AddUserAsync(RegistrationDto dto, string? returnUrl)
+        public async Task<Result<AuthResultDto>> RegisterAsync(RegisterDto dto)
         {
-            var foundUser = await _userManager.FindByEmailAsync(dto.Email);
-            if (foundUser == null)
+            var user = new ApplicationUser { UserName = dto.Email, Email = dto.Email, FullName = dto.FullName };
+
+            var result = await _userManager.CreateAsync(user, dto.Password);
+
+            string userId;
+
+            if (!result.Succeeded)
             {
-                foundUser = new ApplicationUser { UserName = dto.Email, Email = dto.Email, FullName = dto.FullName };
-                var result = await _userManager.CreateAsync(foundUser, dto.Password);
-                if (!result.Succeeded)
+                if (!result.Errors.Any(e => e.Code == "DuplicateUserName"))
                 {
-                    return AddUserResult.PasswordTooWeak;
+                    return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
                 }
-            }
-            else if (foundUser.EmailConfirmed)
-            {
-                return AddUserResult.EmailAlreadyExist;
+
+                user = await _userManager.FindByEmailAsync(dto.Email);
+
+                if (user!.EmailConfirmed)
+                {
+                    return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
+                }
+
+                if (!await _userManager.CheckPasswordAsync(user, dto.Password))
+                {
+                    return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
+                }
+
+                userId = user.Id;
+                _logger.LogInformation("User trying login again.");
             }
             else
             {
-                foundUser.FullName = dto.FullName;
-                await _context.SaveChangesAsync();
-                var token = await _userManager.GeneratePasswordResetTokenAsync(foundUser);
-                var result = await _userManager.ResetPasswordAsync(foundUser, token, dto.Password);
-                if (!result.Succeeded)
-                {
-                    return AddUserResult.PasswordTooWeak;
-                }
+                _logger.LogInformation("User created a new account with password.");
+                userId = await _userManager.GetUserIdAsync(user);
             }
 
-            await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmRegister, returnUrl);
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
-            return AddUserResult.Success;
+            return Result.Ok(new AuthResultDto { UserId = userId, Code = code });
         }
 
-        public async Task SendEmailConfirmationTokenAsync(string email, EmailConfirmation emailConfirmation)
+        public async Task<Result<AuthResultDto>> LoginAsync(LoginDto dto)
         {
-            ApplicationUser? user = await _userManager.FindByEmailAsync(email);
+            var result = await _signInManager.PasswordSignInAsync(dto.Email, dto.Password, true, false);
+
+            if (result.Succeeded)
+            {
+                return Result.Ok(new AuthResultDto { EmailNotConfirmed = false });
+            }
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
             if (user == null)
             {
-                return;
+                return Result.Fail(new Error("Login failed").WithMetadata("Code", "LoginFailed"));
             }
-            await SendEmailConfirmationTokenAsync(user, emailConfirmation, null);
+
+            bool isPasswordCorrect = false;
+            if (result.IsNotAllowed)
+            {
+                isPasswordCorrect = await _userManager.CheckPasswordAsync(user, dto.Password);
+            }
+
+            string code;
+
+            if (isPasswordCorrect)
+            {
+                code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                return Result.Ok(new AuthResultDto { UserId = user.Id, Code = code, EmailNotConfirmed = true });
+            }
+
+            var hasPasswordResult = await _userManager.HasPasswordAsync(user);
+
+            if (hasPasswordResult)
+            {
+                return Result.Fail(new Error("Login failed").WithMetadata("Code", "LoginFailed"));
+            }
+
+            code = (await GeneratePasswordResetTokenAsync(dto.Email)).Value.Code;
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            return Result.Ok(new AuthResultDto { UserId = user.Id, Code = code, PasswordNotExist = true });
         }
 
-        public async Task SendEmailConfirmationTokenAsync(string userId, EmailConfirmation emailConfirmation, string? returnUrl)
+        public async Task<Result> ConfirmEmailAsync(ConfirmTokenDto dto)
         {
-            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(dto.UserId);
             if (user == null)
             {
-                return;
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
-            await SendEmailConfirmationTokenAsync(user, emailConfirmation, returnUrl);
+            dto.Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Code));
+            var result = await _userManager.ConfirmEmailAsync(user, dto.Code);
+            if (!result.Succeeded)
+            {
+                return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
+            }
+            await _signInManager.SignInAsync(user, new AuthenticationProperties());
+            return Result.Ok();
         }
 
-        private async Task SendEmailConfirmationTokenAsync(ApplicationUser user, EmailConfirmation emailConfirmation, string? returnUrl)
+        public async Task<Result<ConfirmTokenDto>> GeneratePasswordResetTokenAsync(string email)
         {
-            string? token;
-            if (emailConfirmation == EmailConfirmation.ConfirmNewEmail && user.PendingNewEmail != null)
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || !user.EmailConfirmed)
             {
-                token = await _userManager.GenerateChangeEmailTokenAsync(user, user.PendingNewEmail);
-            }
-            else if (emailConfirmation == EmailConfirmation.ResetPassword)
-            {
-                token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            }
-            else
-            {
-                token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
 
-            await _emailService.SendConfirmationEmailAsync(user, token, emailConfirmation, returnUrl);
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return Result.Ok(new ConfirmTokenDto {Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id});
         }
 
-        public async Task<GoogleLoginResult> ProcessExternalLoginAsync(ExternalLoginInfo info)
+        public async Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !user.EmailConfirmed)
+            {
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
+            }
+
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return Result.Ok(new ConfirmTokenDto { Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id });
+        }
+
+        public async Task<Result<ConfirmTokenDto>> ConfirmCurrentEmailAsync(ConfirmTokenDto dto, string? newEmail)
+        {
+            var user = await _userManager.FindByIdAsync(dto.UserId);
+            if (user == null)
+            {
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
+            }
+            dto.Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Code));
+            var result = await _userManager.ConfirmEmailAsync(user, dto.Code);
+            if (!result.Succeeded)
+            {
+                return Result.Fail(new Error("Token incorrect").WithMetadata("Code", "TokenIncorrect"));
+            }
+            if (newEmail != null)
+            {
+                user.PendingNewEmail = newEmail;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return Result.Ok();
+        }
+
+        public async Task<Result<ConfirmTokenDto>> GenerateNewEmailConfirmationTokenAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !user.EmailConfirmed)
+            {
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
+            }
+
+            if (user.PendingNewEmail == null)
+            {
+                return Result.Fail(new Error("Current email not confirmed").WithMetadata("Code", "CurrentEmailNotConfirmed"));
+            }
+
+            var code = await _userManager.GenerateChangeEmailTokenAsync(user, user.PendingNewEmail);
+            return Result.Ok(new ConfirmTokenDto { Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id });
+        }
+
+        public async Task<Result<ConfirmTokenDto>> ConfirmNewEmailAsync(ConfirmTokenDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.UserId);
+            if (user == null)
+            {
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
+            }
+
+            if (user.PendingNewEmail == null)
+            {
+                return Result.Fail(new Error("Current email not confirmed").WithMetadata("Code", "CurrentEmailNotConfirmed"));
+            }
+
+            dto.Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Code));
+            var result = await _userManager.ChangeEmailAsync(user, user.PendingNewEmail, dto.Code);
+            if (!result.Succeeded)
+            {
+                return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
+            }
+            await _signInManager.RefreshSignInAsync(user);
+
+            return Result.Ok();
+        }
+
+        public async Task<Result<bool>> HasPasswordAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
+            }
+
+            bool result = await _userManager.HasPasswordAsync(user);
+
+            return Result.Ok(result);
+        }
+
+
+        public async Task<Result<ExternalLoginResultDto>> ProcessExternalLoginAsync(ExternalLoginInfo info)
         {
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
             if (result.Succeeded)
             {
-                return GoogleLoginResult.Login;
+                return Result.Ok(new ExternalLoginResultDto { IsLogin = true });
             }
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             if (email == null)
             {
-                return GoogleLoginResult.Error;
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -124,75 +262,23 @@ namespace Vulyk.Services
                 await _signInManager.SignInAsync(user, true);
                 user.EmailConfirmed = true;
                 await _context.SaveChangesAsync();
-                return GoogleLoginResult.Login;
+                return Result.Ok(new ExternalLoginResultDto { IsLogin = true });
             }
             var fullName = info.Principal.FindFirstValue(ClaimTypes.Name);
             user = new ApplicationUser { UserName = email, Email = email, FullName = fullName, EmailConfirmed = true };
             var identityResult = await _userManager.CreateAsync(user);
             if (!identityResult.Succeeded)
             {
-                return GoogleLoginResult.Error;
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
             identityResult = await _userManager.AddLoginAsync(user, info);
 
             if (!identityResult.Succeeded)
             {
-                return GoogleLoginResult.Error;
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
             await _signInManager.SignInAsync(user, true);
-            return GoogleLoginResult.Register;
-        }
-
-        public enum GoogleLoginResult
-        {
-            Login, Register, Error
-        }
-
-        public enum AddUserResult
-        {
-            Success, EmailAlreadyExist, PasswordTooWeak
-        }
-
-        public enum EmailConfirmation
-        {
-            ConfirmRegister, ConfirmCurrentEmail, ConfirmNewEmail, ResetPassword, ConfirmLogin
-        }
-
-        public async Task<bool> CheckVerificationTokenAsync(EmailConfirmDto dto, EmailConfirmation emailConfirmation)
-        {
-            ApplicationUser? foundUser = await _userManager.FindByIdAsync(dto.UserId);
-            if (foundUser == null)
-            {
-                return false;
-            }
-
-            IdentityResult? result = null;
-            if (emailConfirmation == EmailConfirmation.ConfirmRegister || emailConfirmation == EmailConfirmation.ConfirmLogin || emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
-            {
-                result = await _userManager.ConfirmEmailAsync(foundUser, dto.Token);
-            }
-            else if (foundUser.PendingNewEmail != null && emailConfirmation == EmailConfirmation.ConfirmNewEmail)
-            {
-                result = await _userManager.ChangeEmailAsync(foundUser, foundUser.PendingNewEmail, dto.Token);
-                if (result == IdentityResult.Success)
-                {
-                    result = await _userManager.SetUserNameAsync(foundUser, foundUser.PendingNewEmail);
-                }
-            }
-
-            if (result == null || !result.Succeeded)
-            {
-                return false;
-            }
-
-            if (emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
-            {
-                foundUser.PendingNewEmail = dto.NewEmail;
-                await _context.SaveChangesAsync();
-            }
-            await _signInManager.SignInAsync(foundUser, true);
-
-            return true;
+            return Result.Ok(new ExternalLoginResultDto { IsLogin = false });
         }
 
         public async Task EditUserProfileAsync(string userId, UserProfileEditDto dto)
@@ -208,128 +294,78 @@ namespace Vulyk.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<EditPasswordResult> AddPasswordAsync(string userId, string newPassword, string newPasswordConfirm)
+        public async Task<Result> SetPasswordAsync(string userId, string newPassword, string newPasswordConfirm)
         {
             ApplicationUser? user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return EditPasswordResult.UserNotFound;
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
 
             if (newPassword != newPasswordConfirm)
             {
-                return EditPasswordResult.NewPasswordsIsDifferent;
+                return Result.Fail(new Error("Password is differents").WithMetadata("Code", "PasswordIsDifferents"));
             }
 
             if (await _userManager.HasPasswordAsync(user))
             {
-                return EditPasswordResult.PasswordAlreadyExist;
+                return Result.Fail(new Error("Password already exist").WithMetadata("Code", "PasswordAlreadyExist"));
             }
             var result = await _userManager.AddPasswordAsync(user, newPasswordConfirm);
 
             user.EmailConfirmed = true;
-            await _context.SaveChangesAsync();
-
-            return EditPasswordResult.Success;
+            await _userManager.UpdateAsync(user);
+            await _signInManager.RefreshSignInAsync(user);
+            _logger.LogInformation("User set their password successfully.");
+            return Result.Ok();
         }
 
-        public async Task<EditPasswordResult> EditPasswordByCurrentPasswordAsync(EditPasswordByCurrentPasswordDto dto)
+        public async Task<Result> ChangePasswordAsync(string userId, ChangePasswordDto dto)
+        {
+            ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
+            }
+
+            if (dto.NewPassword != dto.ConfirmPassword)
+            {
+                return Result.Fail(new Error("Password is differents").WithMetadata("Code", "PasswordIsDifferents"));
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, dto.OldPassword, dto.ConfirmPassword);
+            if (!result.Succeeded)
+            {
+                return Result.Fail(new Error("Current password incorrect").WithMetadata("Code", "CurrentPasswordIncorrect"));
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+
+            _logger.LogInformation("User changed their password successfully.");
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> ResetPasswordAsync(ResetPasswordDto dto)
         {
             ApplicationUser? user = await _userManager.FindByIdAsync(dto.UserId);
             if (user == null)
             {
-                return EditPasswordResult.UserNotFound;
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
 
-            if (dto.NewPassword != dto.NewPasswordConfirm)
+            if (dto.Password != dto.ConfirmPassword)
             {
-                return EditPasswordResult.NewPasswordsIsDifferent;
+                return Result.Fail(new Error("Password is differents").WithMetadata("Code", "PasswordIsDifferents"));
             }
 
-            var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPasswordConfirm);
+            var result = await _userManager.ResetPasswordAsync(user, dto.Code, dto.ConfirmPassword);
             if (!result.Succeeded)
             {
-                return EditPasswordResult.CurrentPasswordIncorrect;
+                return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", "PasswordIsDifferents")));
             }
 
-            return EditPasswordResult.Success;
-        }
-
-        public async Task<EditPasswordResult> ResetPasswordAsync(ResetPasswordDto dto)
-        {
-            ApplicationUser? user = await _userManager.FindByIdAsync(dto.UserId);
-            if (user == null)
-            {
-                return EditPasswordResult.UserNotFound;
-            }
-
-            if (dto.NewPassword != dto.NewPasswordConfirm)
-            {
-                return EditPasswordResult.NewPasswordsIsDifferent;
-            }
-
-            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPasswordConfirm);
-            if (!result.Succeeded)
-            {
-                if (result.Errors.Any(e => e.Code == "InvalidToken"))
-                {
-                    return EditPasswordResult.TokenIncorrect;
-                } else
-                {
-                    return EditPasswordResult.PasswordTooWeak;
-                }
-            }
-            await _signInManager.SignInAsync(user, true);
-            user.EmailConfirmed = true;
-            await _context.SaveChangesAsync();
-            return EditPasswordResult.Success;
-        }
-
-        public enum EditPasswordResult
-        {
-            Success, CurrentPasswordIncorrect, TokenIncorrect, NewPasswordsIsDifferent, UserNotFound, PasswordAlreadyExist, PasswordTooWeak
-        }
-
-        public async Task<FindUserResult> LoginAsync(string email, string password, string? returnUrl)
-        {
-            ApplicationUser? foundUser = await _userManager.FindByEmailAsync(email);
-
-            if (foundUser == null)
-            {
-                return FindUserResult.LoginFailed;
-            }
-            if (!foundUser.EmailConfirmed)
-            {
-                await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmLogin, returnUrl);
-                return FindUserResult.EmailEntered;
-            }
-            if (!await _userManager.HasPasswordAsync(foundUser))
-            {
-                await _userManager.AddPasswordAsync(foundUser, password);
-                await SendEmailConfirmationTokenAsync(foundUser, EmailConfirmation.ConfirmLogin, returnUrl);
-                return FindUserResult.EmailEntered;
-            }
-
-            var result = await _signInManager.CheckPasswordSignInAsync(foundUser, password, false);
-
-            if (result.IsNotAllowed)
-            {
-                return FindUserResult.EmailEntered;
-            }
-
-            if (!result.Succeeded)
-            {
-                return FindUserResult.LoginFailed;
-            }
-
-            await _signInManager.SignInAsync(foundUser, true);
-
-            return FindUserResult.EmailConfirmed;
-        }
-
-        public async Task LogOutAsync()
-        {
-            await _signInManager.SignOutAsync();
+            return Result.Ok();
         }
 
         public async Task<UserProfileEditDto> FindUserByIdAsync(string id)
@@ -367,26 +403,6 @@ namespace Vulyk.Services
 
             foundUser.FullName = fullName;
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<string?> GetEmailAsync(string id)
-        {
-            var foundUser = await _userManager.FindByIdAsync(id);
-            if (foundUser == null)
-            {
-                return null;
-            }
-            return await _userManager.GetEmailAsync(foundUser);
-        }
-
-        public async Task<string?> GetPendingNewEmailAsync(string id)
-        {
-            var foundUser = await _userManager.FindByIdAsync(id);
-            if (foundUser == null)
-            {
-                return null;
-            }
-            return foundUser.PendingNewEmail;
         }
 
         public async Task<(string?, FindUserResult)> FindUserByEmailAsync(string email)

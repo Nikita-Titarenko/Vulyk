@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Vulyk.Data;
 using Vulyk.DTOs;
 using Vulyk.Hubs;
-using Vulyk.Models;
+using Vulyk.Entities;
 using Vulyk.Services;
 using Vulyk.ViewModels;
 using static System.Net.Mime.MediaTypeNames;

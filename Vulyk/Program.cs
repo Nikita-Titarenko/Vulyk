@@ -1,13 +1,14 @@
 using System.Reflection;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Vulyk.Data;
+using Vulyk.Entities;
 using Vulyk.Hubs;
-using Vulyk.Models;
 using Vulyk.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 var mapperConfig = new MapperConfiguration(options =>
@@ -36,11 +38,10 @@ builder.Services.AddAuthentication()
         opt.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
     });
 builder.Services.AddSingleton(mapper);
-
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
@@ -50,7 +51,7 @@ builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureApplicationCookie(opt =>
 {
-    opt.LoginPath = "/Account/Login";
+    opt.LoginPath = "/Identity/Account/Login";
 });
 var app = builder.Build();
 

@@ -39,8 +39,8 @@
 					</li>
 				</ul>
 				<div id="auth-container">
-					<a class="btn btn-secondary" asp-action="@nameof(AccountController.Login)" asp-controller="Account">Login</a>
-					<a class="btn btn-primary text-white" asp-action="@nameof(AccountController.Register)" asp-controller="Account">Register</a>
+					<a class="btn btn-secondary" asp-area="Identity" asp-page="/Account/Login">Login</a>
+					<a class="btn btn-primary text-white" asp-area="Identity" asp-page="/Account/Register">Register</a>
 				</div>
 			</div>
 		</div>
