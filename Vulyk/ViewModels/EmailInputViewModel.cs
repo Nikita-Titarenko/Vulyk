@@ -2,10 +2,10 @@
 
 namespace Vulyk.ViewModels
 {
-    public class EmailInputViewModel : EmailViewModel
+    public class EmailInputViewModel
     {
         [Required]
         [EmailAddress]
-        public new string Email { get => base.Email; set => base.Email = value; }
+        public string Email { get; set; } = string.Empty;
     }
 }

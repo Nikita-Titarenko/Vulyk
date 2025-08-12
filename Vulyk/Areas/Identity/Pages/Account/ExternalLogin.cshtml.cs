@@ -1,22 +1,17 @@
 ﻿using System.Security.Claims;
+using AutoMapper;
 using Microsoft.DotNet.Scaffolding.Shared;
 using Vulyk.Controllers;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    [AllowAnonymous]
-    public class ExternalLoginModel : PageModel
+    public class ExternalLoginModel : AnonymousOnlyModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IUserService _userService;
 
-        public ExternalLoginModel(
-            SignInManager<ApplicationUser> signInManager,
-            IUserService userService)
-        {
+        public ExternalLoginModel(IUserService userService, IMapper mapper, IEmailSender emailSender, SignInManager<ApplicationUser> signInManager) : base(userService, mapper, emailSender) {
             _signInManager = signInManager;
-            _userService = userService;
         }
 
         public string ReturnUrl { get; set; } = string.Empty;

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
@@ -7,16 +8,9 @@ using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    public class ConfirmCurrentEmailModel : PageModel
+    public class ConfirmCurrentEmailModel : BaseAccountPageModel
     {
-        private readonly IUserService _userService;
-        private readonly IEmailSender _emailSender;
-
-        public ConfirmCurrentEmailModel(IUserService userService, IEmailSender emailSender)
-        {
-            _userService = userService;
-            _emailSender = emailSender;
-        }
+        public ConfirmCurrentEmailModel(IUserService userService, IEmailSender emailSender, IMapper mapper) : base(userService, mapper, emailSender) { }
 
         [TempData]
         public string StatusMessage { get; set; } = string.Empty;
@@ -75,17 +69,13 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 StatusMessage = "Error confirming your email.";
                 return Page();
             }
-            result = await _userService.GenerateNewEmailConfirmationTokenAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var callbackUrl = Url.Page(
-    "/Account/ConfirmNewEmail",
-    pageHandler: null,
-    values: new { area = "Identity", userId = result.Value.UserId, code = result.Value.Code },
-    protocol: Request.Scheme);
+            result = await _userService.GenerateNewEmailConfirmationTokenAsync(UserId);
+            var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ConfirmNewEmail", null);
 
             await _emailSender.SendEmailAsync(Input.Email, "Confirm your email for change email",
                 $"Please confirm email changing by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-            return RedirectToPage("NewEmailConfirmation");
+            return RedirectToPage("NewEmailConfirmation", new { UserId, Code, Input.Email});
         }
     }
 }

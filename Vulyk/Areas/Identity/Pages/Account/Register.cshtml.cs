@@ -1,27 +1,16 @@
 ﻿using AutoMapper;
 using Vulyk.DTOs;
+using Vulyk.Filters;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    public class RegisterModel : PageModel
+    public class RegisterModel : AnonymousOnlyModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IUserService _userService;
-        private readonly IEmailSender _emailSender;
-        private readonly IMapper _mapper;
 
-        public RegisterModel(
-            SignInManager<ApplicationUser> signInManager,
-            ILogger<RegisterModel> logger,
-            IUserService userService,
-            IEmailSender emailSender,
-            IMapper mapper)
-        {
+        public RegisterModel(IUserService userService, IMapper mapper, IEmailSender emailSender, SignInManager<ApplicationUser> signInManager) : base(userService, mapper, emailSender) {
             _signInManager = signInManager;
-            _userService = userService;
-            _emailSender = emailSender;
-            _mapper = mapper;
         }
 
         [BindProperty]
@@ -45,7 +34,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
 
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StrongPassword]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; } = string.Empty;
@@ -79,11 +68,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { area = "Identity", userId = result.Value.UserId, code = result.Value.Code, returnUrl = returnUrl },
-                protocol: Request.Scheme);
+            var callbackUrl = CreateEmailConfirmationLink(_mapper.Map<ConfirmTokenDto>(result.Value), "/Account/ConfirmEmail", ReturnUrl);
 
             await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                 $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");

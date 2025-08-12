@@ -2,25 +2,17 @@
 using FluentResults;
 using Vulyk.Controllers;
 using Vulyk.DTOs;
+using Vulyk.Filters;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    public class LoginModel : PageModel
+    public class LoginModel : AnonymousOnlyModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IUserService _userService;
-        private readonly IMapper _mapper;
-        private readonly IEmailSender _emailSender;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, IUserService userService,
-            IMapper mapper,
-            IEmailSender emailSender)
-        {
+        public LoginModel(IUserService userService, IMapper mapper, IEmailSender emailSender, SignInManager<ApplicationUser> signInManager) : base(userService, mapper, emailSender) {
             _signInManager = signInManager;
-            _userService = userService;
-            _mapper = mapper;
-            _emailSender = emailSender;
         }
 
         [BindProperty]
@@ -41,6 +33,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
 
             [Required]
             [DataType(DataType.Password)]
+            [StrongPassword]
             public string Password { get; set; } = string.Empty;
 
             [Display(Name = "Remember me?")]
@@ -64,15 +57,6 @@ namespace Vulyk.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        private string CreateEmailConfirmationLink(AuthResultDto authResultDto, string redirectPage, string? returnUrl = null)
-        {
-            return Url.Page(
-redirectPage,
-pageHandler: null,
-values: new { area = "Identity", userId = authResultDto.UserId, code = authResultDto.Code, returnUrl = returnUrl },
-protocol: Request.Scheme)!;
-        }
-
         public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
             returnUrl ??= Url.Content("~/Chat/Index");
@@ -94,7 +78,7 @@ protocol: Request.Scheme)!;
 
             if (result.Value.PasswordNotExist)
             {
-                var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ResetPassword", returnUrl);
+                var callbackUrl = CreateEmailConfirmationLink(_mapper.Map<ConfirmTokenDto>(result.Value), "/Account/ResetPassword", returnUrl);
 
                 await _emailSender.SendEmailAsync(Input.Email, "Reset Password",
                     $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
@@ -104,7 +88,7 @@ protocol: Request.Scheme)!;
 
             if (result.Value.EmailNotConfirmed)
             {
-                var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ConfirmEmail", returnUrl);
+                var callbackUrl = CreateEmailConfirmationLink(_mapper.Map<ConfirmTokenDto>(result.Value), "/Account/ConfirmEmail", returnUrl);
 
                 await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");

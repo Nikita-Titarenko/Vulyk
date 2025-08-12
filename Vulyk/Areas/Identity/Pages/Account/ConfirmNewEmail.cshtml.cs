@@ -33,7 +33,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 StatusMessage = "Error confirming your email.";
                 return Page();
             }
-
+            StatusMessage = "Your email was successfull changed!";
             return Page();
         }
     }

@@ -8,6 +8,12 @@
 <h1>@ViewData["Title"]</h1>
 <div class="form">
 	<p class="w-100 text-center">
-		Please check your email to confirm your account.
+		Please check @Model.Email to confirm your account.
 	</p>
+	<a class="w-100 text-center" asp-page="/Account/Register">Input wrong email?</a>
+	<form class="w-100 text-center" method="post">
+		<input type="hidden" asp-for="Email" />
+		<input type="hidden" asp-for="ReturnUrl" />
+		<button type="submit" class="link">Resent email</button>
+	</form>
 </div>

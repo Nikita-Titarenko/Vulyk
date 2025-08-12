@@ -9,6 +9,7 @@ namespace Vulyk.AutoMappers
         public ChatProfile() {
             CreateMap<ChatListItemDto, ChatListItemViewModel>();
             CreateMap<ChatListDto, ChatListViewModel>();
+            CreateMap<GetUserChatResultDto, CreateUserChatResultDto>();
         }
     }
 }

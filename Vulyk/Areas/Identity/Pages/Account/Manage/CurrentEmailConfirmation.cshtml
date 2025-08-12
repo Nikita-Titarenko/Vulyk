@@ -4,12 +4,17 @@
 	Layout = "~/Views/Shared/AppLayout.cshtml";
 	ViewData["Title"] = "Current email confirmation";
 }
-
+@section Styles {
+	<link rel="stylesheet" href="~/css/form.css" />
+}
 <h1>@ViewData["Title"]</h1>
-<div class="form-container">
-	<div class="form">
-		<p class="w-100 text-center">
-			Please check your email to confirm email changing.
-		</p>
-	</div>
+<div class="form">
+	<p class="w-100 text-center">
+		Please check @Model.Email to confirm email changing.
+	</p>
+
+	<form class="w-100 text-center" method="post">
+		<input type="hidden" asp-for="Email" />
+		<button type="submit" class="link">Resent email</button>
+	</form>
 </div>

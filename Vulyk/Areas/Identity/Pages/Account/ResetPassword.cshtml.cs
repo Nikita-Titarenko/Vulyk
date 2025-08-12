@@ -1,22 +1,21 @@
 ﻿using AutoMapper;
 using Vulyk.DTOs;
+using Vulyk.Filters;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    public class ResetPasswordModel : PageModel
+    public class ResetPasswordModel : AnonymousOnlyModel
     {
-        private readonly IUserService _userService;
-        private readonly IMapper _mapper;
-
-        public ResetPasswordModel(IUserService userService, IMapper mapper)
-        {
-            _userService = userService;
-            _mapper = mapper;
-        }
+        public ResetPasswordModel(IUserService userService, IMapper mapper, IEmailSender emailSender) : base(userService, mapper, emailSender) { }
 
         [BindProperty]
+        [Required]
         public string UserId { get; set; } = string.Empty;
+
+        [BindProperty]
+        [Required]
+        public string Code { get; set; } = string.Empty;
 
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
@@ -24,7 +23,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StrongPassword]
             [DataType(DataType.Password)]
             public string Password { get; set; } = string.Empty;
 
@@ -32,10 +31,6 @@ namespace Vulyk.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; } = string.Empty;
-
-            [Required]
-            public string Code { get; set; } = string.Empty;
-
         }
 
         public IActionResult OnGet(string userId, string? code = null)
@@ -46,10 +41,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
             }
             else
             {
-                Input = new InputModel
-                {
-                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
-                };
+                Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
                 UserId = userId;
                 return Page();
             }
@@ -63,6 +55,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
             }
             var dto = _mapper.Map<ResetPasswordDto>(Input);
             dto.UserId = UserId;
+            dto.Code = Code;
             var result = await _userService.ResetPasswordAsync(dto);
             if (result.IsSuccess || result.Errors.Any(e => e.Metadata.GetValueOrDefault("Code") as string == "UserNotFound"))
             {

@@ -1,22 +1,14 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
 using Vulyk.DTOs;
+using Vulyk.Filters;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {
-    public class ChangePasswordModel : PageModel
+    public class ChangePasswordModel : BaseManagePageModel
     {
-        private readonly IUserService _userService;
-        private readonly IMapper _mapper;
-
-        public ChangePasswordModel(
-            IUserService userService,
-            IMapper mapper)
-        {
-            _mapper = mapper;
-            _userService = userService;
-        }
+        public ChangePasswordModel(IUserService userService, IEmailSender emailSender, IMapper mapper) : base(userService, mapper, emailSender) { }
 
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
@@ -30,10 +22,11 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
             [Required]
             [DataType(DataType.Password)]
             [Display(Name = "Current password")]
+            [StrongPassword]
             public string OldPassword { get; set; } = string.Empty;
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StrongPassword]
             [DataType(DataType.Password)]
             [Display(Name = "New password")]
             public string NewPassword { get; set; } = string.Empty;
@@ -46,7 +39,7 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var hasPassword = await _userService.HasPasswordAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var hasPassword = await _userService.HasPasswordAsync(GetUserId());
             if (!hasPassword.IsSuccess)
             {
                 return NotFound($"Unable to load user with ID '{User.FindFirstValue(ClaimTypes.NameIdentifier)}'.");
@@ -67,7 +60,7 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            var result = await _userService.ChangePasswordAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), _mapper.Map<ChangePasswordDto>(Input));
+            var result = await _userService.ChangePasswordAsync(GetUserId(), _mapper.Map<ChangePasswordDto>(Input));
 
             if (!result.IsSuccess)
             {

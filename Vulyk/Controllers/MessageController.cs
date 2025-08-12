@@ -40,14 +40,21 @@ namespace Vulyk.Controllers
         [Authorize]
         public async Task<IActionResult> DisplayEmptyChat(string userId)
         {
-            string? userName = await _userService.GetFullNameAsync(userId);
-            if (userName == null)
+            var getFullNameResult = await _userService.GetFullNameAsync(userId);
+            if (!getFullNameResult.IsSuccess)
             {
-                return BadRequest();
+                foreach (var error in getFullNameResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return View();
             }
+            string? fullName = getFullNameResult.Value.FullName;
+
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
-                UserName = userName,
+                FullName = fullName,
                 UserId = userId,
             };
             return PartialView("_MessagesPartialView", messageListViewModel);
@@ -62,13 +69,20 @@ namespace Vulyk.Controllers
             }
             string userId = GetUserId()!;
 
-            int chatId = await _messageService.CreateOrAddMessageToChatAsync(userId, createMessageViewModel.Text, createMessageViewModel.UserId);
-            string? name = await _userService.GetFullNameAsync(createMessageViewModel.UserId);
-            if (name == null)
+            int chatId = await _messageService.CreateMessageAsync(userId, createMessageViewModel.Text, createMessageViewModel.UserId);
+
+            var getFullNameResult = await _userService.GetFullNameAsync(createMessageViewModel.UserId);
+            if (!getFullNameResult.IsSuccess)
             {
-                return NotFound("User not found");
+                foreach (var error in getFullNameResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return View();
             }
-            return Ok(new {chatId, name});
+
+            return Ok(new {chatId, fullName = getFullNameResult.Value.FullName });
         }
     }
 }

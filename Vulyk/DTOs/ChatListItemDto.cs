@@ -8,7 +8,7 @@ namespace Vulyk.DTOs
 
         public string UserId { get; set; } = string.Empty;
 
-        public string Name = string.Empty;
+        public string FullName = string.Empty;
 
         public DateTime? LastMessageDateTime { get; set; }
 

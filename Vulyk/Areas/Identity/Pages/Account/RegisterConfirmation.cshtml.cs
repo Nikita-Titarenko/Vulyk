@@ -1,49 +1,41 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Vulyk.Entities;
+﻿using AutoMapper;
+using FluentResults;
+using Vulyk.DTOs;
+using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    [AllowAnonymous]
-    public class RegisterConfirmationModel : PageModel
+    public class RegisterConfirmationModel : AnonymousOnlyModel
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailSender _sender;
+        public RegisterConfirmationModel(IUserService userService, IMapper mapper, IEmailSender emailSender) : base(userService, mapper, emailSender) { }
 
-        public RegisterConfirmationModel(UserManager<ApplicationUser> userManager, IEmailSender sender)
-        {
-            _userManager = userManager;
-            _sender = sender;
-        }
-
+        [BindProperty]
         public string Email { get; set; } = string.Empty;
 
-        public bool DisplayConfirmAccountLink { get; set; }
+        [BindProperty]
+        public string ReturnUrl { get; set; } = string.Empty;
 
-        public string EmailConfirmationUrl { get; set; } = string.Empty;
-
-        public async Task<IActionResult> OnGetAsync(string email, string returnUrl = null)
+        public IActionResult OnGet(string email, string? returnUrl = null)
         {
             if (email == null)
             {
                 return RedirectToPage("/Index");
             }
-            returnUrl = returnUrl ?? Url.Content("~/");
-
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with email '{email}'.");
-            }
+            ReturnUrl = returnUrl ?? Url.Content("~/Chat/Index");
 
             Email = email;
+
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            var result = await _userService.GenerateCurrentEmailConfirmationTokenByEmailAsync(Email);
+
+            var callbackUrl = CreateEmailConfirmationLink(_mapper.Map<ConfirmTokenDto>(result.Value), "/Account/ConfirmEmail", ReturnUrl);
+
+            await _emailSender.SendEmailAsync(Email, "Confirm your email",
+                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             return Page();
         }

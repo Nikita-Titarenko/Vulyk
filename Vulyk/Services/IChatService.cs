@@ -1,11 +1,14 @@
-﻿using Vulyk.DTOs;
+﻿using FluentResults;
+using Vulyk.DTOs;
 
 namespace Vulyk.Services
 {
     public interface IChatService
     {
-        Task<int?> GetChatAsync(string userId, string userToAddId);
-        Task<ChatListDto> GetChatsAsync(string userId);
-        Task<(ChatService.CreateChatResult, int?)> GetOrCreateChatAsync(string userId, string userToAddId);
+        Task<Result<CreateUserChatResultDto>> CreateUserChatAsync(string userId, string userToAddId);
+        Task<Result<CreateUserChatResultDto>> CreateUserChatByEmailAsync(string userId, string userToAddEmail);
+        Task<Result<GetUserChatResultDto>> GetUserChatAsync(string userId, string userToAddId);
+        Task<Result<GetUserChatResultDto>> GetUserChatByEmailAsync(string userId, string userToAddEmail);
+        Task<Result<ChatListDto>> GetChatsAsync(string userId);
     }
 }

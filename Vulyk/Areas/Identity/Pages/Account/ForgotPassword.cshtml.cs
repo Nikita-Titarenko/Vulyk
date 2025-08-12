@@ -1,17 +1,12 @@
-﻿using Vulyk.Services;
+﻿using AutoMapper;
+using Vulyk.Filters;
+using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
-    public class ForgotPasswordModel : PageModel
+    public class ForgotPasswordModel : AnonymousOnlyModel
     {
-        private readonly IEmailSender _emailSender;
-        private readonly IUserService _userService;
-
-        public ForgotPasswordModel(IEmailSender emailSender, IUserService userService)
-        {
-            _emailSender = emailSender;
-            _userService = userService;
-        }
+        public ForgotPasswordModel(IUserService userService, IMapper mapper, IEmailSender emailSender) : base(userService, mapper, emailSender) { }
 
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
@@ -32,11 +27,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
             var result = await _userService.GeneratePasswordResetTokenAsync(Input.Email);
             if (result.IsSuccess)
             {
-                var callbackUrl = Url.Page(
-    "/Account/ResetPassword",
-    pageHandler: null,
-    values: new { area = "Identity", code = result.Value.Code, userId = result.Value.UserId },
-    protocol: Request.Scheme);
+                var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ResetPassword", null);
 
                 await _emailSender.SendEmailAsync(
                     Input.Email,
@@ -45,7 +36,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
             }
 
 
-            return RedirectToPage("./ForgotPasswordConfirmation");
+            return RedirectToPage("./ForgotPasswordConfirmation", new { Input.Email });
         }
     }
 }

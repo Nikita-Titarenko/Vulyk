@@ -1,15 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Vulyk.Data;
-using Vulyk.DTOs;
-using Vulyk.Hubs;
-using Vulyk.Entities;
+﻿using System.Security.Claims;
+using AutoMapper;
 using Vulyk.Services;
 using Vulyk.ViewModels;
-using static System.Net.Mime.MediaTypeNames;
-using static Vulyk.Services.ChatService;
 
 namespace Vulyk.Controllers
 {
@@ -34,24 +26,37 @@ namespace Vulyk.Controllers
         {
             ViewData["ChoosedPage"] = "Chats";
             string userId = GetUserId()!;
+            var getChatsResult = await _chatService.GetChatsAsync(userId);
 
-            ChatListViewModel chatListViewModel = await GetChatListViewModel(userId);
+            if (!getChatsResult.IsSuccess)
+            {
+                foreach (var error in getChatsResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return View();
+            }
+            ChatListViewModel chatListViewModel = _mapper.Map<ChatListViewModel>(getChatsResult.Value);
 
             chatListViewModel.NewUserId = userToAddId;
             chatListViewModel.DisplayChatId = chatId;
             chatListViewModel.UserId = userId;
-            string? userName = await _userService.GetFullNameAsync(chatListViewModel.UserId);
-            if (userName != null)
+
+            var getFullNameResult = await _userService.GetFullNameAsync(chatListViewModel.UserId);
+            if (!getFullNameResult.IsSuccess)
             {
-                chatListViewModel.FullName = userName;
+                foreach (var error in getFullNameResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return View();
             }
+            chatListViewModel.FullName = getFullNameResult.Value.FullName;
+
             ViewData["SidepanelVisibility"] = true;
             return View(chatListViewModel);
-        }
-
-        public async Task<ChatListViewModel> GetChatListViewModel(string userId)
-        {
-            return _mapper.Map<ChatListViewModel>(await _chatService.GetChatsAsync(userId));
         }
 
         [HttpGet]
@@ -61,7 +66,7 @@ namespace Vulyk.Controllers
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
 
-            return View(new LoginViewModel());
+            return View();
         }
 
         [Authorize]
@@ -76,22 +81,32 @@ namespace Vulyk.Controllers
                 return View(emailInputChatViewModel);
             }
 
-            string? userId = GetUserId()!;
-
-            var (foundUserId, findUserResult) = await _userService.FindUserByEmailAsync(emailInputChatViewModel.Email);
-            if (findUserResult == UserService.FindUserResult.LoginFailed)
-            {
-                ModelState.AddModelError(string.Empty, $"User with this email not exist");
-                return View(emailInputChatViewModel);
-            }
-            if (userId == foundUserId)
+            if (User.FindFirstValue(ClaimTypes.Email) == emailInputChatViewModel.Email)
             {
                 ModelState.AddModelError(string.Empty, "You don't can add yourself");
                 return View(emailInputChatViewModel);
             }
-            int? chatId = await _chatService.GetChatAsync(userId, foundUserId!);
 
-            return RedirectToAction(nameof(Index), "Chat", new { userToAddId = foundUserId, chatId });
+            string userId = GetUserId()!;
+
+            var getUserChatResult = await _chatService.GetUserChatByEmailAsync(userId, emailInputChatViewModel.Email);
+
+            if (!getUserChatResult.IsSuccess)
+            {
+                foreach (var error in getUserChatResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return View();
+            }
+
+            if (getUserChatResult.Value.ChatId != null)
+            {
+                return RedirectToAction(nameof(Index), "Chat", new { chatId = getUserChatResult.Value.ChatId, userToAddId = getUserChatResult.Value.UserId });
+            }
+
+            return RedirectToAction(nameof(Index), "Chat", new { userToAddId = getUserChatResult.Value.UserId });
         }
     }
 }

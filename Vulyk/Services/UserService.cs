@@ -1,22 +1,9 @@
-﻿using System;
-using System.Reflection.Emit;
-using System.Security.Claims;
-using System.Text;
+﻿using System.Security.Claims;
 using FluentResults;
-using Humanizer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Security;
 using Vulyk.Data;
 using Vulyk.DTOs;
-using Vulyk.Entities;
-using Vulyk.ViewModels;
-using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace Vulyk.Services
 {
@@ -75,15 +62,14 @@ namespace Vulyk.Services
                 userId = await _userManager.GetUserIdAsync(user);
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var confirmTokenDto = await GenerateCurrentEmailConfirmationToken(user);
 
-            return Result.Ok(new AuthResultDto { UserId = userId, Code = code });
+            return Result.Ok(new AuthResultDto { UserId = userId, Code = confirmTokenDto.Value.Code });
         }
 
         public async Task<Result<AuthResultDto>> LoginAsync(LoginDto dto)
         {
-            var result = await _signInManager.PasswordSignInAsync(dto.Email, dto.Password, true, false);
+            var result = await _signInManager.PasswordSignInAsync(dto.Email, dto.Password, dto.RememberMe, false);
 
             if (result.Succeeded)
             {
@@ -107,9 +93,8 @@ namespace Vulyk.Services
 
             if (isPasswordCorrect)
             {
-                code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                return Result.Ok(new AuthResultDto { UserId = user.Id, Code = code, EmailNotConfirmed = true });
+                var confirmTokenDto = await GenerateCurrentEmailConfirmationToken(user);
+                return Result.Ok(new AuthResultDto { UserId = user.Id, Code = confirmTokenDto.Value.Code, EmailNotConfirmed = true });
             }
 
             var hasPasswordResult = await _userManager.HasPasswordAsync(user);
@@ -150,17 +135,33 @@ namespace Vulyk.Services
             }
 
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return Result.Ok(new ConfirmTokenDto {Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id});
+            return Result.Ok(new ConfirmTokenDto { Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id });
         }
 
-        public async Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenAsync(string userId)
+        public async Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenByEmailAsync(string email)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null || !user.EmailConfirmed)
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
             {
                 return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
 
+            return await GenerateCurrentEmailConfirmationToken(user);
+        }
+
+        public async Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenByIdAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
+            }
+
+            return await GenerateCurrentEmailConfirmationToken(user);
+        }
+
+        private async Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationToken(ApplicationUser user)
+        {
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             return Result.Ok(new ConfirmTokenDto { Code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code)), UserId = user.Id });
         }
@@ -219,6 +220,9 @@ namespace Vulyk.Services
 
             dto.Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Code));
             var result = await _userManager.ChangeEmailAsync(user, user.PendingNewEmail, dto.Code);
+            user.UserName = user.PendingNewEmail;
+            user.NormalizedUserName = user.PendingNewEmail.ToUpper();
+            await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
                 return Result.Fail(result.Errors.Select(e => new Error(e.Description).WithMetadata("Code", e.Code)));
@@ -388,9 +392,15 @@ namespace Vulyk.Services
             return user;
         }
 
-        public async Task<string?> GetFullNameAsync(string id)
+        public async Task<Result<GetFullNameResultDto>> GetFullNameAsync(string id)
         {
-            return await _context.ApplicationUser.Where(u => u.Id == id && u.EmailConfirmed).Select(u => u.FullName).FirstOrDefaultAsync();
+            string? fullName = await _context.ApplicationUser.Where(u => u.Id == id && u.EmailConfirmed).Select(u => u.FullName).FirstOrDefaultAsync();
+            if (fullName == null)
+            {
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
+            }
+
+            return Result.Ok(new GetFullNameResultDto { FullName = fullName });
         }
 
         public async Task EditFullNameAsync(string id, string fullName)
@@ -405,26 +415,17 @@ namespace Vulyk.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<(string?, FindUserResult)> FindUserByEmailAsync(string email)
+        public async Task<Result<FindUserByEmailDto>> FindUserByEmailAsync(string email)
         {
             string emailNormalized = email.ToLower();
             ApplicationUser? foundUser = await _userManager.FindByEmailAsync(email);
 
-            if (foundUser == null)
+            if (foundUser == null || !foundUser.EmailConfirmed)
             {
-                return (null, FindUserResult.LoginFailed);
+                return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
 
-            if (foundUser.EmailConfirmed)
-            {
-                return (foundUser.Id, FindUserResult.EmailConfirmed);
-            }
-            return (foundUser.Id, FindUserResult.EmailEntered);
-        }
-
-        public enum FindUserResult
-        {
-            EmailEntered, EmailConfirmed, LoginFailed
+            return Result.Ok(new FindUserByEmailDto { UserId = foundUser.Id });
         }
     }
 }

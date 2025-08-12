@@ -9,9 +9,9 @@ namespace Vulyk.Services
     public interface IUserService
     {
         Task EditUserProfileAsync(string userId, UserProfileEditDto dto);
-        Task<(string?, UserService.FindUserResult)> FindUserByEmailAsync(string email);
+        Task<Result<FindUserByEmailDto>> FindUserByEmailAsync(string email);
         Task<UserProfileEditDto> FindUserByIdAsync(string id);
-        Task<string?> GetFullNameAsync(string id);
+        Task<Result<GetFullNameResultDto>> GetFullNameAsync(string id);
         Task EditFullNameAsync(string id, string fullName);
         Task<Result<ExternalLoginResultDto>> ProcessExternalLoginAsync(ExternalLoginInfo info);
         Task<Result> SetPasswordAsync(string userId, string newPassword, string newPasswordConfirm);
@@ -22,7 +22,8 @@ namespace Vulyk.Services
         Task<Result> ConfirmEmailAsync(ConfirmTokenDto dto);
         Task<Result<ConfirmTokenDto>> GeneratePasswordResetTokenAsync(string email);
         Task<Result<bool>> HasPasswordAsync(string userId);
-        Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenAsync(string userId);
+        Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenByIdAsync(string userId);
+        Task<Result<ConfirmTokenDto>> GenerateCurrentEmailConfirmationTokenByEmailAsync(string email);
         Task<Result<ConfirmTokenDto>> ConfirmCurrentEmailAsync(ConfirmTokenDto dto, string? newEmail);
         Task<Result<ConfirmTokenDto>> GenerateNewEmailConfirmationTokenAsync(string userId);
         Task<Result<ConfirmTokenDto>> ConfirmNewEmailAsync(ConfirmTokenDto dto);

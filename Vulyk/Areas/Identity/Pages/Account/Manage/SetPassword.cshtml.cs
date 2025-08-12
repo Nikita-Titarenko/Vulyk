@@ -1,17 +1,14 @@
 ﻿using System.Security.Claims;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Vulyk.Filters;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {
-    public class SetPasswordModel : PageModel
+    public class SetPasswordModel : BaseManagePageModel
     {
-        private readonly IUserService _userService;
-
-        public SetPasswordModel(IUserService userService)
-        {
-            _userService = userService;
-        }
+        public SetPasswordModel(IUserService userService, IEmailSender emailSender, IMapper mapper) : base(userService, mapper, emailSender) { }
 
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
@@ -21,7 +18,7 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
         public class InputModel
         {
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StrongPassword]
             [DataType(DataType.Password)]
             [Display(Name = "New password")]
             public string NewPassword { get; set; } = string.Empty;
@@ -44,7 +41,7 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            var result = await _userService.SetPasswordAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!, Input.NewPassword, Input.ConfirmPassword);
+            var result = await _userService.SetPasswordAsync(GetUserId(), Input.NewPassword, Input.ConfirmPassword);
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)

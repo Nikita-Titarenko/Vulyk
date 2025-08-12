@@ -1,13 +1,8 @@
 using System.Reflection;
 using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Vulyk.Data;
-using Vulyk.Entities;
 using Vulyk.Hubs;
 using Vulyk.Services;
 
@@ -52,6 +47,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureApplicationCookie(opt =>
 {
     opt.LoginPath = "/Identity/Account/Login";
+});
+builder.Services.AddRazorPages(opt =>
+{
+    opt.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");
 });
 var app = builder.Build();
 

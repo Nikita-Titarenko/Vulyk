@@ -31,7 +31,7 @@ connection.on('ReceiveMessage', (userId, message) => {
     updateChatList(userId, null, message, false);
 });
 
-connection.on('CreateChat', async (userId, chatId, name, lastMessage) => {
+connection.on('CreateChat', async (userId, chatId, fullName, lastMessage) => {
     await connection.invoke("LoadChatAsync", chatId.toString());
     var noChatsDiv = document.getElementById('no-chats');
     if (noChatsDiv) {
@@ -39,7 +39,7 @@ connection.on('CreateChat', async (userId, chatId, name, lastMessage) => {
         document.querySelector('.chat-page-container').classList.add('newUserAdded');
         document.querySelector('.chat-page-container').classList.remove('d-none');
     }
-    createChatListItem(userId, chatId, lastMessage, name, getCurrentTime());
+    createChatListItem(userId, chatId, lastMessage, fullName, getCurrentTime());
     const chatIdDiv = document.getElementById('chatId');
     if (chatIdDiv) {
         chatIdDiv.dataset.chatId = chatId;
@@ -117,14 +117,14 @@ function CreateMessage(e) {
             var chatId = chatIdDiv.dataset.chatId;
             var userId = formData.get('UserId');
             var yourUserId = chatLauncher.dataset.yourUserId;
-            var name = chatLauncher.dataset.yourName;
+            var fullName = chatLauncher.dataset.yourName;
             var text = formData.get("text");
             if (chatId == '') {
                 var result = await r.json();
                 chatId = result.chatId;
-                name = result.name;
+                fullName = result.fullName;
                 chatIdDiv.dataset.chatId = chatId;
-                await connection.invoke("CreateChatAsync", userId, yourUserId, chatId, name, text);
+                await connection.invoke("CreateChatAsync", userId, yourUserId, chatId, fullName, text);
             } else {
                 try {
                     await connection.invoke("SendMessageAsync", chatId.toString(), yourUserId, text);
@@ -134,7 +134,7 @@ function CreateMessage(e) {
                 }
             }
 
-            updateChatList(userId, chatId, formData.get("text"), true, name);
+            updateChatList(userId, chatId, formData.get("text"), true, fullName);
             form.reset();
         }
     });
@@ -181,7 +181,7 @@ function updateChatList(userId, chatId, message, isYourMessage, userName) {
     }
 }
 
-function createChatListItem(userId, chatId, lastMessageText, userName, currentTime) {
+function createChatListItem(userId, chatId, lastMessageText, fullName, currentTime) {
     const chatPanelDiv = document.querySelector('.chat-panel');
 
     const chatItemDiv = document.createElement('div');
@@ -197,7 +197,7 @@ function createChatListItem(userId, chatId, lastMessageText, userName, currentTi
     const nameDiv = document.createElement('div');
     nameDiv.classList.add('chat-title');
     nameDiv.classList.add('overflow-text');
-    nameDiv.textContent = userName;
+    nameDiv.textContent = fullName;
     horizontalDiv.appendChild(nameDiv);
 
     const lastMessageDateTimeDiv = document.createElement('div');

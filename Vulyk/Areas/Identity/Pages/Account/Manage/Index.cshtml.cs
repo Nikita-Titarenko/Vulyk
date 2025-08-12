@@ -1,23 +1,12 @@
-﻿using System.Security.Claims;
-using AutoMapper;
-using FluentResults;
+﻿using AutoMapper;
 using Vulyk.DTOs;
 using Vulyk.Services;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {
-    public class IndexModel : PageModel
+    public class IndexModel : BaseManagePageModel
     {
-        private readonly IUserService _userService;
-        private readonly IEmailSender _emailSender;
-        private readonly IMapper _mapper;
-
-        public IndexModel(IUserService userService, IMapper mapper, IEmailSender emailSender)
-        {
-            _userService = userService;
-            _mapper = mapper;
-            _emailSender = emailSender;
-        }
+        public IndexModel(IUserService userService, IEmailSender emailSender, IMapper mapper) : base(userService, mapper, emailSender) { }
 
         [TempData]
         public string StatusMessage { get; set; } = string.Empty;
@@ -25,26 +14,33 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
 
+        [BindProperty]
+        public bool IsPasswordExist { get; set; }
+
+        [BindProperty]
+        public string Email { get; set; } = string.Empty;
+
         public class InputModel
         {
             [Required]
             [StringLength(20, MinimumLength = 2, ErrorMessage = "The full name length needs to be from 2 to 20 characters")]
             [Display(Name = "Full Name")]
             public string FullName { get; set; } = string.Empty;
+
             [Phone]
             [Display(Name = "Phone number")]
-            [StringLength(20, MinimumLength = 10, ErrorMessage = "The phone length needs to be from 10 to 20 characters")]
-            public string PhoneNumber { get; set; } = string.Empty;
-            public bool IsPasswordExist { get; set; }
-            public string Email { get; set; } = string.Empty;
+            [StringLength(20, ErrorMessage = "The password length needs to be from 2 to 20 characters")]
+            public string? PhoneNumber { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
-            var profile = await _userService.FindUserByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var profile = await _userService.FindUserByIdAsync(GetUserId());
             Input = _mapper.Map<InputModel>(profile);
+            Email = profile.Email;
+            IsPasswordExist = profile.IsPasswordExist;
             return Page();
         }
 
@@ -52,23 +48,19 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
-            await _userService.EditUserProfileAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), _mapper.Map<UserProfileEditDto>(Input));
+            await _userService.EditUserProfileAsync(GetUserId(), _mapper.Map<UserProfileEditDto>(Input));
             return Page();
         }
 
         public async Task<IActionResult> OnPostRequestCurrentEmailConfirmation()
         {
-            var result = await _userService.GenerateCurrentEmailConfirmationTokenAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var callbackUrl = Url.Page(
-    "/Account/ConfirmCurrentEmail",
-    pageHandler: null,
-    values: new { area = "Identity", userId = result.Value.UserId, code = result.Value.Code },
-    protocol: Request.Scheme);
+            var result = await _userService.GenerateCurrentEmailConfirmationTokenByIdAsync(GetUserId());
+            var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ConfirmCurrentEmail", null);
 
-            await _emailSender.SendEmailAsync(Input.Email, "Confirm your email for change email",
+            await _emailSender.SendEmailAsync(Email, "Confirm your email for change email",
                 $"Please confirm email changing by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-            return RedirectToPage("/Account/Manage/CurrentEmailConfirmation");
+            return RedirectToPage("/Account/Manage/CurrentEmailConfirmation", new { Email });
         }
     }
 }

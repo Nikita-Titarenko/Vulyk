@@ -44,23 +44,25 @@ namespace Vulyk.Services
             };
         }
 
-        public async Task<int> CreateOrAddMessageToChatAsync(string userId, string text, string userToAddId)
+        public async Task<int> CreateMessageAsync(string userId, string text, string userToAddId)
         {
-            var (result, chatIdNullable) = await _chatService.GetOrCreateChatAsync(userId, userToAddId);
+            var createChatResult = await _chatService.CreateUserChatAsync(userId, userToAddId);
 
-            if (result == ChatService.CreateChatResult.Success)
+            if (!createChatResult.IsSuccess)
             {
-                int chatId = chatIdNullable!.Value;
-                _context.Message.Add(new Message
-                {
-                    UserId = userId,
-                    ChatId = chatId,
-                    Text = text,
-                    CreationDateTime = DateTime.Now
-                });
-                await _context.SaveChangesAsync();
+                return -1;
             }
-            return chatIdNullable!.Value;
+
+            _context.Message.Add(new Message
+            {
+                UserId = userId,
+                ChatId = createChatResult.Value.ChatId,
+                Text = text,
+                CreationDateTime = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
+            return createChatResult.Value.ChatId;
         }
     }
 }

@@ -14,11 +14,5 @@ namespace Vulyk.Controllers
             }
             return userId;
         }
-
-        public IActionResult ShowUnexpectedError()
-        {
-            ModelState.AddModelError(string.Empty, "Occur unexpected error!");
-            return View();
-        }
     }
 }
