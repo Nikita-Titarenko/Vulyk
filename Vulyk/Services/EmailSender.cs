@@ -1,14 +1,4 @@
-﻿using System.Net.Mail;
-using MailKit.Net.Smtp;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
-using MimeKit;
-using Org.BouncyCastle.Crypto;
-using Vulyk.Controllers;
-using Vulyk.Entities;
-using static Vulyk.Services.UserService;
+﻿using MimeKit;
 
 namespace Vulyk.Services
 {
@@ -24,30 +14,6 @@ namespace Vulyk.Services
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            //if (emailConfirmation == EmailConfirmation.ConfirmCurrentEmail)
-            //{
-            //    action = nameof(ProfileController.NewEmailInput);
-            //    controller = "Profile";
-            //    message.Subject = "Confirm changing email in Vulyk";
-            //}
-            //else if (emailConfirmation == EmailConfirmation.ResetPassword)
-            //{
-            //    action = nameof(AccountController.ResetPassword);
-            //    controller = "Account";
-            //    message.Subject = "Confirm reset password in Vulyk";
-            //}
-            //else if (emailConfirmation == EmailConfirmation.ConfirmRegister || emailConfirmation == EmailConfirmation.ConfirmLogin)
-            //{
-            //    action = nameof(AccountController.ConfirmEmail);
-            //    controller = "Account";
-            //    message.Subject = "Confirm Registration in Vulyk";
-            //}
-            //else if (emailConfirmation == EmailConfirmation.ConfirmNewEmail)
-            //{
-            //    action = nameof(AccountController.ConfirmEmail);
-            //    controller = "Account";
-            //    message.Subject = "Confirm changing email in Vulyk";
-            //}
             string? fromAddress = _configuration["EmailSettings:Email"];
             string? password = _configuration["EmailSettings:Password"];
             string? host = _configuration["EmailSettings:Server"];

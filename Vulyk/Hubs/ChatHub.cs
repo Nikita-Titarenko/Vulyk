@@ -29,9 +29,9 @@ namespace Vulyk.Hubs
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
         }
 
-        public async Task CreateChatAsync(string userId, string yourUserId, int chatId, string fullName, string lastMessage)
+        public async Task CreateChatAsync(string userId, string partnerId, int chatId, string fullName, string lastMessage)
         {
-            await Clients.Groups($"user-{userId}").SendAsync("CreateChat", yourUserId, chatId, fullName, lastMessage);
+            await Clients.Groups($"user-{partnerId}").SendAsync("CreateChat", userId, chatId, fullName, lastMessage);
             await LoadChatAsync(chatId.ToString());
         }
     }

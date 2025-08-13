@@ -38,7 +38,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return RedirectToPage("/Index");
             }
 
-            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = userId, Code = code }, null);
+            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = userId, Code = code });
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)
@@ -59,7 +59,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return RedirectToPage("/Index");
             }
 
-            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = UserId, Code = Code }, Input.Email);
+            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = UserId, Code = Code, NewEmail = Input.Email });
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)
@@ -69,8 +69,8 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 StatusMessage = "Error confirming your email.";
                 return Page();
             }
-            result = await _userService.GenerateNewEmailConfirmationTokenAsync(UserId);
-            var callbackUrl = CreateEmailConfirmationLink(result.Value, "/Account/ConfirmNewEmail", null);
+            var generateNewEmailTokenResult = await _userService.GenerateNewEmailConfirmationTokenAsync(UserId);
+            var callbackUrl = CreateEmailConfirmationLink(generateNewEmailTokenResult.Value, "/Account/ConfirmNewEmail", null);
 
             await _emailSender.SendEmailAsync(Input.Email, "Confirm your email for change email",
                 $"Please confirm email changing by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");

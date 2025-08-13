@@ -37,10 +37,20 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
-            var profile = await _userService.FindUserByIdAsync(GetUserId());
-            Input = _mapper.Map<InputModel>(profile);
-            Email = profile.Email;
-            IsPasswordExist = profile.IsPasswordExist;
+            var getUserProfileResult = await _userService.GetUserProfileAsync(GetUserId());
+            if (!getUserProfileResult.IsSuccess)
+            {
+                foreach (var error in getUserProfileResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+
+                return Page();
+            }
+
+            Input = _mapper.Map<InputModel>(getUserProfileResult.Value);
+            Email = getUserProfileResult.Value.Email;
+            IsPasswordExist = getUserProfileResult.Value.IsPasswordExist;
             return Page();
         }
 
@@ -48,7 +58,17 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
         {
             ViewData["ChoosedPage"] = "EditProfile";
             ViewData["SidepanelVisibility"] = false;
-            await _userService.EditUserProfileAsync(GetUserId(), _mapper.Map<UserProfileEditDto>(Input));
+            var dto = _mapper.Map<UserProfileEditDto>(Input);
+            dto.UserId = GetUserId();
+            var result = await _userService.EditUserProfileAsync(dto);
+            if (!result.IsSuccess)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
+            }
+
             return Page();
         }
 

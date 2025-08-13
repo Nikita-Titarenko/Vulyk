@@ -6,7 +6,8 @@ namespace Vulyk.DTOs
 {
     public class UserProfileEditDto
     {
-        public string? Phone { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
         public string FullName { get; set; } = string.Empty;
         public bool IsPasswordExist { get; set; }
         public string Email { get; set; } = string.Empty;

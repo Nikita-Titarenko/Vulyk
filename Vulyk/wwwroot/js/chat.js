@@ -53,7 +53,7 @@ function makeSoundNotification() {
 }
 
 function chooseChat(chatId, userId) {
-    fetch(`Message/Index?chatId=${chatId}&partnerUserId=${userId}`)
+    fetch(`Message/Index?chatId=${chatId}&partnerId=${userId}`)
         .then(r => r.text())
         .then(html => {
             document.getElementById('messages').innerHTML = html;
@@ -115,8 +115,8 @@ function CreateMessage(e) {
         if (r.ok) {
             const chatIdDiv = document.getElementById('chatId');
             var chatId = chatIdDiv.dataset.chatId;
-            var userId = formData.get('UserId');
-            var yourUserId = chatLauncher.dataset.yourUserId;
+            var partnerId = formData.get('PartnerId');
+            var userId = chatLauncher.dataset.yourUserId;
             var fullName = chatLauncher.dataset.yourName;
             var text = formData.get("text");
             if (chatId == '') {
@@ -124,17 +124,17 @@ function CreateMessage(e) {
                 chatId = result.chatId;
                 fullName = result.fullName;
                 chatIdDiv.dataset.chatId = chatId;
-                await connection.invoke("CreateChatAsync", userId, yourUserId, chatId, fullName, text);
+                await connection.invoke("CreateChatAsync", userId, partnerId, chatId, fullName, text);
             } else {
                 try {
-                    await connection.invoke("SendMessageAsync", chatId.toString(), yourUserId, text);
+                    await connection.invoke("SendMessageAsync", chatId.toString(), userId, text);
                 }
                 catch (er) {
                     console.log(er);
                 }
             }
 
-            updateChatList(userId, chatId, formData.get("text"), true, fullName);
+            updateChatList(partnerId, chatId, formData.get("text"), true, fullName);
             form.reset();
         }
     });

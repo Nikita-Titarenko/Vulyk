@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Vulyk.DTOs;
 using Vulyk.Filters;
 using Vulyk.Services;
 
@@ -40,8 +41,9 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
             {
                 return Page();
             }
-
-            var result = await _userService.SetPasswordAsync(GetUserId(), Input.NewPassword, Input.ConfirmPassword);
+            var dto = _mapper.Map<SetPasswordDto>(Input);
+            dto.UserId = GetUserId();
+            var result = await _userService.SetPasswordAsync(dto);
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)

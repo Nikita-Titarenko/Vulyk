@@ -1,10 +1,11 @@
-﻿using Vulyk.DTOs;
+﻿using FluentResults;
+using Vulyk.DTOs;
 
 namespace Vulyk.Services
 {
     public interface IMessageService
     {
-        Task<int> CreateMessageAsync(string userId, string text, string userToAddId);
-        Task<MessageListDto> GetMessagesAsync(int chatId, string userId, string partnerId);
+        Task<Result<CreateMessageResultDto>> CreateMessageAsync(CreateMessageDto dto);
+        Task<Result<MessageListDto>> GetMessagesAsync(GetMessagesDto dto);
     }
 }

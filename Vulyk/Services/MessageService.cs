@@ -1,10 +1,7 @@
-﻿using System.ComponentModel;
-using Microsoft.AspNetCore.SignalR;
+﻿using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.DTOs;
-using Vulyk.Hubs;
-using Vulyk.Entities;
 
 namespace Vulyk.Services
 {
@@ -12,57 +9,81 @@ namespace Vulyk.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IChatService _chatService;
+        private readonly IUserService _userService;
 
-        public MessageService(ApplicationDbContext context, IChatService chatService)
+        public MessageService(ApplicationDbContext context, IChatService chatService, IUserService userService)
         {
             _context = context;
             _chatService = chatService;
+            _userService = userService;
         }
 
-        public async Task<MessageListDto> GetMessagesAsync(int chatId, string userId, string partnerId)
+        ///  <summary>
+        ///  Get messages from Chat
+        ///  </summary>
+        ///  <param name="GetMessagesDto">The data containing UserId, ChatId and PartnerId</param>
+        ///  <returns>
+        ///  <see cref="MessageListDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>PartnerId, ChatId, Messages and parner's FullName if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
+        public async Task<Result<MessageListDto>> GetMessagesAsync(GetMessagesDto dto)
         {
-            string? userName = await _context.ApplicationUser.Where(u => u.Id == partnerId).Select(u => u.FullName).FirstOrDefaultAsync();
-            if (userName == null)
+            var fullNameResult = await _userService.GetFullNameAsync(dto.PartnerId);
+            if (!fullNameResult.IsSuccess)
             {
-                return new MessageListDto { };
+                return Result.Fail(fullNameResult.Errors);
             }
             List<MessageListItemDto> messages = await _context.Message
-                .Where(m => m.ChatId == chatId)
+                .Where(m => m.ChatId == dto.ChatId)
                 .Select(m => new MessageListItemDto
                 {
-                    IsMine = m.UserId == userId,
+                    IsMine = m.UserId == dto.UserId,
                     Text = m.Text,
                     CreationDateTime = m.CreationDateTime,
 
                 }).OrderBy(m => m.CreationDateTime).ToListAsync();
             return new MessageListDto
             {
-                UserId = partnerId,
-                ChatId = chatId,
-                UserName = userName,
+                PartnerId = dto.PartnerId,
+                ChatId = dto.ChatId,
+                FullName = fullNameResult.Value.FullName,
                 Messages = messages
             };
         }
 
-        public async Task<int> CreateMessageAsync(string userId, string text, string userToAddId)
+        ///  <summary>
+        ///  Create message
+        ///  </summary>
+        ///  <param name="CreateMessageDto">The data containing UserId, MessageText and PartnerId</param>
+        ///  <returns>
+        ///  <see cref="CreateMessageResultDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
+        public async Task<Result<CreateMessageResultDto>> CreateMessageAsync(CreateMessageDto dto)
         {
-            var createChatResult = await _chatService.CreateUserChatAsync(userId, userToAddId);
+            var createChatResult = await _chatService.CreateUserChatAsync(dto.UserId, dto.PartnerId);
 
             if (!createChatResult.IsSuccess)
             {
-                return -1;
+                return Result.Fail(createChatResult.Errors);
             }
 
             _context.Message.Add(new Message
             {
-                UserId = userId,
+                UserId = dto.UserId,
                 ChatId = createChatResult.Value.ChatId,
-                Text = text,
+                Text = dto.Text,
                 CreationDateTime = DateTime.Now
             });
             await _context.SaveChangesAsync();
 
-            return createChatResult.Value.ChatId;
+            return Result.Ok(new CreateMessageResultDto { ChatId = createChatResult.Value.ChatId });
         }
     }
 }

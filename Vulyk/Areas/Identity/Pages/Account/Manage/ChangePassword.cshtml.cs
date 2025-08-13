@@ -59,8 +59,9 @@ namespace Vulyk.Areas.Identity.Pages.Account.Manage
             {
                 return Page();
             }
-
-            var result = await _userService.ChangePasswordAsync(GetUserId(), _mapper.Map<ChangePasswordDto>(Input));
+            var dto = _mapper.Map<ChangePasswordDto>(Input);
+            dto.UserId = GetUserId();
+            var result = await _userService.ChangePasswordAsync(dto);
 
             if (!result.IsSuccess)
             {

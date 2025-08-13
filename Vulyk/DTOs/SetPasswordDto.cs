@@ -1,9 +1,8 @@
 ﻿namespace Vulyk.DTOs
 {
-    public class ChangePasswordDto
+    public class SetPasswordDto
     {
         public string UserId { get; set; } = string.Empty;
-        public string OldPassword { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
     }

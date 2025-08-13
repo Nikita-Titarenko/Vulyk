@@ -17,13 +17,28 @@ namespace Vulyk.Services
 
         private readonly IUserService _userService;
 
-        public ChatService(ApplicationDbContext context, IUserService userService, IMapper mapper)
+        private readonly ILogger<ChatService> _logger;
+
+        public ChatService(ApplicationDbContext context, IUserService userService, IMapper mapper, ILogger<ChatService> logger)
         {
             _context = context;
             _userService = userService;
             _mapper = mapper;
+            _logger = logger;
         }
 
+        ///  <summary>
+        ///  Create chat between two users if it doesn't exist
+        ///  </summary>
+        ///  <param name="userId">Identifier of the user that create chat</param>
+        ///  <param name="email">Email of the adding user</param>
+        ///  <returns>
+        ///  <see cref="CreateUserChatResultDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId and UserId (partner) if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
         public async Task<Result<CreateUserChatResultDto>> CreateUserChatByEmailAsync(string userId, string email)
         {
             var findUserResult = await _userService.FindUserByEmailAsync(email);
@@ -35,6 +50,18 @@ namespace Vulyk.Services
             return await CreateUserChatAsync(userId, findUserResult.Value.UserId);
         }
 
+        ///  <summary>
+        ///  Create chat between two users if it doesn't exist
+        ///  </summary>
+        ///  <param name="userId">Identifier of the user that create chat</param>
+        ///  <param name="userToAddId">Identifier of the adding user</param>
+        ///  <returns>
+        ///  <see cref="CreateUserChatResultDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId and UserId (partner) if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
         public async Task<Result<CreateUserChatResultDto>> CreateUserChatAsync(string userId, string userToAddId)
         {
             var getChatResult = await GetUserChatAsync(userId, userToAddId);
@@ -64,15 +91,29 @@ namespace Vulyk.Services
                 _context.UserChat.Add(secondUserChat);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
                 return Result.Ok(new CreateUserChatResultDto { ChatId = chat.Id });
             }
             catch
             {
                 await transaction.RollbackAsync();
+                _logger.LogError("Failed to create Chat with UserId={userId} and PartnerId={userToAddId}", userId, userToAddId);
                 return Result.Fail(new Error("Invalid request").WithMetadata("Code", "InvalidRequest"));
             }
         }
 
+        ///  <summary>
+        ///  Get UserChat by email
+        ///  </summary>
+        ///  <param name="userId">Identifier of the user</param>
+        ///  <param name="email">Email of the adding user</param>
+        ///  <returns>
+        ///  <see cref="CreateUserChatResultDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId and UserId (partner) if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
         public async Task<Result<GetUserChatResultDto>> GetUserChatByEmailAsync(string userId, string email)
         {
             var findUserResult = await _userService.FindUserByEmailAsync(email);
@@ -84,6 +125,18 @@ namespace Vulyk.Services
             return await GetUserChatAsync(userId, findUserResult.Value.UserId);
         }
 
+        ///  <summary>
+        ///  Get UserChat by email
+        ///  </summary>
+        ///  <param name="userId">Identifier of the user</param>
+        ///  <param name="userToAddId">Identifier of the adding user</param>
+        ///  <returns>
+        ///  <see cref="CreateUserChatResultDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId and UserId (partner) if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
         public async Task<Result<GetUserChatResultDto>> GetUserChatAsync(string userId, string userToAddId)
         {
             int? chatId = await _context.Chat
@@ -96,6 +149,17 @@ namespace Vulyk.Services
             return Result.Ok(new GetUserChatResultDto { UserId = userToAddId, ChatId = chatId });
         }
 
+        ///  <summary>
+        ///  Get user's ChatList with ChatListItems
+        ///  </summary>
+        ///  <param name="userId">Identifier of the user</param>
+        ///  <returns>
+        ///  <see cref="ChatListDto"/> containing ChatListItems that containing:
+        ///  <list type="bullet">
+        ///  <item>ChatId, UserId (partner), FullName (partner), LastMessageDateTime, LastMessageText if operation successful</item>
+        ///  <item>Error information if users not found</item>
+        /// </list>
+        /// </returns>
         public async Task<Result<ChatListDto>> GetChatsAsync(string userId)
         {
             try
@@ -137,6 +201,7 @@ namespace Vulyk.Services
             }
             catch
             {
+                _logger.LogError("Failed to receive chats for UserId={userId}", userId);
                 return Result.Fail(new Error("Error chats receiving").WithMetadata("Code", "GetChatsError"));
             }
         }

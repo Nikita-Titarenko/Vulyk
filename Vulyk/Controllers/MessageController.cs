@@ -26,12 +26,22 @@ namespace Vulyk.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> Index(int chatId, string partnerUserId)
+        public async Task<IActionResult> Index(int chatId, string partnerId)
         {
             string userId = GetUserId()!;
+            var dto = new GetMessagesDto { ChatId = chatId, UserId = userId, PartnerId = partnerId };
+            var getMessagesResult = await _messageService.GetMessagesAsync(dto);
+            if (!getMessagesResult.IsSuccess)
+            {
+                foreach (var error in getMessagesResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Message);
+                }
 
-            MessageListDto messageListDto = await _messageService.GetMessagesAsync(chatId, userId, partnerUserId);
-            MessageListViewModel messageListViewModel = _mapper.Map<MessageListViewModel>(messageListDto);
+                return View();
+            }
+
+            MessageListViewModel messageListViewModel = _mapper.Map<MessageListViewModel>(getMessagesResult.Value);
             messageListViewModel.ChatId = chatId;
 
             return PartialView("_MessagesPartialView", messageListViewModel);
@@ -55,7 +65,7 @@ namespace Vulyk.Controllers
             MessageListViewModel messageListViewModel = new MessageListViewModel
             {
                 FullName = fullName,
-                UserId = userId,
+                PartnerId = userId,
             };
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
@@ -69,9 +79,23 @@ namespace Vulyk.Controllers
             }
             string userId = GetUserId()!;
 
-            int chatId = await _messageService.CreateMessageAsync(userId, createMessageViewModel.Text, createMessageViewModel.UserId);
+            var dto = _mapper.Map<CreateMessageDto>(createMessageViewModel);
+            dto.UserId = userId;
+            var createMessageResult = await _messageService.CreateMessageAsync(dto);
+            if (!createMessageResult.IsSuccess)
+            {
+                if (!createMessageResult.IsSuccess)
+                {
+                    foreach (var error in createMessageResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Message);
+                    }
 
-            var getFullNameResult = await _userService.GetFullNameAsync(createMessageViewModel.UserId);
+                    return View();
+                }
+            }
+
+            var getFullNameResult = await _userService.GetFullNameAsync(createMessageViewModel.PartnerId);
             if (!getFullNameResult.IsSuccess)
             {
                 foreach (var error in getFullNameResult.Errors)
@@ -82,7 +106,7 @@ namespace Vulyk.Controllers
                 return View();
             }
 
-            return Ok(new {chatId, fullName = getFullNameResult.Value.FullName });
+            return Ok(new { createMessageResult.Value.ChatId, fullName = getFullNameResult.Value.FullName });
         }
     }
 }
