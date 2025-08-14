@@ -328,6 +328,7 @@ namespace Vulyk.Services
 
             if (user.PendingNewEmail == null)
             {
+                _logger.LogWarning("Failed to confirm new email: Current email not confirmed for User with UserId={userId}", dto.UserId);
                 return Result.Fail(new Error("Current email not confirmed").WithMetadata("Code", "CurrentEmailNotConfirmed"));
             }
 
@@ -615,14 +616,14 @@ namespace Vulyk.Services
         /// </returns>
         public async Task<Result<GetFullNameResultDto>> GetFullNameAsync(string id)
         {
-            string? fullName = await _context.ApplicationUser.Where(u => u.Id == id && u.EmailConfirmed).Select(u => u.FullName).FirstOrDefaultAsync();
-            if (fullName == null)
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
             {
                 _logger.LogWarning("Failed to get user FullName with UserId={id}", id);
                 return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
 
-            return Result.Ok(new GetFullNameResultDto { FullName = fullName });
+            return Result.Ok(new GetFullNameResultDto { FullName = user.FullName });
         }
 
         ///  <summary>
@@ -668,13 +669,62 @@ namespace Vulyk.Services
             string emailNormalized = email.ToLower();
             ApplicationUser? foundUser = await _userManager.FindByEmailAsync(email);
 
-            if (foundUser == null || !foundUser.EmailConfirmed)
+            if (foundUser == null)
             {
-                _logger.LogWarning("Failed to fo find user using email");
+                _logger.LogWarning("Failed to find user my email: User not found");
                 return Result.Fail(new Error("User not found").WithMetadata("Code", "UserNotFound"));
             }
 
+            if (!foundUser.EmailConfirmed)
+            {
+                _logger.LogWarning("Failed to find user my emai: Current email not confirmed for User with UserId={userId}", foundUser.Id);
+                return Result.Fail(new Error("Current email not confirmed").WithMetadata("Code", "CurrentEmailNotConfirmed"));
+            }
+
             return Result.Ok(new FindUserByEmailDto { UserId = foundUser.Id });
+        }
+
+        ///  <summary>
+        ///  Get users for administrator
+        ///  </summary>
+        ///  <param name="page">Page number starting from 1</param>
+        ///  <param name="pageSize">Number of users to receive</param>
+        ///  <returns>
+        ///  <see cref="UsersDto"/> containing:
+        ///  <list type="bullet">
+        ///  <item>List of users that containing FullName, Email, Status and Role if operation successful</item>
+        ///  <item>Error information if it fails</item>
+        /// </list>
+        /// </returns>
+        public async Task<Result<UsersDto>> GetUsers(int page, int pageSize)
+        {
+            UsersDto usersDto = new UsersDto
+            {
+                Users = await _context.ApplicationUser
+                .AsNoTracking()
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new
+                {
+                    RoleId = _context.UserRoles
+                        .Where(ur => ur.UserId == u.Id)
+                        .Select(ur => ur.RoleId)
+                        .FirstOrDefault(),
+                    FullName = u.FullName,
+                    Email = u.Email!,
+                    Status = u.EmailConfirmed ? UserStatus.ConfirmedEmail : UserStatus.NotConfirmedEmail,
+                })
+                .Select(u => new UserDto
+                {
+                    Email = u.Email,
+                    FullName = u.FullName,
+                    Status = u.Status,
+                    Role = _context.Roles
+                        .Where(r => r.Id == u.RoleId).Select(r => r.Name).FirstOrDefault() == "Administrator" ? UserRole.Admin : UserRole.User
+                }).ToListAsync()
+            };
+
+            return Result.Ok(usersDto);
         }
     }
 }

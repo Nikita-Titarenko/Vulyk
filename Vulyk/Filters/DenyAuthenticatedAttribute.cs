@@ -16,7 +16,7 @@ namespace Vulyk.Filters
             var user = context.HttpContext.User;
             if (user.Identity != null && user.Identity.IsAuthenticated)
             {
-                context.Result = new RedirectToActionResult(nameof(ChatController.Index), "Chat", null);
+                context.Result = new RedirectToActionResult(nameof(ChatController.Index), "Chat", new {area = ""});
             }
         }
 

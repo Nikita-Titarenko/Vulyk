@@ -38,13 +38,16 @@ namespace Vulyk.Services
             }
             List<MessageListItemDto> messages = await _context.Message
                 .Where(m => m.ChatId == dto.ChatId)
+                .AsNoTracking()
                 .Select(m => new MessageListItemDto
                 {
                     IsMine = m.UserId == dto.UserId,
                     Text = m.Text,
                     CreationDateTime = m.CreationDateTime,
 
-                }).OrderBy(m => m.CreationDateTime).ToListAsync();
+                })
+                .OrderBy(m => m.CreationDateTime)
+                .ToListAsync();
             return new MessageListDto
             {
                 PartnerId = dto.PartnerId,
@@ -79,7 +82,7 @@ namespace Vulyk.Services
                 UserId = dto.UserId,
                 ChatId = createChatResult.Value.ChatId,
                 Text = dto.Text,
-                CreationDateTime = DateTime.Now
+                CreationDateTime = DateTime.UtcNow,
             });
             await _context.SaveChangesAsync();
 

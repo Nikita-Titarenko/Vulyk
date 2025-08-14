@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using Vulyk.Common
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
@@ -19,12 +20,12 @@
 			<div class="navbar h-100">
 				<ul class="navbar-nav h-100">
 					<li class="nav-item">
-						<a class="nav-link" asp-action="@nameof(ChatController.Index)" asp-controller="Chat">
+						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.Index)" asp-controller="Chat">
 							<i class="i-nav fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
 					<li>
-						<a class="nav-link" asp-action="@nameof(ChatController.Create)" asp-controller="Chat">
+						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.Create)" asp-controller="Chat">
 							<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
@@ -33,6 +34,14 @@
 							<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
+					@if (User.IsInRole(Roles.Administrator))
+					{
+						<li>
+							<a class="nav-link" asp-area="Admin" asp-controller="User" asp-action="@nameof(Vulyk.Areas.Admin.Controllers.UserController.Index)">
+								<i class="i-nav fa fa-gear @(ViewData["ChoosedPage"] as string == "AdminPanel" ? "i-choosed" : "")"></i>
+							</a>
+						</li>
+					}
 					<li class="mt-auto">
 						<form asp-area="Identity" asp-page="/Account/LogOut">
 							<button class="nav-link" type="submit">
@@ -40,6 +49,7 @@
 							</button>
 						</form>
 					</li>
+
 				</ul>
 			</div>
 		</div>

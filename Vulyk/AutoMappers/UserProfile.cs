@@ -17,6 +17,8 @@ namespace Vulyk.AutoMappers
             CreateMap<Areas.Identity.Pages.Account.ResetPasswordModel.InputModel, ResetPasswordDto>();
             CreateMap<Areas.Identity.Pages.Account.Manage.SetPasswordModel.InputModel, SetPasswordDto>();
             CreateMap<AuthResultDto, ConfirmTokenDto>();
+            CreateMap<UsersDto, UsersViewModel>();
+            CreateMap<UserDto, UserViewModel>();
         }
     }
 }

@@ -89,3 +89,8 @@ main {
         transform: translateX(0);
     }
 }
+
+.table-container{
+    height: 75%;
+    overflow-y: auto;
+}

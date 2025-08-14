@@ -71,7 +71,7 @@ namespace Vulyk.Services
                 return Result.Ok(createChatResult);
             }
 
-                using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 Chat chat = new Chat();
@@ -140,9 +140,10 @@ namespace Vulyk.Services
         public async Task<Result<GetUserChatResultDto>> GetUserChatAsync(string userId, string userToAddId)
         {
             int? chatId = await _context.Chat
-                .Where(c =>
-                c.UserChats.Any(uc => uc.UserId == userId) &&
-                c.UserChats.Any(uc => uc.UserId == userToAddId))
+                .Where(c => c.UserChats
+                .Any(uc => uc.UserId == userId) && c.UserChats
+                .Any(uc => uc.UserId == userToAddId))
+                .AsNoTracking()
                 .Select(c => (int?)c.Id)
                 .FirstOrDefaultAsync();
 
@@ -167,35 +168,39 @@ namespace Vulyk.Services
                 ChatListDto chatList = new ChatListDto
                 {
                     ChatItems = await _context.UserChat
-    .Where(uc => uc.UserId == userId)
-    .Select(uc => new
-    {
-        uc.ChatId,
+                        .Where(uc => uc.UserId == userId)
+                        .Select(uc => new
+                        {
+                            uc.ChatId,
 
-        Partner = _context.UserChat
-        .Where(x => x.ChatId == uc.ChatId && x.UserId != userId && x.ApplicationUser.EmailConfirmed)
-        .Select(uc => new
-        {
-            Id = uc.UserId,
-            uc.ApplicationUser.FullName,
-            uc.ApplicationUser.LastOnline
-        }).FirstOrDefault(),
+                            Partner = _context.UserChat
+                                .Where(x => x.ChatId == uc.ChatId && x.UserId != userId && x.ApplicationUser.EmailConfirmed)
+                                .Select(uc => new
+                                {
+                                    Id = uc.UserId,
+                                    uc.ApplicationUser.FullName,
+                                    uc.ApplicationUser.LastOnline
+                                })
+                                .FirstOrDefault(),
 
-        LastMessage = _context.Message
-         .Where(m => m.ChatId == uc.ChatId)
-         .Select(m => new { m.Text, m.CreationDateTime }).OrderByDescending(m => m.CreationDateTime).FirstOrDefault()
-    })
-    .Where(uc => uc.Partner != null)
-    .OrderByDescending(uc => uc.LastMessage != null ? uc.LastMessage.CreationDateTime : DateTime.MinValue)
-    .Select(uc => new ChatListItemDto
-    {
-        ChatId = uc.ChatId,
-        UserId = uc.Partner!.Id,
-        FullName = uc.Partner.FullName ?? string.Empty,
-        LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text.Substring(0, lastMessageLength) : string.Empty,
-        LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
+                            LastMessage = _context.Message
+                                    .Where(m => m.ChatId == uc.ChatId)
+                                    .Select(m => new { m.Text, m.CreationDateTime })
+                                    .OrderByDescending(m => m.CreationDateTime)
+                                    .FirstOrDefault()
+                        })
+                        .Where(uc => uc.Partner != null)
+                        .OrderByDescending(uc => uc.LastMessage != null ? uc.LastMessage.CreationDateTime : DateTime.MinValue)
+                        .Select(uc => new ChatListItemDto
+                        {
+                            ChatId = uc.ChatId,
+                            UserId = uc.Partner!.Id,
+                            FullName = uc.Partner.FullName ?? string.Empty,
+                            LastMessageText = uc.LastMessage != null ? uc.LastMessage.Text.Substring(0, lastMessageLength) : string.Empty,
+                            LastMessageDateTime = uc.LastMessage != null ? uc.LastMessage.CreationDateTime : null
 
-    }).ToListAsync()
+                        })
+                        .ToListAsync()
                 };
                 return Result.Ok(chatList);
             }

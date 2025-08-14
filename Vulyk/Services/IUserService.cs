@@ -27,5 +27,6 @@ namespace Vulyk.Services
         Task<Result> ConfirmCurrentEmailAsync(ConfirmTokenDto dto);
         Task<Result<ConfirmTokenDto>> GenerateNewEmailConfirmationTokenAsync(string userId);
         Task<Result> ConfirmNewEmailAsync(ConfirmTokenDto dto);
+        Task<Result<UsersDto>> GetUsers(int page, int pageSize);
     }
 }

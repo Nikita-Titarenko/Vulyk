@@ -1,14 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-
-namespace Vulyk.Entities
+﻿namespace Vulyk.Entities
 {
     public class ApplicationUser : IdentityUser
     {
         [MaxLength(20)]
-        public string? FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
         public DateTime? LastOnline { get; set; } = DateTime.Now;
 
