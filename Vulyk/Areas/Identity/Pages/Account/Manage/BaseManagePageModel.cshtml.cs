@@ -2,7 +2,7 @@ using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Vulyk.Services;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {

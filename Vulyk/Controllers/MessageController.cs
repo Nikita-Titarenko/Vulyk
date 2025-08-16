@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vulyk.Data;
 using Vulyk.DTOs;
-using Vulyk.Entities;
+using Vulyk.DTOs.Message;
+using Vulyk.Models;
 using Vulyk.Services;
-using Vulyk.ViewModels;
+using Vulyk.Services.User;
+using Vulyk.ViewModels.Message;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Vulyk.Controllers
@@ -41,7 +43,7 @@ namespace Vulyk.Controllers
                 return View();
             }
 
-            MessageListViewModel messageListViewModel = _mapper.Map<MessageListViewModel>(getMessagesResult.Value);
+            var messageListViewModel = _mapper.Map<MessageListViewModel>(getMessagesResult.Value);
             messageListViewModel.ChatId = chatId;
 
             return PartialView("_MessagesPartialView", messageListViewModel);

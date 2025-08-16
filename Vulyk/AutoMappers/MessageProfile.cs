@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Vulyk.DTOs;
-using Vulyk.ViewModels;
+using Vulyk.DTOs.Message;
+using Vulyk.ViewModels.Message;
 
 namespace Vulyk.AutoMappers
 {

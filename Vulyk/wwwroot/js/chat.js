@@ -1,39 +1,62 @@
 ﻿const connection = new signalR.HubConnectionBuilder()
+    .withAutomaticReconnect()
     .withUrl("/chathub").build();
 
-var chatLauncher;
-var selectedChatList;
-var noSelectedChatMessage;
-async function startConnectionAndRun() {
-    await connection.start();
-    if (document.readyState == 'loading') {
-        document.addEventListener('DOMContentLoaded', async () => {
-            await run();
-        });
-    } else {
-        await run();
+connection.onreconnecting((error) => {
+    showToast('Connection lost. Trying to reconnect...', colors['error']);
+});
+
+connection.onreconnected(async (error) => {
+    showToast('Connection restored', colors['success'], 5000);
+    await addToGroups();
+});
+
+connection.onclose(async (error) => {
+    showToast('Connection closed', colors['error']);
+});
+
+let chatLauncher = document.getElementById('chat-launcher');;
+let selectedChatList;
+let noSelectedChatMessage = document.getElementById('no-selected-chat');;
+async function startConnection() {
+    try {
+        await connection.start();
+        await addToGroups();
+        await loadChat();
+    }
+    catch (error) {
+        showToast('Failed to load chats. Please try again later.', colors['error']);
     }
 }
-async function run() {
-    chatLauncher = document.getElementById('chat-launcher');
-    if (chatLauncher.dataset.chatId) {
-        chooseChat(chatLauncher.dataset.chatId, chatLauncher.dataset.userToAddId);
-    } else if (chatLauncher.dataset.userToAddId) {
-        createEmptyChat(chatLauncher.dataset.userToAddId);
-    }
-    await connection.invoke('JoinUserGroupAsync', chatLauncher.dataset.yourUserId);
 
+async function addToGroups() {
+    await connection.invoke('JoinUserGroupAsync', chatLauncher.dataset.yourUserId);
     await connection.invoke("LoadChatsAsync", JSON.parse(chatLauncher.dataset.chatIds));
 }
-startConnectionAndRun();
+
+async function loadChat() {
+    if (chatLauncher.dataset.chatId) {
+        await chooseChat(chatLauncher.dataset.chatId, chatLauncher.dataset.userToAddId);
+    } else if (chatLauncher.dataset.userToAddId) {
+        await createEmptyChat(chatLauncher.dataset.userToAddId);
+    }
+}
+startConnection();
+
 
 connection.on('ReceiveMessage', (userId, message) => {
     updateChatList(userId, null, message, false);
 });
 
 connection.on('CreateChat', async (userId, chatId, fullName, lastMessage) => {
-    await connection.invoke("LoadChatAsync", chatId.toString());
-    var noChatsDiv = document.getElementById('no-chats');
+    try {
+        await connection.invoke("LoadChatAsync", chatId.toString());
+    }
+    catch {
+        showToast('Failed to create chat. Please try again later.', colors['error']);
+    }
+
+    const noChatsDiv = document.getElementById('no-chats');
     if (noChatsDiv) {
         noChatsDiv.classList.add('newUserAdded');
         document.querySelector('.chat-page-container').classList.add('newUserAdded');
@@ -52,43 +75,57 @@ function makeSoundNotification() {
     notificationSound.play();
 }
 
-function chooseChat(chatId, userId) {
-    fetch(`Message/Index?chatId=${chatId}&partnerId=${userId}`)
-        .then(r => r.text())
-        .then(html => {
-            document.getElementById('messages').innerHTML = html;
-            scrollMessageContainer();
-        });
+async function chooseChat(chatId, userId) {
+    const response = await fetch(`Message/Index?chatId=${chatId}&partnerId=${userId}`);
+    if (!response.ok) {
+        return new Error();
+    }
+    const html = await response.text();
+    const messages = document.getElementById('messages');
+    if (messages) {
+        messages.innerHTML = html;
+        scrollMessageContainer();
+    }
+
     if (selectedChatList) {
         selectedChatList.classList.remove('selected');
     }
-    noSelectedChatMessage.classList.add('d-none');
+    if (noSelectedChatMessage) {
+        noSelectedChatMessage.classList.add('d-none');
+    }
+
     changeSidebarVisibility(sidebar, chatPanel, messagePanel, main);
     changeChatItemColor(chatId);
 }
 
 function changeChatItemColor(chatId) {
-    var newSelectedChatList = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    const newSelectedChatList = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
     newSelectedChatList.classList.add('selected');
     selectedChatList = newSelectedChatList;
 }
 
-function createEmptyChat(userId) {
-    fetch(`Message/DisplayEmptyChat?userId=${userId}`)
-        .then(r => r.text())
-        .then(html => {
-            document.getElementById('messages').innerHTML = html;
-        });
+async function createEmptyChat(userId) {
+    try {
+        const response = await fetch(`Message/DisplayEmptyChat?userId=${userId}`);
+        if (!response.ok) {
+            throw new Error();
+        }
+        const html = await response.text();
+        document.getElementById('messages').innerHTML = html;
+    }
+    catch {
+        showToast('Failed to create new chat. Please try again later.', colors['error']);
+    }
 }
 
 const chatP = document.querySelector('.chat-panel');
-noSelectedChatMessage = document.getElementById('no-selected-chat');
+
 if (chatP) {
-    chatP.addEventListener('click', function (e) {
+    chatP.addEventListener('click', async function (e) {
         if (!e.target) {
             return;
         }
-        var chatId, userId;
+        let chatId, userId;
         if (e.target.classList.contains('chat-item')) {
             chatId = e.target.dataset.chatId;
             userId = e.target.dataset.userId;
@@ -99,50 +136,51 @@ if (chatP) {
         if (chatId == null) {
             return;
         }
-        chooseChat(chatId, userId);
+        await chooseChat(chatId, userId);
     });
 }
 
 
-function CreateMessage(e) {
+async function createMessage(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-    fetch(`Message/CreateMessage`, {
-        method: 'POST',
-        body: formData
-    }).then(async r => {
-        if (r.ok) {
-            const chatIdDiv = document.getElementById('chatId');
-            var chatId = chatIdDiv.dataset.chatId;
-            var partnerId = formData.get('PartnerId');
-            var userId = chatLauncher.dataset.yourUserId;
-            var fullName = chatLauncher.dataset.yourName;
-            var text = formData.get("text");
-            if (chatId == '') {
-                var result = await r.json();
-                chatId = result.chatId;
-                fullName = result.fullName;
-                chatIdDiv.dataset.chatId = chatId;
-                await connection.invoke("CreateChatAsync", userId, partnerId, chatId, fullName, text);
-            } else {
-                try {
-                    await connection.invoke("SendMessageAsync", chatId.toString(), userId, text);
-                }
-                catch (er) {
-                    console.log(er);
-                }
-            }
+    try {
+        const response = await fetch(`Message/CreateMessage`, {
+            method: 'POST',
+            body: formData
+        });
 
-            updateChatList(partnerId, chatId, formData.get("text"), true, fullName);
-            form.reset();
+        if (!response.ok) {
+            throw new Error();
         }
-    });
+
+        const chatIdDiv = document.getElementById('chatId');
+        let chatId = chatIdDiv.dataset.chatId;
+        const partnerId = formData.get('PartnerId');
+        const userId = chatLauncher.dataset.yourUserId;
+        let fullName = chatLauncher.dataset.yourName;
+        const text = formData.get("text");
+        if (chatId == '') {
+            const result = await response.json();
+            chatId = result.chatId;
+            fullName = result.fullName;
+            chatIdDiv.dataset.chatId = chatId;
+            await connection.invoke("CreateChatAsync", userId, partnerId, chatId, fullName, text);
+        } else {
+            await connection.invoke("SendMessageAsync", chatId.toString(), userId, text);
+        }
+        updateChatList(partnerId, chatId, formData.get("text"), true, fullName);
+        form.reset();
+    }
+    catch {
+        showToast('Failed to create message. Please try again later.', colors['error']);
+    }
 }
 
 document.addEventListener('submit', (e) => {
     if (e.target && e.target.id) {
-        CreateMessage(e);
+        createMessage(e);
     }
 })
 
@@ -160,16 +198,16 @@ function updateChatList(userId, chatId, message, isYourMessage, userName) {
             return;
         }
 
-        var chatItem = document.querySelector(`.chat-item[data-user-id='${userId}']`);
+        const chatItem = document.querySelector(`.chat-item[data-user-id='${userId}']`);
         const currentTime = getCurrentTime();
         if (chatItem == null) {
             createChatListItem(userId, chatId, message, userName, currentTime);
             changeChatItemColor(chatId);
         } else {
-            var lastMessageText = chatItem.querySelector('.chat-last-message');
+            const lastMessageText = chatItem.querySelector('.chat-last-message');
             lastMessageText.textContent = message.slice(0, 26);
 
-            var lastMessageDateTime = chatItem.querySelector('.last-message-data-time');
+            const lastMessageDateTime = chatItem.querySelector('.last-message-data-time');
 
             lastMessageDateTime.textContent = currentTime;
         }
@@ -179,6 +217,12 @@ function updateChatList(userId, chatId, message, isYourMessage, userName) {
     catch (err) {
         console.log(err);
     }
+}
+
+function escapeHTML(item) {
+    const div = document.createElement('div');
+    div.textContent = item;
+    return div.innerHTML;
 }
 
 function createChatListItem(userId, chatId, lastMessageText, fullName, currentTime) {
@@ -220,9 +264,9 @@ function getCurrentTime() {
 }
 
 function appendMessage(time, userId, message, isYourMessage) {
-    var messageContainer = document.querySelector(`.message-container[data-user-id='${userId}']`);
+    const messageContainer = document.querySelector(`.message-container[data-user-id='${userId}']`);
     if (messageContainer) {
-        messageDiv = document.createElement('div');
+        const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         messageDiv.classList.add(isYourMessage ? 'your' : 'partner');
 

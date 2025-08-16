@@ -1,19 +1,20 @@
-var page = 1;
-var pageSize;
-var rowHeight;
-var table;
-var tableContainer;
-var isLoading = false;
+let page = 1;
+let pageSize;
+let rowHeight;
+const table = document.querySelector('tbody');;
+const tableContainer = document.querySelector('.table-container');
+let isLoading = false;
 
 async function loadUsers() {
-    const response = await fetch(`/Admin/User/LoadUsers?page=${++page}`);
-    const result = await response.json();
-    if (!result.isSuccess) {
-        return;
-    }
-    for (var user of result.value.users) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    try {
+        const response = await fetch(`/Admin/User/LoadUsers?page=${++page}`);
+        const result = await response.json();
+        if (!result.isSuccess) {
+            return;
+        }
+        for (let user of result.value.users) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
 				<td>
 					${user.fullName}
 				</td>
@@ -27,29 +28,33 @@ async function loadUsers() {
 					${user.role}
 				</td>
                 `;
-        table.appendChild(tr);
+            table.appendChild(tr);
+        }
+    }
+    catch {
+        showToast('Failed to load users. Please try again later.', colors['error']);
+    }
+    finally {
+        isLoading = false;
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    var div = document.querySelector('[data-page-size]');
-    if (div) {
-        pageSize = parseInt(div.dataset.pageSize);
-        var td = document.querySelector('td');
+const div = document.querySelector('[data-page-size]');
+if (div) {
+    pageSize = parseInt(div.dataset.pageSize);
+    const td = document.querySelector('td');
 
-        if (td) {
-            rowHeight = td.offsetHeight;
-        }
-    } else {
-        pageSize = 20;
+    if (td) {
+        rowHeight = td.offsetHeight;
     }
-    table = document.querySelector('tbody');
-    tableContainer = document.querySelector('.table-container');
-    tableContainer.addEventListener('scroll', () => {
-        if (!isLoading && tableContainer.scrollHeight * 0.8 <= tableContainer.scrollTop + tableContainer.clientHeight) {
-            isLoading = true;
-            loadUsers();
-            isLoading = false;
-        }
-    });
+} else {
+    pageSize = 20;
+}
+
+
+tableContainer.addEventListener('scroll', () => {
+    if (!isLoading && tableContainer.scrollHeight * 0.8 <= tableContainer.scrollTop + tableContainer.clientHeight) {
+        isLoading = true;
+        loadUsers();
+    }
 });

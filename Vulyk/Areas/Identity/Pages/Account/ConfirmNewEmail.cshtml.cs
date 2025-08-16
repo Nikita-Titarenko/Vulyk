@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Vulyk.Services;
+using Vulyk.DTOs.Account;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
@@ -23,7 +24,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return RedirectToPage("/Index");
             }
 
-            var result = await _userService.ConfirmNewEmailAsync(new DTOs.ConfirmTokenDto { UserId = userId, Code = code });
+            var result = await _userService.ConfirmNewEmailAsync(new ConfirmTokenDto { UserId = userId, Code = code });
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)

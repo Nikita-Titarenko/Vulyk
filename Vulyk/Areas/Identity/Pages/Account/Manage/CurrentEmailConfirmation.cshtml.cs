@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
 using Vulyk.Areas.Identity.Pages.Account.Manage;
 using Vulyk.Controllers;
-using Vulyk.DTOs;
-using Vulyk.Services;
+using Vulyk.DTOs.Account;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {

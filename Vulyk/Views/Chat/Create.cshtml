@@ -1,10 +1,11 @@
-﻿@model EmailInputViewModel
+﻿@using Vulyk.ViewModels.Chat
+@model EmailInputViewModel
 @{
 	Layout = "~/Views/Shared/AppLayout.cshtml";
 	ViewData["Title"] = "Create new chat";
 }
 @section Styles {
-	<link rel="stylesheet" href="~/css/form.css" />
+	<link rel="stylesheet" href="~/css/form.css" asp-append-version="true"/>
 }
 <div class="form-container">
 	<h5 class="subheading bold-text">Create chat</h5>

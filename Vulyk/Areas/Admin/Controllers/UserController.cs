@@ -1,8 +1,8 @@
 ﻿using System.Configuration;
 using AutoMapper;
 using Vulyk.Common;
-using Vulyk.Services;
-using Vulyk.ViewModels;
+using Vulyk.Services.User;
+using Vulyk.ViewModels.User;
 
 namespace Vulyk.Areas.Admin.Controllers
 {

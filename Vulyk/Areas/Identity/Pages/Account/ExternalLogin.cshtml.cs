@@ -2,7 +2,7 @@
 using AutoMapper;
 using Microsoft.DotNet.Scaffolding.Shared;
 using Vulyk.Controllers;
-using Vulyk.Services;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {

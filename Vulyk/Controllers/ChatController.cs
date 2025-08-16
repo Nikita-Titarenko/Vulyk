@@ -1,7 +1,8 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
-using Vulyk.Services;
-using Vulyk.ViewModels;
+using Vulyk.Services.Chat;
+using Vulyk.Services.User;
+using Vulyk.ViewModels.Chat;
 
 namespace Vulyk.Controllers
 {
@@ -37,7 +38,7 @@ namespace Vulyk.Controllers
 
                 return View();
             }
-            ChatListViewModel chatListViewModel = _mapper.Map<ChatListViewModel>(getChatsResult.Value);
+            var chatListViewModel = _mapper.Map<ChatListViewModel>(getChatsResult.Value);
 
             chatListViewModel.NewUserId = userToAddId;
             chatListViewModel.DisplayChatId = chatId;
@@ -101,7 +102,7 @@ namespace Vulyk.Controllers
                 return View();
             }
 
-            if (getUserChatResult.Value.ChatId != null)
+            if (getUserChatResult.Value.ChatId.HasValue)
             {
                 return RedirectToAction(nameof(Index), "Chat", new { chatId = getUserChatResult.Value.ChatId, userToAddId = getUserChatResult.Value.UserId });
             }

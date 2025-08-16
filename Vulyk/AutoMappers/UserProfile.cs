@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using Vulyk.Areas.Identity.Pages.Account;
-using Vulyk.DTOs;
+using Vulyk.DTOs.Account;
+using Vulyk.DTOs.Profile;
+using Vulyk.DTOs.UserManagement;
 using Vulyk.ViewModels;
+using Vulyk.ViewModels.User;
 
 namespace Vulyk.AutoMappers
 {

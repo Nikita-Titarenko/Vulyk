@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using FluentResults;
-using Vulyk.DTOs;
-using Vulyk.Services;
+using Vulyk.DTOs.Account;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {

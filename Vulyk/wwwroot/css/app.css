@@ -78,6 +78,30 @@ main {
     transform: translateX(0);
 }
 
+#toast {
+    position: fixed;
+    top: 5%;
+    left: 35%;
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    width: 30%;
+    z-index: 3;
+}
+
+    #toast.hidden {
+        display: none;
+    }
+
+    #toast.visible {
+        display: flex;
+    }
+
+.table-container {
+    height: 75%;
+    overflow-y: auto;
+}
+
 @media (min-width: 768px) {
     .navbar-toggler-custom, .navbar-toggler-custom-opened {
         display: none;
@@ -88,9 +112,4 @@ main {
         position: static;
         transform: translateX(0);
     }
-}
-
-.table-container{
-    height: 75%;
-    overflow-y: auto;
 }

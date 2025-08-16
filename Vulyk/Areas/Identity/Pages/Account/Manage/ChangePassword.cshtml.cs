@@ -1,8 +1,8 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
-using Vulyk.DTOs;
+using Vulyk.DTOs.Profile;
 using Vulyk.Filters;
-using Vulyk.Services;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {

@@ -1,14 +1,15 @@
-﻿@model Vulyk.ViewModels.ChatListViewModel
+﻿@using Vulyk.ViewModels.Chat
+@model ChatListViewModel
 @{
 	Layout = "~/Views/Shared/AppLayout.cshtml";
 	ViewData["Title"] = "Chats";
 }
 @section Styles {
-	<link rel="stylesheet" href="~/css/ChatPage.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/chatPage.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/form.css" asp-append-version="true" />
 }
 @{
-	bool noChats = Model.ChatItems.Count() == 0 && Model.NewUserId == null;
+	bool noChats = !Model.ChatItems.Any() && Model.NewUserId == null;
 }
 @if (noChats)
 {
@@ -50,6 +51,6 @@
 	 data-chat-ids='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChatItems.Select(c => c.ChatId.ToString()).ToList()))'>
 </div>
 @section Scripts {
-	<script src="~/lib/signalr/signalr.min.js"></script>
-	<script src="~/js/chat.js"></script>
+	<script src="~/lib/signalr/signalr.min.js" asp-append-version="true" defer></script>
+	<script src="~/js/chat.js" asp-append-version="true" defer></script>
 }

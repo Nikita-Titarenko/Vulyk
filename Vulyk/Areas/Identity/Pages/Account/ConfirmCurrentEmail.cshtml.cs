@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
 using Vulyk.Controllers;
-using Vulyk.Services;
+using Vulyk.DTOs.Account;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {
@@ -38,7 +39,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return RedirectToPage("/Index");
             }
 
-            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = userId, Code = code });
+            var result = await _userService.ConfirmCurrentEmailAsync(new ConfirmTokenDto { UserId = userId, Code = code });
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)
@@ -59,7 +60,7 @@ namespace Vulyk.Areas.Identity.Pages.Account
                 return RedirectToPage("/Index");
             }
 
-            var result = await _userService.ConfirmCurrentEmailAsync(new DTOs.ConfirmTokenDto { UserId = UserId, Code = Code, NewEmail = Input.Email });
+            var result = await _userService.ConfirmCurrentEmailAsync(new ConfirmTokenDto { UserId = UserId, Code = Code, NewEmail = Input.Email });
             if (!result.IsSuccess)
             {
                 foreach (var error in result.Errors)

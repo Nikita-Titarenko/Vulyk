@@ -2,7 +2,7 @@
 	ViewData["Title"] = "Home Page";
 }
 @section Styles {
-	<link rel="stylesheet" href="~/css/index.css" />
+	<link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
 }
 <section id="hero-section" class="section-page">
 	<div class="d-flex hero-container">
@@ -167,5 +167,5 @@
 	</div>
 </section>
 @section Scripts{
-	<script src="~/js/index.js"></script>
+	<script src="~/js/index.js" asp-append-version="true" defer></script>
 }

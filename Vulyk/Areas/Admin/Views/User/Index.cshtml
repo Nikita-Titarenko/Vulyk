@@ -1,5 +1,6 @@
 ﻿@using Vulyk.ViewModels
-@model Vulyk.ViewModels.UsersViewModel
+@using Vulyk.ViewModels.User
+@model UsersViewModel
 @{
 	ViewData["Title"] = "Users";
 	Layout = "~/Views/Shared/AppLayout.cshtml";
@@ -45,5 +46,5 @@
 	<div data-page-size="@UsersViewModel.PageSize"></div>
 </div>
 @section Scripts {
-	<script src="~/js/loadUsers.js"></script>
+	<script src="~/js/loadUsers.js" defer></script>
 }

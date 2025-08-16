@@ -1,23 +1,24 @@
-﻿@model Vulyk.ViewModels.MessageListViewModel
+﻿@using Vulyk.ViewModels.Message
+
+@model Vulyk.ViewModels.Message.MessageListViewModel
 <div class="d-flex justify-content-between" id="chat-header">
 	<div class="subheading">@Model.FullName</div>
 	<i class="fa fa-ellipsis-v fa-2x i-chat-tool"></i>
 </div>
 <div class="message-container mt-auto h-100" data-user-id="@Model.PartnerId">
-	@{
-		foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
-		{
-			string messageTypeClass = messageListItemViewModel.IsMine ? "your" : "partner";
-			<div class="message @messageTypeClass">
-				<div class="message-text">@messageListItemViewModel.Text</div>
-				<div class="message-time @messageTypeClass">@messageListItemViewModel.CreationDateTime.ToString("HH:mm")</div>
-			</div>
-		}
+	@foreach (MessageListItemViewModel messageListItemViewModel in Model.Messages)
+	{
+		string messageTypeClass = messageListItemViewModel.IsMine ? "your" : "partner";
+		<div class="message @messageTypeClass">
+			<div class="message-text">@messageListItemViewModel.Text</div>
+			<div class="message-time @messageTypeClass">@messageListItemViewModel.CreationDateTime.ToString("HH:mm")</div>
+		</div>
 	}
+
 </div>
 <div id="chatId" data-chat-id="@Model.ChatId" hidden></div>
 <form id="createMessageForm" class="d-flex write-message-form">
 	<input asp-for="PartnerId" hidden />
-	<input class="form-input" name="text" placeholder="Write a message"/>
+	<input class="form-input" name="text" placeholder="Write a message" />
 	<button type="submit"><i class="fa fa-paper-plane fa-2x i-chat-tool p-3"></i></button>
 </form>

@@ -1,16 +1,24 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Vulyk.Data;
 using Vulyk.Hubs;
 using Vulyk.Services;
+using Vulyk.Services.Chat;
+using Vulyk.Services.Email;
+using Vulyk.Services.Message;
+using Vulyk.Services.User;
+using Vulyk.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.SignIn.RequireConfirmedEmail = true;
 });
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -48,6 +56,11 @@ builder.Services.ConfigureApplicationCookie(opt =>
 {
     opt.LoginPath = "/Identity/Account/Login";
 });
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddRazorPages(opt =>
 {
     opt.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");

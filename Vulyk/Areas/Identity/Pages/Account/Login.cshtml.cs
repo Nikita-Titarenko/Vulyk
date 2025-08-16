@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using FluentResults;
 using Vulyk.Controllers;
-using Vulyk.DTOs;
+using Vulyk.DTOs.Account;
 using Vulyk.Filters;
-using Vulyk.Services;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account
 {

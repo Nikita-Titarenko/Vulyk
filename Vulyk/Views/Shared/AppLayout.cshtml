@@ -54,14 +54,16 @@
 			</div>
 		</div>
 		<main role="main">
+			<div id="toast" class="hidden">
+				<h1 class="subtitle" id="toast-message"></h1>
+			</div>
 			@RenderBody()
 		</main>
 	</div>
 	@await RenderSectionAsync("Styles", required: false)
-	<script src="~/js/app.js"></script>
-	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true" defer></script>
+	<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true" defer></script>
+	<script src="~/js/app.js" asp-append-version="true" defer></script>
 	@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

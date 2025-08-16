@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Vulyk.DTOs;
-using Vulyk.Services;
+using Vulyk.DTOs.Profile;
+using Vulyk.Services.User;
 
 namespace Vulyk.Areas.Identity.Pages.Account.Manage
 {
