@@ -15,9 +15,10 @@ connection.onclose(async (error) => {
     showToast('Connection closed', colors['error']);
 });
 
-let chatLauncher = document.getElementById('chat-launcher');;
+const chatLauncher = document.getElementById('chat-launcher');;
 let selectedChatList;
-let noSelectedChatMessage = document.getElementById('no-selected-chat');;
+let noSelectedChatMessage = document.getElementById('no-selected-chat');
+
 async function startConnection() {
     try {
         await connection.start();
@@ -96,6 +97,7 @@ async function chooseChat(chatId, userId) {
 
     changeSidebarVisibility(sidebar, chatPanel, messagePanel, main);
     changeChatItemColor(chatId);
+    addMessageSendForEnter();
 }
 
 function changeChatItemColor(chatId) {
@@ -112,10 +114,23 @@ async function createEmptyChat(userId) {
         }
         const html = await response.text();
         document.getElementById('messages').innerHTML = html;
+        addMessageSendForEnter();
     }
     catch {
         showToast('Failed to create new chat. Please try again later.', colors['error']);
     }
+}
+
+function addMessageSendForEnter() {
+    const textarea = document.querySelector(`textarea[name='text']`);
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key != 'Enter' || e.shiftKey) {
+            return;
+        }
+        e.preventDefault();
+        const form = textarea.closest('form');
+        form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))
+    });
 }
 
 const chatP = document.querySelector('.chat-panel');
@@ -145,10 +160,14 @@ async function createMessage(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
+    const csrfToken = document.querySelector(`meta[name='csrf-token']`);
     try {
         const response = await fetch(`Message/CreateMessage`, {
             method: 'POST',
-            body: formData
+            headers: {
+                'RequestVerificationToken': csrfToken.content
+            },
+            body: formData,
         });
 
         if (!response.ok) {
@@ -182,7 +201,7 @@ document.addEventListener('submit', (e) => {
     if (e.target && e.target.id) {
         createMessage(e);
     }
-})
+});
 
 function scrollMessageContainer() {
     const messageContainer = document.querySelector('.message-container');
@@ -230,8 +249,8 @@ function createChatListItem(userId, chatId, lastMessageText, fullName, currentTi
 
     const chatItemDiv = document.createElement('div');
     chatItemDiv.classList.add('chat-item');
-    chatItemDiv.dataset.chatId = chatId;
-    chatItemDiv.dataset.userId = userId;
+    chatItemDiv.dataset.chatId = escapeHTML(chatId);
+    chatItemDiv.dataset.userId = escapeHTML(userId);
     chatPanelDiv.prepend(chatItemDiv);
 
     const horizontalDiv = document.createElement('div');

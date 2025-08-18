@@ -9,7 +9,7 @@
 	<link rel="stylesheet" href="~/css/form.css" asp-append-version="true" />
 }
 @{
-	bool noChats = !Model.ChatItems.Any() && Model.NewUserId == null;
+	bool noChats = !Model.ChatItems.Any() && string.IsNullOrWhiteSpace(Model.NewUserId);
 }
 @if (noChats)
 {
@@ -34,7 +34,7 @@
 	</div>
 
 	<div id="messages" class="message-panel @(ViewData["SidepanelVisibility"] as bool? == true ? "opacity-50" : string.Empty)">
-		@if (Model.NewUserId == null && Model.DisplayChatId == null)
+		@if (string.IsNullOrWhiteSpace(Model.NewUserId) && !Model.DisplayChatId.HasValue)
 		{
 			<div class="h-100" id="no-selected-chat">
 				<div class="subtitle secondary-text">Select chat to start messaging</div>

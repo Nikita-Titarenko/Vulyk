@@ -27,6 +27,7 @@ namespace Vulyk.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> Index(int chatId, string partnerId)
         {
@@ -49,6 +50,7 @@ namespace Vulyk.Controllers
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
 
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> DisplayEmptyChat(string userId)
         {
@@ -72,7 +74,9 @@ namespace Vulyk.Controllers
             return PartialView("_MessagesPartialView", messageListViewModel);
         }
 
+        [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateMessage(CreateMessageViewModel createMessageViewModel)
         {
             if (!ModelState.IsValid)

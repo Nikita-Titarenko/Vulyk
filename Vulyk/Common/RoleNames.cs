@@ -1,6 +1,6 @@
 ﻿namespace Vulyk.Common
 {
-    public static class Roles
+    public static class RoleNames
     {
         public const string Administrator = "Administrator";
     }

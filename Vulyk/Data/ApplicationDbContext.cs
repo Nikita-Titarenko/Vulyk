@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Vulyk.Data.Configurations;
 
 namespace Vulyk.Data
 {
@@ -23,42 +25,7 @@ namespace Vulyk.Data
         {
             base.OnModelCreating(builder);
 
-            string userRoleId = Guid.NewGuid().ToString();
-            string administratorRoleId = Guid.NewGuid().ToString();
-            builder.Entity<IdentityRole>().HasData(
-                new IdentityRole
-                {
-                    Id = userRoleId,
-                    Name = "User",
-                    NormalizedName = "USER"
-                },
-                new IdentityRole
-                {
-                    Id = administratorRoleId,
-                    Name = "Administrator",
-                    NormalizedName = "ADMINISTRATOR"
-                }
-            );
-            PasswordHasher<ApplicationUser> passwordHasher = new PasswordHasher<ApplicationUser>();
-            string administratorId = Guid.NewGuid().ToString();
-            builder.Entity<ApplicationUser>().HasData(new ApplicationUser
-            {
-                EmailConfirmed = true,
-                UserName = "vulyk.messenger@gmail.com",
-                NormalizedUserName = "VULYK.MESSENGER@GMAIL.COM",
-                Email = "vulyk.messenger@gmail.com",
-                NormalizedEmail = "VULYK.MESSENGER@GMAIL.COM",
-                FullName = "Mykyta Titarenko",
-                Id = administratorId,
-                PasswordHash = passwordHasher.HashPassword(new ApplicationUser(), "77228Glnik!"),
-                PhoneNumber = "+380953589545"
-            });
-
-            builder.Entity<IdentityUserRole<string>>().HasData(new IdentityUserRole<string>
-            {
-                UserId = administratorId,
-                RoleId = administratorRoleId
-            });
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             builder.Entity<ApplicationUser>().Property(u => u.FullName).HasMaxLength(20);
 

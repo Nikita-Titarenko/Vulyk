@@ -25,7 +25,7 @@
 						</a>
 					</li>
 					<li>
-						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.Create)" asp-controller="Chat">
+						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.GetUserChat)" asp-controller="Chat">
 							<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
@@ -34,7 +34,7 @@
 							<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
 						</a>
 					</li>
-					@if (User.IsInRole(Roles.Administrator))
+					@if (User.IsInRole(RoleNames.Administrator))
 					{
 						<li>
 							<a class="nav-link" asp-area="Admin" asp-controller="User" asp-action="@nameof(Vulyk.Areas.Admin.Controllers.UserController.Index)">

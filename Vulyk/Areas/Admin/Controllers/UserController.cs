@@ -7,7 +7,7 @@ using Vulyk.ViewModels.User;
 namespace Vulyk.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = RoleNames.Administrator)]
     public class UserController : Controller
     {
 

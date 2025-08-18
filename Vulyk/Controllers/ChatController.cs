@@ -62,7 +62,7 @@ namespace Vulyk.Controllers
 
         [HttpGet]
         [Authorize]
-        public IActionResult Create()
+        public IActionResult GetUserChat()
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;
@@ -73,7 +73,7 @@ namespace Vulyk.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(EmailInputViewModel emailInputChatViewModel)
+        public async Task<IActionResult> GetUserChat(EmailInputViewModel emailInputChatViewModel)
         {
             ViewData["ChoosedPage"] = "CreateChat";
             ViewData["SidepanelVisibility"] = false;

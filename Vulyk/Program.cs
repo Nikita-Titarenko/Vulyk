@@ -2,7 +2,10 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Vulyk.Data;
 using Vulyk.Hubs;
 using Vulyk.Services;
@@ -19,6 +22,12 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+var jwtToken = builder.Configuration["JWT:SECRET"]!;
+
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -28,19 +37,23 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
-var mapperConfig = new MapperConfiguration(options =>
-{
-    options.AddMaps(Assembly.GetExecutingAssembly());
-}, new LoggerFactory());
 
-IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddAutoMapper(cfg => { }, AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddAuthentication()
     .AddGoogle(opt =>
     {
         opt.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
         opt.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+    })
+    .AddJwtBearer(opt =>
+    {
+        opt.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtToken))
+        };
     });
-builder.Services.AddSingleton(mapper);
+
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
@@ -93,6 +106,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
