@@ -96,17 +96,20 @@ namespace Vulyk.Services.User
         {
             var result = await _signInManager.PasswordSignInAsync(dto.Email, dto.Password, dto.RememberMe, false);
 
-            if (result.Succeeded)
+            if (result.Succeeded && !dto.UserIdNeed)
             {
                 return Result.Ok(new AuthResultDto { EmailNotConfirmed = false });
             }
-
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-
+            ApplicationUser? user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
             {
                 _logger.LogWarning("Failed to login: User not found");
                 return Result.Fail(new Error("Login failed").WithMetadata("Code", "LoginFailed"));
+            }
+
+            if (result.Succeeded)
+            {
+                return Result.Ok(new AuthResultDto { EmailNotConfirmed = false, UserId = user.Id });
             }
 
             bool isPasswordCorrect = false;

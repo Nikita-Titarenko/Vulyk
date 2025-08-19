@@ -2,7 +2,7 @@
 
 namespace Vulyk.ApiModels.Requests
 {
-    public class RegisterApiModel
+    public class RegisterRequestModel
     {
         [Required]
         [StringLength(20, ErrorMessage = "The Full Name must be at max 20 characters long.")]

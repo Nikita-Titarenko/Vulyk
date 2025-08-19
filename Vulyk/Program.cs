@@ -14,6 +14,7 @@ using Vulyk.Services.Email;
 using Vulyk.Services.Message;
 using Vulyk.Services.User;
 using Vulyk.Settings;
+using Vulyk.Services.JwtToken;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<IdentityOptions>(options =>
@@ -50,7 +51,11 @@ builder.Services.AddAuthentication()
         opt.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtToken))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtToken)),
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = builder.Configuration["JWT:ISSUER"]!,
+            ValidAudience = builder.Configuration["JWT:AUDIENCE"]!
         };
     });
 
@@ -58,6 +63,7 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);

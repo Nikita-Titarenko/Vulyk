@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
+using Vulyk.ApiModels.Requests;
+using Vulyk.ApiModels.Responds;
 using Vulyk.Areas.Identity.Pages.Account;
 using Vulyk.DTOs.Account;
 using Vulyk.DTOs.Profile;
@@ -22,6 +24,11 @@ namespace Vulyk.AutoMappers
             CreateMap<AuthResultDto, ConfirmTokenDto>();
             CreateMap<UsersDto, UsersViewModel>();
             CreateMap<UserDto, UserViewModel>();
+
+            CreateMap<UserProfileEditDto, ProfileResponseModel>();
+            CreateMap<LoginRequestModel, LoginDto>();
+            CreateMap<RegisterRequestModel, RegisterDto>();
+            CreateMap<RegisterDto, AuthResponseModel>();
         }
     }
 }
