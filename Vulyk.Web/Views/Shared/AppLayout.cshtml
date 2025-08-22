@@ -1,0 +1,70 @@
+﻿@using Vulyk.Web.Common
+@using Vulyk.Web.Controllers
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - Vulyk</title>
+	<link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tiro+Devanagari+Hindi&Roboto">
+</head>
+<body>
+	<button class="navbar-toggler-custom">
+		<i class="fa fa-bars"></i>
+	</button>
+	<div class="app">
+		<div class="sidebar @(ViewData["SidepanelVisibility"] as bool? == true ? "sidebar-visible" : "sidebar-invisible")">
+			<div class="navbar h-100">
+				<ul class="navbar-nav h-100">
+					<li class="nav-item">
+						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.Index)" asp-controller="Chat">
+							<i class="i-nav fa fa-comment @(ViewData["ChoosedPage"] as string == "Chats" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					<li>
+						<a class="nav-link" asp-area="" asp-action="@nameof(ChatController.GetUserChat)" asp-controller="Chat">
+							<i class="i-nav fa fa-plus @(ViewData["ChoosedPage"] as string == "CreateChat" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					<li>
+						<a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index">
+							<i class="i-nav fa fa-user-circle-o @(ViewData["ChoosedPage"] as string == "EditProfile" ? "i-choosed" : "")"></i>
+						</a>
+					</li>
+					@if (User.IsInRole(RoleNames.Administrator))
+					{
+						<li>
+							<a class="nav-link" asp-area="Admin" asp-controller="User" asp-action="@nameof(Vulyk.Web.Areas.Admin.Controllers.UserController.Index)">
+								<i class="i-nav fa fa-gear @(ViewData["ChoosedPage"] as string == "AdminPanel" ? "i-choosed" : "")"></i>
+							</a>
+						</li>
+					}
+					<li class="mt-auto">
+						<form asp-area="Identity" asp-page="/Account/LogOut">
+							<button class="nav-link" type="submit">
+								<i class="i-nav fa fa-sign-out"></i>
+							</button>
+						</form>
+					</li>
+
+				</ul>
+			</div>
+		</div>
+		<main role="main">
+			<div id="toast" class="hidden">
+				<h1 class="subtitle" id="toast-message"></h1>
+			</div>
+			@RenderBody()
+		</main>
+	</div>
+	@await RenderSectionAsync("Styles", required: false)
+	<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true" defer></script>
+	<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true" defer></script>
+	<script src="~/js/app.js" asp-append-version="true" defer></script>
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

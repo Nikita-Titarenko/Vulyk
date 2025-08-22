@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vulyk", "Vulyk\Vulyk.csproj", "{D6413333-DF6C-48C9-8B14-ACAD61444C20}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vulyk.Application", "Vulyk.Application\Vulyk.Application.csproj", "{91DCA781-F83A-68F7-6F4B-216D489E9167}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vulyk.Domain", "Vulyk.Domain\Vulyk.Domain.csproj", "{EEA753C4-3AB9-D980-11DE-223A775B2283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vulyk.Infrastructure", "Vulyk.Infrastructure\Vulyk.Infrastructure.csproj", "{345B0800-A5FC-89D8-BE05-52A3D1DC7F85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vulyk.Web", "Vulyk.Web\Vulyk.Web.csproj", "{F6F3700D-F7EC-EF75-72A2-7FE700387D22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +17,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D6413333-DF6C-48C9-8B14-ACAD61444C20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D6413333-DF6C-48C9-8B14-ACAD61444C20}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D6413333-DF6C-48C9-8B14-ACAD61444C20}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D6413333-DF6C-48C9-8B14-ACAD61444C20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91DCA781-F83A-68F7-6F4B-216D489E9167}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91DCA781-F83A-68F7-6F4B-216D489E9167}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91DCA781-F83A-68F7-6F4B-216D489E9167}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91DCA781-F83A-68F7-6F4B-216D489E9167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEA753C4-3AB9-D980-11DE-223A775B2283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEA753C4-3AB9-D980-11DE-223A775B2283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEA753C4-3AB9-D980-11DE-223A775B2283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEA753C4-3AB9-D980-11DE-223A775B2283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{345B0800-A5FC-89D8-BE05-52A3D1DC7F85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{345B0800-A5FC-89D8-BE05-52A3D1DC7F85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{345B0800-A5FC-89D8-BE05-52A3D1DC7F85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{345B0800-A5FC-89D8-BE05-52A3D1DC7F85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6F3700D-F7EC-EF75-72A2-7FE700387D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6F3700D-F7EC-EF75-72A2-7FE700387D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6F3700D-F7EC-EF75-72A2-7FE700387D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6F3700D-F7EC-EF75-72A2-7FE700387D22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

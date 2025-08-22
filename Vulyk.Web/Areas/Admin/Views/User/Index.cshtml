@@ -1,0 +1,49 @@
+﻿@using Vulyk.Web.ViewModels.UserManagement
+@model UsersViewModel
+@{
+	ViewData["Title"] = "Users";
+	Layout = "~/Views/Shared/AppLayout.cshtml";
+}
+<div class="table-container">
+	<table class="table">
+		<thead>
+			<tr>
+				<td>
+					@Html.DisplayNameFor(m => m.Users[0].FullName)
+				</td>
+				<td>
+					@Html.DisplayNameFor(m => m.Users[0].Email)
+				</td>
+				<td>
+					@Html.DisplayNameFor(m => m.Users[0].Status)
+				</td>
+				<td>
+					@Html.DisplayNameFor(m => m.Users[0].Role)
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+		@foreach (var user in Model.Users)
+		{
+				<tr>
+					<td>
+						@user.FullName
+					</td>
+					<td>
+						@user.Email
+					</td>
+					<td>
+						@user.Status.ToString()
+					</td>
+					<td>
+						@user.Role.ToString()
+					</td>
+				</tr>
+		}
+		</tbody>
+	</table>
+	<div data-page-size="@UsersViewModel.PageSize"></div>
+</div>
+@section Scripts {
+	<script src="~/js/loadUsers.js" defer></script>
+}

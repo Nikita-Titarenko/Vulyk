@@ -1,0 +1,17 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Vulyk.Application.DTOs.Chat
+{
+    public class ChatListItemDto
+    {
+        public int ChatId { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public string FullName { get; set; } = string.Empty;
+
+        public DateTime? LastMessageDateTime { get; set; }
+
+        public string? LastMessageText { get; set; } = string.Empty;
+    }
+}
