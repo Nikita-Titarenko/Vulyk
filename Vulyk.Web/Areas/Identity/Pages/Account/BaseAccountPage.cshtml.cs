@@ -6,11 +6,11 @@ namespace Vulyk.Web.Areas.Identity.Pages.Account
 {
     public class BaseAccountPageModel : PageModel
     {
-        public readonly IUserService _userService;
+        protected readonly IUserService _userService;
 
-        public readonly IMapper _mapper;
+        protected readonly IMapper _mapper;
 
-        public readonly IEmailSender _emailSender;
+        protected readonly IEmailSender _emailSender;
 
         public BaseAccountPageModel(IUserService userService, IMapper mapper, IEmailSender emailSender)
         {

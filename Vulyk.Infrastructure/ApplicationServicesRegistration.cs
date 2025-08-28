@@ -31,6 +31,7 @@ namespace Vulyk.Infrastructure
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddHostedService<DeleteUnconfirmedUsersService>();
             services.AddAutoMapper(cfg => { }, AppDomain.CurrentDomain.GetAssemblies());
             return services;
         } 

@@ -84,15 +84,12 @@ namespace Vulyk.Web.Controllers
             var createMessageResult = await _messageService.CreateMessageAsync(dto);
             if (!createMessageResult.IsSuccess)
             {
-                if (!createMessageResult.IsSuccess)
+                foreach (var error in createMessageResult.Errors)
                 {
-                    foreach (var error in createMessageResult.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Message);
-                    }
-
-                    return View();
+                    ModelState.AddModelError(string.Empty, error.Message);
                 }
+
+                return View();
             }
 
             var getFullNameResult = await _userService.GetFullNameAsync(createMessageViewModel.PartnerId);

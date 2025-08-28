@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Vulyk.Application.DTOs.Chat;
+using Vulyk.Web.ApiModels.Responds;
 using Vulyk.Web.ViewModels.Chat;
 
 namespace Vulyk.Web.AutoMappers
@@ -10,6 +11,10 @@ namespace Vulyk.Web.AutoMappers
             CreateMap<ChatListItemDto, ChatListItemViewModel>();
             CreateMap<ChatListDto, ChatListViewModel>();
             CreateMap<GetUserChatResultDto, CreateUserChatResultDto>();
+
+            CreateMap<ChatListDto, ChatListResponseModel>();
+            CreateMap<ChatListItemDto, ChatListItemResponseModel>();
+            CreateMap<GetUserChatResultDto, GetUserChatResponseModel>();
         }
     }
 }

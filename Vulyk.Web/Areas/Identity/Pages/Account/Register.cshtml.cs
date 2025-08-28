@@ -9,10 +9,12 @@ namespace Vulyk.Web.Areas.Identity.Pages.Account
     public class RegisterModel : AnonymousOnlyModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public RegisterModel(IUserService userService, IMapper mapper, IEmailSender emailSender, SignInManager<ApplicationUser> signInManager) : base(userService, mapper, emailSender)
+        public RegisterModel(IUserService userService, IMapper mapper, IEmailSender emailSender, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment webHostEnvironment) : base(userService, mapper, emailSender)
         {
             _signInManager = signInManager;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [BindProperty]
@@ -71,9 +73,14 @@ namespace Vulyk.Web.Areas.Identity.Pages.Account
             }
 
             var callbackUrl = CreateEmailConfirmationLink(_mapper.Map<ConfirmTokenDto>(result.Value), "/Account/ConfirmEmail", ReturnUrl);
+            var emailTemplatePath = Path.Combine(_webHostEnvironment.WebRootPath, "templates", "email_layout.html");
+            var template = await System.IO.File.ReadAllTextAsync(emailTemplatePath);
+            var messageBody = template
+                .Replace("{FullName}", Input.FullName)
+                .Replace("{MessageContent}", $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                messageBody);
 
             return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
         }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using Vulyk.Infrastructure;
 using Vulyk.Infrastructure.Data;
 using Vulyk.Infrastructure.Models;
@@ -43,6 +44,12 @@ builder.Services.AddAuthentication()
             ValidAudience = builder.Configuration["JWT:AUDIENCE"]!
         };
     });
+
+builder.Host.UseSerilog((cont, conf) =>
+{
+    conf.WriteTo.Console()
+    .ReadFrom.Configuration(cont.Configuration);
+});
 
 var app = builder.Build();
 

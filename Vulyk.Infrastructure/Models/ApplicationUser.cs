@@ -9,7 +9,9 @@ namespace Vulyk.Infrastructure.Models
         [MaxLength(20)]
         public string FullName { get; set; } = string.Empty;
 
-        public DateTime? LastOnline { get; set; } = DateTime.Now;
+        public DateTime? LastOnline { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public string? PendingNewEmail { get; set; }
 

@@ -143,7 +143,6 @@ namespace Vulyk.Infrastructure.Services.User
             }
 
             code = (await GeneratePasswordResetTokenAsync(dto.Email)).Value.Code;
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             return Result.Ok(new AuthResultDto { UserId = user.Id, Code = code, PasswordNotExist = true });
         }
 
@@ -573,7 +572,7 @@ namespace Vulyk.Infrastructure.Services.User
                 return Result.Fail(new Error("Password is differents").WithMetadata("Code", "PasswordIsDifferents"));
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, dto.Code, dto.ConfirmPassword);
+            var result = await _userManager.ResetPasswordAsync(user, Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Code)), dto.ConfirmPassword);
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Failed to reset password: verification token incorrect for User with UserId={UserId}", dto.UserId);

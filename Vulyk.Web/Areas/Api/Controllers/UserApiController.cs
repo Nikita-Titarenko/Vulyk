@@ -13,11 +13,11 @@ namespace Vulyk.Web.Areas.Api.Controllers
     [ApiController]
     public class UserApiController : ControllerBase
     {
-        public readonly IUserService _userService;
+        private readonly IUserService _userService;
 
-        public readonly IMapper _mapper;
+        private readonly IMapper _mapper;
 
-        public readonly IEmailSender _emailSender;
+        private readonly IEmailSender _emailSender;
 
         private readonly IJwtTokenService _jwtTokenService;
 
