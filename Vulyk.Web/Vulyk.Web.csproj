@@ -29,7 +29,6 @@
 	<ItemGroup>
 		<Folder Include="Views\Shared\Components\UserProfile\" />
 		<Folder Include="wwwroot\images\" />
-		<Folder Include="wwwroot\sounds\" />
 	</ItemGroup>
 
 	<ItemGroup>

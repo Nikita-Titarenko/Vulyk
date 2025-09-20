@@ -72,7 +72,7 @@ connection.on('CreateChat', async (userId, chatId, fullName, lastMessage) => {
 });
 
 function makeSoundNotification() {
-    const notificationSound = new Audio('sounds/notificationSound.wav');
+    const notificationSound = new Audio('sounds/notification-sound.wav');
     notificationSound.play();
 }
 
