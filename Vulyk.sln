@@ -39,5 +39,6 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EFEACCE4-F18C-4051-809F-318AF14B309C}
+		StartupProject = Vulyk.Web
 	EndGlobalSection
 EndGlobal
